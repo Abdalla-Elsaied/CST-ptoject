@@ -1,84 +1,65 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Product 1</title>
-
+<title>Phone Product View</title>
 <link rel="stylesheet" href="/CSS/ProductViewPage.css">
 </head>
 <body>
 
-<div class="top-bar">
-Discount 20% For New Member, <b>ONLY FOR TODAY!</b>
+<div class="card">
+
+  <div class="images">
+    <img id="mainImage"
+    src="https://fdn2.gsmarena.com/vv/pics/apple/apple-iphone-15-pro-1.jpg"
+    class="main-img">
+
+    <div class="thumbs">
+      <img src="https://fdn2.gsmarena.com/vv/pics/apple/apple-iphone-15-pro-1.jpg">
+      <img src="https://fdn2.gsmarena.com/vv/pics/apple/apple-iphone-15-pro-2.jpg">
+      <img src="https://fdn2.gsmarena.com/vv/pics/apple/apple-iphone-15-pro-3.jpg">
+    </div>
+  </div>
+
+  <div class="details">
+    <h2>iPhone 15 Pro Max</h2>
+
+    <div class="price">
+      $999
+      <span class="old">$1199</span>
+      <span class="discount">17%</span>
+    </div>
+
+    <p class="description">
+      A17 Pro chip, Titanium design, Pro camera system.
+    </p>
+
+    <div class="sizes">
+      <button>128GB</button>
+      <button>256GB</button>
+      <button>512GB</button>
+      <button>1TB</button>
+    </div>
+
+    <div class="cart">
+      <div class="quantity">
+        <button id="minus">-</button>
+        <input type="text" id="qty" value="1">
+        <button id="plus">+</button>
+      </div>
+
+      <button class="add-btn">Add to Cart</button>
+    </div>
+  </div>
+
 </div>
 
-<header class="navbar">
-    <div class="logo">MODEVA</div>
-    <div class="nav-links">
-        <a href="#">Catalog</a>
-        <a href="#">Sale</a>
-        <a href="#">New Arrival</a>
-        <a href="#">About</a>
-    </div>
-</header>
+<script src="/JS/ProductViewPage.js">
 
-<section class="product-container">
 
-    <div class="product-images">
-        <img id="mainImage"
-        src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab"
-        class="main-img">
 
-        <div class="thumbs">
-            <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab" class="active-thumb">
-            <img src="https://images.unsplash.com/photo-1503341504253-dff4815485f1">
-            <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d">
-            <img src="https://images.unsplash.com/photo-1516826957135-700dedea698c">
-        </div>
-    </div>
-
-    <div class="product-details">
-        <div class="category">MAN T-SHIRT</div>
-        <h1>WHITE CASUAL T-SHIRT</h1>
-
-        <div>
-            <span class="old-price">IDR 200.000</span>
-            <span class="discount">50%</span>
-        </div>
-
-        <div class="new-price">IDR 100.000</div>
-
-        <p class="description">
-            Clean minimal white casual t-shirt perfect for daily wear.
-        </p>
-
-        <div class="sizes">
-            <button>XS</button>
-            <button>S</button>
-            <button class="active">M</button>
-            <button>L</button>
-            <button>XL</button>
-        </div>
-
-        <div class="cart-section">
-            <div class="quantity">
-                <button id="minus">-</button>
-                <input type="text" id="qty" value="1">
-                <button id="plus">+</button>
-            </div>
-
-            <button class="add-cart">ADD TO CART</button>
-        </div>
-    </div>
-
-</section>
-
-<footer>
-    <h2>MODEVA</h2>
-</footer>
-
-<script src="/JS/ProductViewPage.js"></script>
+</script>
 
 </body>
 </html>
