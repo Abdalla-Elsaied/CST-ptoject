@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dealport – Seller Dashboard</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+
+  <link rel="stylesheet" href="../../CSS/Seller/home.css"/>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════ SIDEBAR ═══════════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-text">DEALP<span class="logo-dot">O</span>RT</span>
+    <button class="sidebar-toggle-btn d-none d-lg-flex" id="sidebarCollapseBtn">
+      <i class="bi bi-layout-sidebar-reverse"></i>
+    </button>
+  </div>
+
+  <div class="sidebar-nav">
+    <p class="nav-section-label">Main menu</p>
+    <ul class="nav flex-column">
+      <li class="nav-item">
+        <a href="#" class="nav-link active"><i class="bi bi-house-door-fill"></i><span>Dashboard</span></a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link"><i class="bi bi-cart3"></i><span>Order Management</span></a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link"><i class="bi bi-people"></i><span>Customers</span></a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link"><i class="bi bi-ticket-perforated"></i><span>Coupon Code</span></a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link"><i class="bi bi-grid"></i><span>Categories</span></a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link"><i class="bi bi-credit-card"></i><span>Transaction</span></a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link"><i class="bi bi-star"></i><span>Brand</span></a>
+      </li>
+    </ul>
+
+    <p class="nav-section-label mt-3">Product</p>
+    <ul class="nav flex-column">
+      <li class="nav-item">
+        <a href="#" class="nav-link"><i class="bi bi-plus-circle"></i><span>Add Products</span></a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link"><i class="bi bi-image"></i><span>Product Media</span></a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link"><i class="bi bi-list-ul"></i><span>Product List</span></a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link"><i class="bi bi-chat-square-text"></i><span>Product Reviews</span></a>
+      </li>
+    </ul>
+
+    <p class="nav-section-label mt-3">Admin</p>
+    <ul class="nav flex-column">
+      <li class="nav-item">
+        <a href="#" class="nav-link"><i class="bi bi-shield-check"></i><span>Admin Role</span></a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link"><i class="bi bi-sliders"></i><span>Control Authority</span></a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-profile">
+      <img src="https://i.pravatar.cc/40?img=12" alt="avatar" class="user-avatar"/>
+      <div class="user-info">
+        <span class="user-name">Dealport</span>
+        <span class="user-email">Mark@thedesigner...</span>
+      </div>
+      <button class="btn-icon"><i class="bi bi-box-arrow-right"></i></button>
+    </div>
+    <a href="#" class="btn-shop"><i class="bi bi-shop"></i><span>Your Shop</span><i class="bi bi-arrow-up-right-square ms-auto"></i></a>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════════ MAIN WRAPPER ═══════════════════════════════════ -->
+<div class="main-wrapper" id="mainWrapper">
+
+  <!-- ─────────── TOP NAVBAR ─────────── -->
+  <header class="topnav">
+    <div class="topnav-left">
+      <button class="btn-icon sidebar-mobile-toggle" id="mobileSidebarBtn">
+        <i class="bi bi-list fs-5"></i>
+      </button>
+      <h1 class="page-title">Dashboard</h1>
+    </div>
+    <div class="topnav-center">
+      <div class="search-bar">
+        <i class="bi bi-search search-icon"></i>
+        <input type="text" placeholder="Search data, users, or reports" class="search-input"/>
+      </div>
+    </div>
+    <div class="topnav-right">
+      <button class="btn-icon notif-btn">
+        <i class="bi bi-bell"></i>
+        <span class="badge-dot"></span>
+      </button>
+      <button class="btn-icon theme-btn" id="themeToggle">
+        <i class="bi bi-sun"></i>
+      </button>
+      <img src="https://i.pravatar.cc/36?img=12" alt="avatar" class="topnav-avatar"/>
+    </div>
+  </header>
+
+  <!-- ─────────── DASHBOARD CONTENT ─────────── -->
+  <main class="dashboard-content">
+
+    <!-- ROW 1 – STAT CARDS -->
+    <div class="row g-4 mb-4">
+
+      <!-- Card 1: Total Sales -->
+      <div class="col-12 col-md-4">
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div>
+              <h6 class="stat-title">Total Sales</h6>
+              <span class="stat-period">Last 7 days</span>
+            </div>
+            <button class="btn-dots"><i class="bi bi-three-dots"></i></button>
+          </div>
+          <div class="stat-body">
+            <span class="stat-value">$350K</span>
+            <div class="stat-badges">
+              <span class="badge-label">Sales</span>
+              <span class="badge-growth up"><i class="bi bi-arrow-up"></i>10.4%</span>
+            </div>
+          </div>
+          <p class="stat-prev">Previous 7days <a href="#">($235)</a></p>
+          <div class="stat-footer">
+            <button class="btn-details">Details</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Total Orders -->
+      <div class="col-12 col-md-4">
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div>
+              <h6 class="stat-title">Total Orders</h6>
+              <span class="stat-period">Last 7 days</span>
+            </div>
+            <button class="btn-dots"><i class="bi bi-three-dots"></i></button>
+          </div>
+          <div class="stat-body">
+            <span class="stat-value">10.7K</span>
+            <div class="stat-badges">
+              <span class="badge-label">order</span>
+              <span class="badge-growth up"><i class="bi bi-arrow-up"></i>14.4%</span>
+            </div>
+          </div>
+          <p class="stat-prev">Previous 7days <a href="#">(7.6k)</a></p>
+          <div class="stat-footer">
+            <button class="btn-details">Details</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Pending & Cancelled -->
+      <div class="col-12 col-md-4">
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div>
+              <h6 class="stat-title">Pending &amp; Canceled</h6>
+              <span class="stat-period">Last 7 days</span>
+            </div>
+            <button class="btn-dots"><i class="bi bi-three-dots"></i></button>
+          </div>
+          <div class="stat-body pending-body">
+            <div class="pending-col">
+              <span class="pending-label">Pending</span>
+              <span class="pending-val">509</span>
+              <span class="pending-sub">user 204</span>
+            </div>
+            <div class="pending-col">
+              <span class="pending-label">Canceled</span>
+              <span class="pending-val danger">94</span>
+              <span class="badge-growth down"><i class="bi bi-arrow-down"></i>14.4%</span>
+            </div>
+          </div>
+          <div class="stat-footer">
+            <button class="btn-details">Details</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 2 – CHART + ANALYTICS -->
+    <div class="row g-4 mb-4">
+
+      <!-- Weekly Report Chart -->
+      <div class="col-12 col-xl-7">
+        <div class="card-panel">
+          <div class="panel-header">
+            <h6 class="panel-title">Report for this week</h6>
+            <div class="d-flex align-items-center gap-2">
+              <button class="btn-week active">This week</button>
+              <button class="btn-week">Last week</button>
+              <button class="btn-dots"><i class="bi bi-three-dots"></i></button>
+            </div>
+          </div>
+
+          <!-- Metrics Row -->
+          <div class="metrics-row">
+            <div class="metric-item active">
+              <span class="metric-val">52k</span>
+              <span class="metric-lbl">Customers</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-val">3.5k</span>
+              <span class="metric-lbl">Total Products</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-val">2.5k</span>
+              <span class="metric-lbl">Stock Products</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-val">0.5k</span>
+              <span class="metric-lbl">Out of Stock</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-val">250k</span>
+              <span class="metric-lbl">Revenue</span>
+            </div>
+          </div>
+
+          <div class="chart-wrap">
+            <canvas id="weeklyChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analytics Panel -->
+      <div class="col-12 col-xl-5">
+        <div class="card-panel h-100">
+          <div class="panel-header">
+            <div>
+              <span class="panel-sub">Users in last 30 minutes</span>
+              <h3 class="panel-big-val">21.5K</h3>
+            </div>
+            <button class="btn-dots"><i class="bi bi-three-dots"></i></button>
+          </div>
+
+          <p class="chart-sub-label">Users per minute</p>
+          <div class="bar-chart-wrap">
+            <canvas id="usersBarChart"></canvas>
+          </div>
+
+          <!-- Sales by Country -->
+          <div class="country-section">
+            <div class="country-header">
+              <span class="country-title">Sales by Country</span>
+              <span class="country-title">Sales</span>
+            </div>
+            <div class="country-list">
+
+              <div class="country-row">
+                <div class="country-flag">
+                  <img src="https://flagcdn.com/w40/us.png" alt="USA"/>
+                </div>
+                <div class="country-info">
+                  <div class="d-flex justify-content-between mb-1">
+                    <span class="country-name">30k <small class="text-muted">US</small></span>
+                    <span class="country-pct up"><i class="bi bi-arrow-up"></i>25.8%</span>
+                  </div>
+                  <div class="progress country-progress">
+                    <div class="progress-bar bg-primary" style="width:75%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="country-row">
+                <div class="country-flag">
+                  <img src="https://flagcdn.com/w40/br.png" alt="Brazil"/>
+                </div>
+                <div class="country-info">
+                  <div class="d-flex justify-content-between mb-1">
+                    <span class="country-name">30k <small class="text-muted">Brazil</small></span>
+                    <span class="country-pct down"><i class="bi bi-arrow-down"></i>15.8%</span>
+                  </div>
+                  <div class="progress country-progress">
+                    <div class="progress-bar bg-primary" style="width:55%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="country-row">
+                <div class="country-flag">
+                  <img src="https://flagcdn.com/w40/au.png" alt="Australia"/>
+                </div>
+                <div class="country-info">
+                  <div class="d-flex justify-content-between mb-1">
+                    <span class="country-name">25k <small class="text-muted">Australia</small></span>
+                    <span class="country-pct up"><i class="bi bi-arrow-up"></i>35.8%</span>
+                  </div>
+                  <div class="progress country-progress">
+                    <div class="progress-bar bg-primary" style="width:65%"></div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+            <button class="btn-view-insight">View Insight</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 3 – TRANSACTION + TOP PRODUCTS -->
+    <div class="row g-4 mb-4">
+
+      <!-- Transaction Table -->
+      <div class="col-12 col-xl-7">
+        <div class="card-panel">
+          <div class="panel-header">
+            <h6 class="panel-title">Transaction</h6>
+            <button class="btn-filter"><i class="bi bi-funnel-fill me-2"></i>Filter</button>
+          </div>
+          <div class="table-responsive">
+            <table class="table dash-table">
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Id Customer</th>
+                  <th>Order Date</th>
+                  <th>Status</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1.</td>
+                  <td>#6545</td>
+                  <td>01 Oct | 11:29 am</td>
+                  <td><span class="status-dot paid"></span>Paid</td>
+                  <td>$64</td>
+                </tr>
+                <tr>
+                  <td>2.</td>
+                  <td>#5412</td>
+                  <td>01 Oct | 11:29 am</td>
+                  <td><span class="status-dot pending"></span>Pending</td>
+                  <td>$557</td>
+                </tr>
+                <tr>
+                  <td>3.</td>
+                  <td>#6622</td>
+                  <td>01 Oct | 11:29 am</td>
+                  <td><span class="status-dot paid"></span>Paid</td>
+                  <td>$156</td>
+                </tr>
+                <tr>
+                  <td>4.</td>
+                  <td>#6462</td>
+                  <td>01 Oct | 11:29 am</td>
+                  <td><span class="status-dot paid"></span>Paid</td>
+                  <td>$265</td>
+                </tr>
+                <tr>
+                  <td>5.</td>
+                  <td>#6462</td>
+                  <td>01 Oct | 11:29 am</td>
+                  <td><span class="status-dot paid"></span>Paid</td>
+                  <td>$265</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="text-end mt-2">
+            <button class="btn-details">Details</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Products -->
+      <div class="col-12 col-xl-5">
+        <div class="card-panel h-100">
+          <div class="panel-header">
+            <h6 class="panel-title">Top Products</h6>
+            <a href="#" class="link-green">All product</a>
+          </div>
+          <div class="product-search mb-3">
+            <i class="bi bi-search"></i>
+            <input type="text" placeholder="Search"/>
+          </div>
+          <div class="product-list">
+
+            <div class="product-row">
+              <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-13-blue-select-2021?wid=60&hei=60&fmt=jpeg" alt="iPhone 13" class="product-thumb"/>
+              <div class="product-meta">
+                <span class="product-name">Apple iPhone 13</span>
+                <span class="product-code">Item: #FXZ-4567</span>
+              </div>
+              <span class="product-price">$999.00</span>
+            </div>
+
+            <div class="product-row">
+              <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=60&h=60&fit=crop" alt="Nike Air Jordan" class="product-thumb"/>
+              <div class="product-meta">
+                <span class="product-name">Nike Air Jordan</span>
+                <span class="product-code">Item: #FXZ-4567</span>
+              </div>
+              <span class="product-price">$72.40</span>
+            </div>
+
+            <div class="product-row">
+              <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=60&h=60&fit=crop" alt="T-shirt" class="product-thumb"/>
+              <div class="product-meta">
+                <span class="product-name">T-shirt</span>
+                <span class="product-code">Item: #FXZ-4567</span>
+              </div>
+              <span class="product-price">$35.40</span>
+            </div>
+
+            <div class="product-row">
+              <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=60&h=60&fit=crop" alt="Cross Bag" class="product-thumb"/>
+              <div class="product-meta">
+                <span class="product-name">Assorted Cross Bag</span>
+                <span class="product-code">Item: #FXZ-4567</span>
+              </div>
+              <span class="product-price">$80.00</span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 4 – BEST SELLING + ADD NEW PRODUCT -->
+    <div class="row g-4 mb-4">
+
+      <!-- Best Selling Products -->
+      <div class="col-12 col-xl-7">
+        <div class="card-panel">
+          <div class="panel-header">
+            <h6 class="panel-title">Best selling product</h6>
+            <button class="btn-filter"><i class="bi bi-funnel-fill me-2"></i>Filter</button>
+          </div>
+          <div class="table-responsive">
+            <table class="table dash-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Total Order</th>
+                  <th>Status</th>
+                  <th>Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-13-blue-select-2021?wid=40&hei=40&fmt=jpeg" class="tbl-prod-img" alt="iPhone"/>
+                      Apple iPhone 13
+                    </div>
+                  </td>
+                  <td>104</td>
+                  <td><span class="status-dot paid"></span><span class="text-success">Stock</span></td>
+                  <td>$999.00</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=40&h=40&fit=crop" class="tbl-prod-img" alt="Jordan"/>
+                      Nike Air Jordan
+                    </div>
+                  </td>
+                  <td>56</td>
+                  <td><span class="status-dot danger-dot"></span><span class="text-danger">Stock out</span></td>
+                  <td>$999.00</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=40&h=40&fit=crop" class="tbl-prod-img" alt="T-shirt"/>
+                      T-shirt
+                    </div>
+                  </td>
+                  <td>266</td>
+                  <td><span class="status-dot paid"></span><span class="text-success">Stock</span></td>
+                  <td>$999.00</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=40&h=40&fit=crop" class="tbl-prod-img" alt="Bag"/>
+                      Cross Bag
+                    </div>
+                  </td>
+                  <td>506</td>
+                  <td><span class="status-dot paid"></span><span class="text-success">Stock</span></td>
+                  <td>$999.00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="text-end mt-2">
+            <button class="btn-details">Details</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add New Product -->
+      <div class="col-12 col-xl-5">
+        <div class="card-panel h-100">
+          <div class="panel-header">
+            <h6 class="panel-title">Add New Product</h6>
+            <a href="#" class="link-green"><i class="bi bi-plus-circle me-1"></i>Add New</a>
+          </div>
+          <p class="cat-label">Categories</p>
+          <div class="category-list">
+            <div class="category-row">
+              <div class="cat-icon"><i class="bi bi-phone"></i></div>
+              <span class="cat-name">Electronic</span>
+              <i class="bi bi-chevron-right ms-auto text-muted"></i>
+            </div>
+            <div class="category-row">
+              <div class="cat-icon"><i class="bi bi-bag"></i></div>
+              <span class="cat-name">Fashion</span>
+              <i class="bi bi-chevron-right ms-auto text-muted"></i>
+            </div>
+            <div class="category-row">
+              <div class="cat-icon"><i class="bi bi-house"></i></div>
+              <span class="cat-name">Home</span>
+              <i class="bi bi-chevron-right ms-auto text-muted"></i>
+            </div>
+          </div>
+          <button class="btn-see-more">See more</button>
+
+          <p class="cat-label mt-3">Product</p>
+          <div class="quick-add-list">
+            <div class="quick-add-row">
+              <img src="https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?w=40&h=40&fit=crop" class="qa-img" alt="Fitness Tracker"/>
+              <div class="qa-meta">
+                <span class="qa-name">Smart Fitness Tracker</span>
+                <span class="qa-price text-success">$39.99</span>
+              </div>
+              <button class="btn-add"><i class="bi bi-plus-circle-fill me-1"></i>Add</button>
+            </div>
+            <div class="quick-add-row">
+              <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=40&h=40&fit=crop" class="qa-img" alt="Wallet"/>
+              <div class="qa-meta">
+                <span class="qa-name">Leather Wallet</span>
+                <span class="qa-price text-success">$19.99</span>
+              </div>
+              <button class="btn-add"><i class="bi bi-plus-circle-fill me-1"></i>Add</button>
+            </div>
+            <div class="quick-add-row">
+              <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=40&h=40&fit=crop" class="qa-img" alt="Trimmer"/>
+              <div class="qa-meta">
+                <span class="qa-name">Electric Hair Trimmer</span>
+                <span class="qa-price text-success">$34.99</span>
+              </div>
+              <button class="btn-add"><i class="bi bi-plus-circle-fill me-1"></i>Add</button>
+            </div>
+          </div>
+          <button class="btn-see-more mt-2">See more</button>
+        </div>
+      </div>
+
+    </div><!-- /ROW 4 -->
+
+  </main><!-- /dashboard-content -->
+</div><!-- /main-wrapper -->
+
+<!-- Overlay for mobile sidebar -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- jQuery (optional) -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script src="../../JS/Seller/home.js"></script>
+</body>
+</html>
