@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Console | CST E-Commerce Marketplace</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+
+    <!-- Admin Panel CSS -->
+    <link rel="stylesheet" href="/CSS/Admin/admin-panel.css">
+</head>
+
+<body>
+
+    <!-- ── SIDEBAR OVERLAY (mobile) ────────────────────────── -->
+    <div id="sidebarOverlay"></div>
+
+    <!-- ── SIDEBAR ─────────────────────────────────────────── -->
+    <aside id="adminSidebar">
+
+        <!-- Logo -->
+        <div class="sidebar-logo">
+            <span class="logo-icon">🛒</span>
+            <span class="logo-text">CST Marketplace</span>
+        </div>
+
+        <!-- Navigation links — data-section maps to section IDs and sectionRenderers -->
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-link" data-section="dashboard">
+                <span class="nav-icon">📊</span> Dashboard
+            </a>
+            <a href="#" class="nav-link" data-section="sellers">
+                <span class="nav-icon">🏪</span> Sellers
+            </a>
+            <a href="#" class="nav-link" data-section="customers">
+                <span class="nav-icon">👤</span> Customers
+            </a>
+            <a href="#" class="nav-link" data-section="products">
+                <span class="nav-icon">📦</span> Products
+            </a>
+            <a href="#" class="nav-link" data-section="orders">
+                <span class="nav-icon">🧾</span> Orders
+            </a>
+            <a href="#" class="nav-link" data-section="analytics">
+                <span class="nav-icon">📈</span> Analytics
+            </a>
+        </nav>
+
+        <!-- Sidebar footer — quick links to teammate's pages -->
+        <div class="sidebar-footer">
+            <a href="/Html/Admin/AddSeller.html" class="sidebar-quick-link">+ Add Seller</a>
+            <a href="/Html/Admin/ShowSellers.html" class="sidebar-quick-link">View Sellers Page</a>
+        </div>
+
+    </aside>
+
+    <!-- ── MAIN CONTENT ─────────────────────────────────────── -->
+    <main id="adminMain">
+
+        <!-- Top navbar -->
+        <header class="admin-topbar">
+            <!-- Hamburger button (mobile only) -->
+            <button id="sidebarToggle" class="hamburger-btn" aria-label="Toggle sidebar">
+                &#9776;
+            </button>
+
+            <span class="topbar-title">Welcome back, <strong id="adminUserName">Admin</strong></span>
+
+            <button id="logoutBtn" class="btn-logout">Logout</button>
+        </header>
+
+        <!-- ── DASHBOARD SECTION ──────────────────────────── -->
+        <section id="dashboardSection" class="admin-section">
+            <div class="section-header">
+                <h2 class="section-title">Overview</h2>
+                <p class="section-subtitle">Marketplace performance at a glance.</p>
+            </div>
+
+            <!-- KPI cards row — filled by admin-dashboard.js -->
+            <div class="row g-3 mb-4" id="kpiRow"></div>
+
+            <!-- Recent activity tables -->
+            <div class="row g-3">
+                <div class="col-lg-6">
+                    <div class="data-card">
+                        <div class="data-card-header">Recent Sellers</div>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Store</th>
+                                        <th>City</th>
+                                        <th>Payment</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentSellersBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="data-card">
+                        <div class="data-card-header">Recent Orders</div>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Seller</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentOrdersBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── SELLERS SECTION ────────────────────────────── -->
+        <section id="sellersSection" class="admin-section" style="display:none">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Seller Management</h2>
+                    <p class="section-subtitle" id="sellersCount">Loading...</p>
+                </div>
+                <a href="/Html/Admin/AddSeller.html" class="btn-primary-green">+ Onboard New Vendor</a>
+            </div>
+
+            <!-- Search bar -->
+            <div class="filter-bar">
+                <input type="text" id="sellerSearchInput" class="filter-input"
+                    placeholder="Search by name, store, or city...">
+            </div>
+
+            <!-- Table -->
+            <div class="data-card">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Store Name</th>
+                                <th>City</th>
+                                <th>Payment</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sellersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── CUSTOMERS SECTION ─────────────────────────── -->
+        <section id="customersSection" class="admin-section" style="display:none">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Customer Accounts</h2>
+                    <p class="section-subtitle" id="customersCount">Loading...</p>
+                </div>
+            </div>
+
+            <!-- Search bar -->
+            <div class="filter-bar">
+                <input type="text" id="customerSearchInput" class="filter-input"
+                    placeholder="Search by name or email...">
+            </div>
+
+            <!-- Table -->
+            <div class="data-card">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Registered</th>
+                                <th>Orders</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── PRODUCTS SECTION ───────────────────────────── -->
+        <section id="productsSection" class="admin-section" style="display:none">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Product Catalog</h2>
+                    <p class="section-subtitle" id="productsCount">Loading...</p>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filter-bar">
+                <input type="text" id="productSearchInput" class="filter-input" placeholder="Search products...">
+
+                <select id="productCategoryFilter" class="filter-select">
+                    <option value="All">All Categories</option>
+                    <option>Electronics</option>
+                    <option>Clothing</option>
+                    <option>Books</option>
+                    <option>Home</option>
+                    <option>Sports</option>
+                    <option>Other</option>
+                </select>
+
+                <select id="productStatusFilter" class="filter-select">
+                    <option value="All">All Status</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                </select>
+            </div>
+
+            <!-- Table -->
+            <div class="data-card">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Image</th>
+                                <th>Product Name</th>
+                                <th>Seller</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── ORDERS SECTION ─────────────────────────────── -->
+        <section id="ordersSection" class="admin-section" style="display:none">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Order Management</h2>
+                    <p class="section-subtitle" id="ordersCount">Loading...</p>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filter-bar flex-wrap">
+                <input type="text" id="orderSearchInput" class="filter-input"
+                    placeholder="Search by order ID or customer...">
+
+                <select id="orderStatusFilter" class="filter-select">
+                    <option value="All">All Statuses</option>
+                    <option>Pending</option>
+                    <option>Processing</option>
+                    <option>Shipped</option>
+                    <option>Delivered</option>
+                    <option>Cancelled</option>
+                </select>
+
+                <input type="date" id="orderDateFrom" class="filter-input" style="max-width:160px">
+                <input type="date" id="orderDateTo" class="filter-input" style="max-width:160px">
+            </div>
+
+            <!-- Table -->
+            <div class="data-card">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Seller</th>
+                                <th>Items</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Change Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── ANALYTICS SECTION ──────────────────────────── -->
+        <section id="analyticsSection" class="admin-section" style="display:none">
+            <div class="section-header">
+                <h2 class="section-title">Sales & Analytics</h2>
+                <p class="section-subtitle">Marketplace-wide statistics and trends.</p>
+            </div>
+
+            <!-- 2x2 chart grid -->
+            <div class="row g-3">
+                <div class="col-lg-6">
+                    <div class="chart-card">
+                        <canvas id="userDistributionChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="chart-card">
+                        <canvas id="ordersByStatusChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="chart-card">
+                        <canvas id="topSellersChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="chart-card">
+                        <canvas id="dailyOrdersChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+
+    <!-- ══════════════════════════════════════════════════════
+         MODALS
+    ═══════════════════════════════════════════════════════ -->
+
+    <!-- Reset Password Modal — used for both customers and sellers -->
+    <div class="modal fade" id="resetPasswordModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Reset Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Hidden fields — set by openResetPasswordModal() in admin-customers.js -->
+                    <input type="hidden" id="resetPasswordUserId">
+                    <input type="hidden" id="resetPasswordUserType">
+                    <div class="mb-3">
+                        <label class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="resetPasswordNew"
+                            placeholder="Min. 6 characters">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" id="resetPasswordConfirm"
+                            placeholder="Repeat new password">
+                    </div>
+                    <!-- Error message shown if passwords don't match -->
+                    <p id="resetPasswordError" style="color:var(--danger);font-size:13px;min-height:18px;margin:0"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <!-- Calls saveResetPassword() from admin-customers.js -->
+                    <button type="button" class="btn-primary-green" onclick="saveResetPassword()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Seller Modal -->
+    <div class="modal fade" id="editSellerModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Seller</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Hidden ID field — used to identify which seller to update -->
+                    <input type="hidden" id="editSellerId">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="editSellerFullName">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editSellerEmail">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone</label>
+                            <input type="tel" class="form-control" id="editSellerPhone">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Store Name</label>
+                            <input type="text" class="form-control" id="editSellerStoreName">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">City</label>
+                            <input type="text" class="form-control" id="editSellerCity">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Payment Method</label>
+                            <select class="form-select" id="editSellerPayment">
+                                <option>Bank Transfer</option>
+                                <option>Vodafone Cash</option>
+                                <option>InstaPay</option>
+                                <option>PayPal</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="editSellerDescription" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <!-- Calls saveSellerEdit() from admin-sellers.js -->
+                    <button type="button" class="btn-primary-green" onclick="saveSellerEdit()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Action Modal — reusable for all delete/deactivate confirmations -->
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Are you sure?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Message set dynamically by showConfirm() in admin-helpers.js -->
+                    <p id="confirmMessage" class="mb-0"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <!-- onConfirm callback set dynamically by showConfirm() -->
+                    <button type="button" class="btn btn-danger btn-sm" id="confirmActionBtn">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════════════════════════
+         SCRIPTS — ORDER IS CRITICAL, DO NOT CHANGE
+    ═══════════════════════════════════════════════════════ -->
+
+    <!-- 1. jQuery (required by teammate's AddSeller.js) -->
+    <script src="/Libraries/JQuery.js"></script>
+
+    <!-- 2. Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+
+    <!-- 3. Chart.js (required by admin-analytics.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- 4. Shared helpers — MUST load before all section files -->
+    <script src="/JS/Admin/admin-helpers.js"></script>
+
+    <!-- 5. Section files — order between these doesn't matter -->
+    <script src="/JS/Admin/admin-dashboard.js"></script>
+    <script src="/JS/Admin/admin-sellers.js"></script>
+    <script src="/JS/Admin/admin-products.js"></script>
+    <script src="/JS/Admin/admin-orders.js"></script>
+    <script src="/JS/Admin/admin-customers.js"></script>
+    <script src="/JS/Admin/admin-analytics.js"></script>
+
+    <!-- 6. Main controller — MUST load last (calls functions from all files above) -->
+    <script src="/JS/Admin/admin-panel.js"></script>
+
+</body>
+
+</html>
