@@ -113,13 +113,13 @@ function renderTable() {
         tbody.innerHTML = `
             <tr>
                 <td colspan="7" class="empty-state">
-                    <div class="empty-icon">${hasFilters ? '🔍' : '👥'}</div>
+                    <div class="empty-icon">${hasFilters ? '<i class="bi bi-search"></i>' : '<i class="bi bi-people"></i>'}</div>
                     <p>${hasFilters
                 ? 'No vendors match the applied filters.'
                 : 'No vendors have been registered yet.'}</p>
                     ${hasFilters
-                ? '<button class="btn-reset-filters" onclick="resetAllFilters()">✕ Clear Filters</button>'
-                : '<a href="/Html/Admin/AddSeller.html">+ Onboard your first vendor</a>'}
+                ? '<button class="btn-reset-filters" onclick="resetAllFilters()"><i class="bi bi-x-lg"></i> Clear Filters</button>'
+                : '<a href="/Html/Admin/AddSeller.html"><i class="bi bi-plus-lg"></i> Onboard your first vendor</a>'}
                 </td>
             </tr>`;
         return;
@@ -154,10 +154,10 @@ function renderTable() {
             <td>
                 <div class="actions-col">
                     <button class="btn-action btn-edit" onclick="openUpdate(${seller.id})" title="Edit">
-                        ✏️ Edit
+                        <i class="bi bi-pencil"></i> Edit
                     </button>
                     <button class="btn-action btn-delete" onclick="confirmDelete(${seller.id}, '${seller.fullName.replace(/'/g, "\\'")}')" title="Delete">
-                        🗑️ Delete
+                        <i class="bi bi-trash"></i> Delete
                     </button>
                 </div>
             </td>
@@ -245,7 +245,8 @@ function showToast(message, type) {
 
     const toast = document.createElement('div');
     toast.className = `admin-toast ${type}`;
-    toast.innerHTML = `<span>${type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️'}</span> ${message}`;
+    const icon = type === 'success' ? '<i class="bi bi-check-circle-fill"></i>' : type === 'error' ? '<i class="bi bi-x-circle-fill"></i>' : '<i class="bi bi-exclamation-triangle-fill"></i>';
+    toast.innerHTML = `<span>${icon}</span> ${message}`;
     document.body.appendChild(toast);
 
     setTimeout(() => {
