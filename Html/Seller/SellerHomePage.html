@@ -31,10 +31,10 @@
     <p class="nav-section-label">Main menu</p>
     <ul class="nav flex-column">
       <li class="nav-item">
-        <a href="#" class="nav-link active"><i class="bi bi-house-door-fill"></i><span>Dashboard</span></a>
+        <a href="#" id="dashboardLink" class="nav-link active"><i class="bi bi-house-door-fill"></i><span>Dashboard</span></a>
       </li>
       <li class="nav-item">
-        <a href="#" class="nav-link"><i class="bi bi-cart3"></i><span>Order Management</span></a>
+        <a href="OrderManagement.html" id="orderManagementLink" class="nav-link"><i class="bi bi-cart3"></i><span>Order Management</span></a>
       </li>
       <li class="nav-item">
         <a href="#" class="nav-link"><i class="bi bi-people"></i><span>Customers</span></a>
@@ -62,7 +62,7 @@
         <a href="#" class="nav-link"><i class="bi bi-image"></i><span>Product Media</span></a>
       </li>
       <li class="nav-item">
-        <a href="#" class="nav-link"><i class="bi bi-list-ul"></i><span>Product List</span></a>
+        <a href="ProductList.html" id="productListLink" class="nav-link"><i class="bi bi-list-ul"></i><span>Product List</span></a>
       </li>
       <li class="nav-item">
         <a href="#" class="nav-link"><i class="bi bi-chat-square-text"></i><span>Product Reviews</span></a>
@@ -124,6 +124,7 @@
 
   <!-- ─────────── DASHBOARD CONTENT ─────────── -->
   <main class="dashboard-content">
+    <div id="dashboardView">
 
     <!-- ROW 1 – STAT CARDS -->
     <div class="row g-4 mb-4">
@@ -579,6 +580,13 @@
       </div>
 
     </div><!-- /ROW 4 -->
+    </div><!-- /dashboardView -->
+
+    <div id="orderManagementView" style="display:none;">
+      <div class="embedded-page-wrap">
+        <iframe id="embeddedPageFrame" src="OrderManagement.html" class="embedded-page-frame" title="Embedded Page"></iframe>
+      </div>
+    </div>
 
   </main><!-- /dashboard-content -->
 </div><!-- /main-wrapper -->

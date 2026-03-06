@@ -353,6 +353,22 @@ img { max-width: 100%; }
   flex: 1;
 }
 
+.embedded-page-wrap {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.embedded-page-frame {
+  width: 100%;
+  height: calc(100vh - 140px);
+  border: 0;
+  display: block;
+  background: #fff;
+}
+
 /* ═══════════════════════════════════
    STAT CARDS
 ═══════════════════════════════════ */
@@ -996,6 +1012,8 @@ img { max-width: 100%; }
   .metric-item { min-width: 70px; }
 
   .chart-wrap { height: 180px; }
+
+  .embedded-page-frame { height: calc(100vh - 120px); }
 }
 
 @media (max-width: 575.98px) {

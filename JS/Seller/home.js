@@ -24,6 +24,50 @@ $(function () {
     $(this).removeClass('active');
   });
 
+  const $dashboardView = $('#dashboardView');
+  const $orderManagementView = $('#orderManagementView');
+  const $pageTitle = $('.page-title');
+  const $embeddedPageFrame = $('#embeddedPageFrame');
+  let darkMode = $('body').hasClass('dark');
+
+  function closeMobileSidebar() {
+    $('#sidebar').removeClass('mobile-open');
+    $('#sidebarOverlay').removeClass('active');
+  }
+
+  function syncEmbeddedTheme() {
+    const iframe = $embeddedPageFrame.get(0);
+    if (!iframe || !iframe.contentWindow || !iframe.contentWindow.document) return;
+    iframe.contentWindow.document.body.classList.toggle('dark', darkMode);
+  }
+
+  function showDashboard() {
+    $dashboardView.show();
+    $orderManagementView.hide();
+    $pageTitle.text('Dashboard');
+    closeMobileSidebar();
+  }
+
+  function showOrderManagement() {
+    $embeddedPageFrame.attr('src', 'OrderManagement.html');
+    $dashboardView.hide();
+    $orderManagementView.show();
+    $pageTitle.text('Order Management');
+    closeMobileSidebar();
+  }
+
+  function showProductList() {
+    $embeddedPageFrame.attr('src', 'ProductList.html');
+    $dashboardView.hide();
+    $orderManagementView.show();
+    $pageTitle.text('Product List');
+    closeMobileSidebar();
+  }
+
+  $embeddedPageFrame.on('load', function () {
+    syncEmbeddedTheme();
+  });
+
   /* ─────────────────────────────────────────
      NAV LINK: active state switch
   ───────────────────────────────────────── */
@@ -33,11 +77,21 @@ $(function () {
     $(this).addClass('active');
   });
 
+  $('#dashboardLink').on('click', function () {
+    showDashboard();
+  });
+
+  $('#orderManagementLink').on('click', function () {
+    showOrderManagement();
+  });
+
+  $('#productListLink').on('click', function () {
+    showProductList();
+  });
+
   /* ─────────────────────────────────────────
      THEME TOGGLE (light ↔ dark)
   ───────────────────────────────────────── */
-  let darkMode = false;
-
   $('#themeToggle').on('click', function () {
     darkMode = !darkMode;
     $('body').toggleClass('dark', darkMode);
@@ -47,6 +101,7 @@ $(function () {
 
     // Update charts for dark mode
     updateChartColors();
+    syncEmbeddedTheme();
   });
 
   /* ─────────────────────────────────────────
