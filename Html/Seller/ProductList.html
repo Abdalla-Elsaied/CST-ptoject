@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product List</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+--green:#22c55e;
+--green-dark:#16a34a;
+--green-light:#ecfdf5;
+--text-primary:#1f2937;
+--text-sec:#6b7280;
+--card-bg:#ffffff;
+--page-bg:#f8fafc;
+--border:#e5e7eb;
+--danger:#ef4444;
+--warning:#f59e0b;
+--radius:12px;
+--shadow:0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,0,.05);
+}
+body.dark{
+--text-primary:#f1f5f9;
+--text-sec:#94a3b8;
+--card-bg:#1e293b;
+--page-bg:#0f172a;
+--border:#334155;
+}
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Plus Jakarta Sans',sans-serif;
+}
+body{
+background:var(--page-bg);
+padding:24px;
+color:var(--text-primary);
+}
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:12px;
+flex-wrap:wrap;
+margin-bottom:18px;
+}
+.title{
+font-size:1.35rem;
+font-weight:700;
+}
+.btn{
+background:var(--green);
+color:#fff;
+border:none;
+border-radius:8px;
+padding:9px 16px;
+font-size:.88rem;
+font-weight:600;
+cursor:pointer;
+}
+.btn:hover{ background:var(--green-dark); }
+.stats{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:14px;
+margin-bottom:16px;
+}
+.card{
+background:var(--card-bg);
+border:1px solid var(--border);
+border-radius:var(--radius);
+box-shadow:var(--shadow);
+padding:16px;
+}
+.card h4{
+font-size:.72rem;
+text-transform:uppercase;
+letter-spacing:.04em;
+color:var(--text-sec);
+margin-bottom:6px;
+}
+.card .val{
+font-size:1.55rem;
+font-weight:800;
+}
+.filters{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px;
+flex-wrap:wrap;
+margin-bottom:12px;
+}
+.tabs{
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+}
+.tab{
+padding:7px 12px;
+border-radius:999px;
+border:1.5px solid var(--border);
+cursor:pointer;
+font-size:.82rem;
+font-weight:600;
+color:var(--text-sec);
+}
+.tab.active{
+background:var(--green-light);
+border-color:var(--green);
+color:var(--green-dark);
+}
+.search{
+border:1.5px solid var(--border);
+border-radius:999px;
+padding:8px 12px;
+font-size:.875rem;
+outline:none;
+min-width:230px;
+}
+.search:focus{ border-color:var(--green); }
+.table-wrap{
+background:var(--card-bg);
+border:1px solid var(--border);
+border-radius:var(--radius);
+box-shadow:var(--shadow);
+overflow:auto;
+}
+table{
+width:100%;
+min-width:850px;
+border-collapse:collapse;
+}
+thead tr{ background:var(--green-light); }
+th{
+font-size:.72rem;
+font-weight:700;
+text-transform:uppercase;
+letter-spacing:.04em;
+color:var(--text-sec);
+padding:10px 14px;
+text-align:left;
+}
+td{
+padding:10px 14px;
+border-top:1px solid var(--border);
+font-size:.85rem;
+vertical-align:middle;
+}
+.stock{
+display:inline-flex;
+align-items:center;
+gap:6px;
+font-weight:600;
+}
+.dot{
+width:7px;
+height:7px;
+border-radius:50%;
+display:inline-block;
+}
+.in-stock .dot{ background:var(--green); }
+.low-stock .dot{ background:var(--warning); }
+.out-stock .dot{ background:var(--danger); }
+.price{ font-weight:700; }
+.pagination{
+display:flex;
+justify-content:center;
+gap:8px;
+margin-top:14px;
+flex-wrap:wrap;
+}
+.page{
+padding:7px 11px;
+border:1.5px solid var(--border);
+border-radius:8px;
+font-size:.82rem;
+font-weight:600;
+color:var(--text-sec);
+cursor:pointer;
+min-width:35px;
+text-align:center;
+}
+.page.active{
+background:var(--green-light);
+border-color:var(--green);
+color:var(--green-dark);
+}
+.modal{
+position:fixed;
+inset:0;
+display:none;
+align-items:center;
+justify-content:center;
+background:rgba(0,0,0,.35);
+padding:12px;
+}
+.modal-content{
+width:100%;
+max-width:360px;
+background:var(--card-bg);
+border:1px solid var(--border);
+border-radius:var(--radius);
+box-shadow:var(--shadow);
+padding:18px;
+}
+.modal-content h3{
+font-size:1rem;
+margin-bottom:10px;
+}
+.modal-content input, .modal-content select{
+width:100%;
+padding:9px 10px;
+margin-bottom:9px;
+font-size:.875rem;
+border:1.5px solid var(--border);
+border-radius:8px;
+outline:none;
+}
+.modal-content input:focus, .modal-content select:focus{ border-color:var(--green); }
+.modal-actions{
+display:flex;
+justify-content:flex-end;
+gap:8px;
+margin-top:4px;
+}
+.btn-secondary{
+background:transparent;
+color:var(--text-sec);
+border:1.5px solid var(--border);
+}
+.btn-secondary:hover{
+background:var(--green-light);
+color:var(--green-dark);
+}
+@media (max-width: 900px){
+.stats{ grid-template-columns:repeat(2,1fr); }
+}
+@media (max-width: 600px){
+body{ padding:14px; }
+.stats{ grid-template-columns:1fr; }
+.search{ width:100%; min-width:0; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="title">Product List</div>
+  <button class="btn" onclick="openModal()">+ Add Product</button>
+</div>
+
+<div class="stats">
+  <div class="card"><h4>Total Products</h4><div class="val" id="totalProducts"></div></div>
+  <div class="card"><h4>In Stock</h4><div class="val" id="inStock"></div></div>
+  <div class="card"><h4>Low Stock</h4><div class="val" id="lowStock"></div></div>
+  <div class="card"><h4>Out Of Stock</h4><div class="val" id="outStock"></div></div>
+</div>
+
+<div class="filters">
+  <div class="tabs">
+    <div class="tab active" onclick="filterBy('all')">All</div>
+    <div class="tab" onclick="filterBy('In Stock')">In Stock</div>
+    <div class="tab" onclick="filterBy('Low Stock')">Low Stock</div>
+    <div class="tab" onclick="filterBy('Out of Stock')">Out of Stock</div>
+  </div>
+  <input class="search" placeholder="Search product..." onkeyup="searchProduct(this.value)">
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>SKU</th>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Price</th>
+        <th>Stock</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<div class="pagination" id="pagination"></div>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <h3>Add Product</h3>
+    <input id="name" placeholder="Product name">
+    <input id="category" placeholder="Category">
+    <input id="price" type="number" placeholder="Price">
+    <input id="stock" type="number" placeholder="Stock quantity">
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn" onclick="addProduct()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const pageSize = 8;
+let page = 1;
+let filter = 'all';
+let search = '';
+
+let products = JSON.parse(localStorage.getItem('sellerProducts'));
+
+if(!products){
+  products = [
+    {name:'Apple iPhone 13', category:'Electronic', price:999, stock:104},
+    {name:'Nike Air Jordan', category:'Fashion', price:72.4, stock:12},
+    {name:'Wireless Headphones', category:'Electronic', price:49.99, stock:0},
+    {name:'Smart Fitness Tracker', category:'Electronic', price:39.99, stock:66},
+    {name:'Leather Wallet', category:'Fashion', price:19.99, stock:7},
+    {name:'Coffee Maker', category:'Home', price:79.99, stock:25},
+    {name:'Memory Foam Pillow', category:'Home', price:39.99, stock:3},
+    {name:'Full HD Webcam', category:'Electronic', price:39.99, stock:31},
+    {name:'Casual Baseball Cap', category:'Fashion', price:14.99, stock:54},
+    {name:'Electric Hair Trimmer', category:'Beauty', price:34.99, stock:0}
+  ];
+  localStorage.setItem('sellerProducts', JSON.stringify(products));
+}
+
+function getStatus(stock){
+  if(stock <= 0) return 'Out of Stock';
+  if(stock <= 10) return 'Low Stock';
+  return 'In Stock';
+}
+
+function statusClass(status){
+  if(status === 'In Stock') return 'in-stock';
+  if(status === 'Low Stock') return 'low-stock';
+  return 'out-stock';
+}
+
+function save(){
+  localStorage.setItem('sellerProducts', JSON.stringify(products));
+}
+
+function updateCards(){
+  document.getElementById('totalProducts').innerText = products.length;
+  document.getElementById('inStock').innerText = products.filter(p => getStatus(Number(p.stock)) === 'In Stock').length;
+  document.getElementById('lowStock').innerText = products.filter(p => getStatus(Number(p.stock)) === 'Low Stock').length;
+  document.getElementById('outStock').innerText = products.filter(p => getStatus(Number(p.stock)) === 'Out of Stock').length;
+}
+
+function render(){
+  let data = products.map((p, idx) => ({...p, idx}));
+  if(filter !== 'all') data = data.filter(p => getStatus(Number(p.stock)) === filter);
+  if(search) data = data.filter(p => p.name.toLowerCase().includes(search));
+
+  const start = (page - 1) * pageSize;
+  const paginated = data.slice(start, start + pageSize);
+
+  let html = '';
+  paginated.forEach((p, i) => {
+    const status = getStatus(Number(p.stock));
+    html += `
+      <tr>
+        <td>${start + i + 1}</td>
+        <td>#PRD${1000 + p.idx}</td>
+        <td>${p.name}</td>
+        <td>${p.category}</td>
+        <td class="price">$${Number(p.price).toFixed(2)}</td>
+        <td>${p.stock}</td>
+        <td><span class="stock ${statusClass(status)}"><span class="dot"></span>${status}</span></td>
+      </tr>
+    `;
+  });
+
+  document.getElementById('tableBody').innerHTML = html;
+  renderPagination(data.length);
+  updateCards();
+}
+
+function renderPagination(total){
+  const pages = Math.ceil(total / pageSize);
+  let html = '';
+  for(let i = 1; i <= pages; i++){
+    html += `<div class="page ${i === page ? 'active' : ''}" onclick="goto(${i})">${i}</div>`;
+  }
+  document.getElementById('pagination').innerHTML = html;
+}
+
+function goto(p){
+  page = p;
+  render();
+}
+
+function filterBy(s){
+  filter = s;
+  page = 1;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  render();
+}
+
+function searchProduct(v){
+  search = v.toLowerCase();
+  page = 1;
+  render();
+}
+
+function openModal(){
+  document.getElementById('modal').style.display = 'flex';
+}
+
+function closeModal(){
+  document.getElementById('modal').style.display = 'none';
+  clearProductForm();
+}
+
+function clearProductForm(){
+  document.getElementById('name').value = '';
+  document.getElementById('category').value = '';
+  document.getElementById('price').value = '';
+  document.getElementById('stock').value = '';
+}
+
+function addProduct(){
+  const name = document.getElementById('name').value.trim();
+  const category = document.getElementById('category').value.trim();
+  const price = document.getElementById('price').value;
+  const stock = document.getElementById('stock').value;
+  if(!name || !category || price === '' || stock === '') return;
+
+  products.unshift({name, category, price:Number(price), stock:Number(stock)});
+  save();
+  closeModal();
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
