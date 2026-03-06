@@ -1,8 +1,13 @@
-// ============================================================
-// admin-dashboard.js
-// Handles the Dashboard section — KPI cards + recent tables.
-// Depends on: admin-helpers.js
-// ============================================================
+import {
+    getSellers,
+    getProducts,
+    getOrders,
+    getUsers,
+    getCustomerName,
+    getSellerName,
+    formatPrice,
+    statusBadge
+} from '../Admin/admin-helpers.js';
 
 
 /**

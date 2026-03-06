@@ -1,50 +1,47 @@
-// ============================================================
-// admin-helpers.js
-// Shared functions used by ALL admin JS files.
-// This file must be loaded FIRST before any other admin JS.
-// ============================================================
+import { 
+    KEY_USERS, 
+    KEY_PRODUCTS, 
+    KEY_ORDERS, 
+    KEY_CURRENT_USER 
+} from '/JS/Core/constants.js';
 
+import { getLS, setLS } from '/JS/Core/storage.js';
+import { ROLES } from '../Core/Auth.js';
 
-// ─── LOCAL STORAGE KEYS ─────────────────────────────────────
-// Centralized keys — change here once, affects everything
-const LS_SELLERS = 'sellers';       // teammate's key (do NOT change)
-const LS_PRODUCTS = 'ls_products';
-const LS_ORDERS = 'ls_orders';
-const LS_USERS = 'ls_users';
-const LS_CURRENT = 'ls_currentUser';
+// ─── DATA ACCESS ─────────────────────────────────────────────
 
+export function getSellers() {
+    const users = getLS(KEY_USERS) || [];
+    return users.filter(u => u.role === ROLES.SELLER);
+}
 
-// ─── LOCAL STORAGE READERS ──────────────────────────────────
+export function getProducts() {
+    return getLS(KEY_PRODUCTS) || [];
+}
 
-/** Get all sellers from localStorage */
-const getSellers = () => JSON.parse(localStorage.getItem(LS_SELLERS) || '[]');
+export function getOrders() {
+    return getLS(KEY_ORDERS) || [];
+}
 
-/** Get all products from localStorage */
-const getProducts = () => JSON.parse(localStorage.getItem(LS_PRODUCTS) || '[]');
+export function getUsers() {
+    return getLS(KEY_USERS) || [];
+}
 
-/** Get all orders from localStorage */
-const getOrders = () => JSON.parse(localStorage.getItem(LS_ORDERS) || '[]');
+export function getCurrentUser() {
+    return getLS(KEY_CURRENT_USER) || null;
+}
 
-/** Get all users (customers) from localStorage */
-const getUsers = () => JSON.parse(localStorage.getItem(LS_USERS) || '[]');
+export function saveUsers(users) {
+    setLS(KEY_USERS, users);
+}
 
-/** Get the currently logged-in admin user */
-const getCurrentUser = () => JSON.parse(localStorage.getItem(LS_CURRENT) || 'null');
+export function saveProducts(products) {
+    setLS(KEY_PRODUCTS, products);
+}
 
-
-// ─── LOCAL STORAGE WRITERS ──────────────────────────────────
-
-/** Save sellers array to localStorage */
-const saveSellers = (data) => localStorage.setItem(LS_SELLERS, JSON.stringify(data));
-
-/** Save products array to localStorage */
-const saveProducts = (data) => localStorage.setItem(LS_PRODUCTS, JSON.stringify(data));
-
-/** Save orders array to localStorage */
-const saveOrders = (data) => localStorage.setItem(LS_ORDERS, JSON.stringify(data));
-
-/** Save users array to localStorage */
-const saveUsers = (data) => localStorage.setItem(LS_USERS, JSON.stringify(data));
+export function saveOrders(orders) {
+    setLS(KEY_ORDERS, orders);
+}
 
 
 // ─── UI HELPERS ─────────────────────────────────────────────
@@ -53,7 +50,7 @@ const saveUsers = (data) => localStorage.setItem(LS_USERS, JSON.stringify(data))
  * Returns a colored badge HTML string based on order status.
  * Used in orders table and dashboard recent orders.
  */
-function statusBadge(status) {
+export function statusBadge(status) {
     const map = {
         'Pending': { bg: '#f59e0b', color: '#fff' },
         'Processing': { bg: '#3b82f6', color: '#fff' },
@@ -69,7 +66,7 @@ function statusBadge(status) {
  * Returns a colored badge for product stock level.
  * Green = in stock, Orange = low stock, Red = out of stock.
  */
-function stockBadge(stock) {
+export function stockBadge(stock) {
     if (stock === 0) return `<span class="stock-badge stock-out">Out of Stock</span>`;
     if (stock <= 5) return `<span class="stock-badge stock-low">Low: ${stock}</span>`;
     return `<span class="stock-badge stock-ok">${stock} in stock</span>`;
@@ -78,7 +75,7 @@ function stockBadge(stock) {
 /**
  * Returns a colored badge for active/inactive product status.
  */
-function activeBadge(isActive) {
+export function activeBadge(isActive) {
     return isActive
         ? `<span class="active-badge active-yes">Active</span>`
         : `<span class="active-badge active-no">Inactive</span>`;
@@ -87,7 +84,7 @@ function activeBadge(isActive) {
 /**
  * Formats a number as a price string — e.g. 49.9 → "$49.90"
  */
-function formatPrice(amount) {
+export function formatPrice(amount) {
     return `$${Number(amount || 0).toFixed(2)}`;
 }
 
@@ -95,7 +92,7 @@ function formatPrice(amount) {
  * Formats an ISO date string to a readable date — e.g. "2026-03-05"
  * Returns "N/A" if the date is missing (some seller objects have no createdAt).
  */
-function formatDate(isoString) {
+export function formatDate(isoString) {
     if (!isoString) return 'N/A';
     return new Date(isoString).toLocaleDateString('en-US', {
         year: 'numeric',
@@ -109,7 +106,7 @@ function formatDate(isoString) {
  * @param {string} message - Text to display
  * @param {'success'|'error'|'info'} type - Controls the color
  */
-function showToast(message, type = 'success') {
+export function showToast(message, type = 'success') {
     const colors = {
         success: '#22c55e',
         error: '#ef4444',
@@ -152,7 +149,7 @@ function showToast(message, type = 'success') {
  * @param {string} message - Question shown to the user
  * @param {Function} onConfirm - Function called when user clicks Confirm
  */
-function showConfirm(message, onConfirm) {
+export function showConfirm(message, onConfirm) {
     document.getElementById('confirmMessage').textContent = message;
 
     const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
@@ -175,7 +172,7 @@ function showConfirm(message, onConfirm) {
  * Used to show seller name in products and orders tables.
  * Falls back to 'Unknown Seller' if not found.
  */
-function getSellerName(sellerId) {
+export function getSellerName(sellerId) {
     const seller = getSellers().find(s => s.id == sellerId); // == because id is Number
     return seller ? seller.storeName : 'Unknown Seller';
 }
@@ -184,7 +181,7 @@ function getSellerName(sellerId) {
  * Returns customer's name by their id.
  * Used to show customer name in orders table.
  */
-function getCustomerName(customerId) {
+export function getCustomerName(customerId) {
     const user = getUsers().find(u => u.id == customerId);
     return user ? (user.name || user.fullName || 'Unknown') : 'Unknown Customer';
 }
