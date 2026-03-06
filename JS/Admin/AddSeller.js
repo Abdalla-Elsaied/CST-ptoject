@@ -1,4 +1,11 @@
-const fields = ['fullName', 'email', 'password', 'phone', 'storeName', 'city', 'description', 'paymentMethod'];
+import { KEY_USERS } from '../Core/Constants.js';
+import { pushItem } from '../Core/Storage.js';
+import { ROLES } from '../Core/Auth.js';
+
+const fields = [
+    'fullName', 'email', 'password', 'phone',
+    'storeName', 'city', 'description', 'paymentMethod'
+];
 
 function getField(name) {
     return $(`[name="${name}"]`);
@@ -6,50 +13,57 @@ function getField(name) {
 
 $(document).ready(function () {
 
-    // Restore fields on reload
     fields.forEach(name => {
         const saved = sessionStorage.getItem(name);
         if (saved) getField(name).val(saved);
     });
 
-    // Save fields on input
     fields.forEach(name => {
-        getField(name).on('input', () => {
-            sessionStorage.setItem(name, getField(name).val());
+        getField(name).on('input', function () {
+            sessionStorage.setItem(name, $(this).val());
         });
     });
 
     $('#sellerForm').on('submit', function (e) {
         e.preventDefault();
+
         if (!this.checkValidity()) {
             e.stopPropagation();
             $(this).addClass('was-validated');
             return;
         }
-        $(this).addClass('was-validated');
-        AddSellerData();
-    });
 
+        $(this).addClass('was-validated');
+        addSeller();
+    });
 });
 
-function AddSellerData() {
-    const seller = {
-        id:            Date.now(),
-        fullName:      getField('fullName').val(),
-        email:         getField('email').val(),
-        password:      getField('password').val(),
-        phone:         getField('phone').val(),
-        storeName:     getField('storeName').val(),
-        city:          getField('city').val(),
-        description:   getField('description').val(),
-        paymentMethod: getField('paymentMethod').val()
+function addSeller() {
+    const sellerId = 'seller_' + Date.now().toString(36).slice(-8);
+
+    const sellerUser = {
+        id: sellerId,
+        name: getField('fullName').val().trim(),
+        email: getField('email').val().trim().toLowerCase(),
+        password: getField('password').val(),           // WARNING: plain text – only for learning!
+        phone: getField('phone').val().trim(),
+        role: ROLES.SELLER,
+        storeName: getField('storeName').val().trim(),
+        storeDescription: getField('description').val().trim(),
+        city: getField('city').val().trim(),
+        paymentMethod: getField('paymentMethod').val(),
+        createdAt: new Date().toISOString()
     };
 
-    const sellers = JSON.parse(localStorage.getItem('sellers') || '[]');
-    sellers.push(seller);
-    localStorage.setItem('sellers', JSON.stringify(sellers));
+    // 1. Add to main users collection
+    pushItem(KEY_USERS, sellerUser);
 
+    // Clear temporary session storage
     fields.forEach(name => sessionStorage.removeItem(name));
 
+    // Optional: show success message
+    alert('Seller account created successfully');
+
+    // Redirect to sellers list
     location.href = '/Html/Admin/ShowSellers.html';
 }
