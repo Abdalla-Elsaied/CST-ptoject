@@ -1,8 +1,8 @@
-import { 
-    KEY_USERS, 
-    KEY_PRODUCTS, 
-    KEY_ORDERS, 
-    KEY_CURRENT_USER 
+import {
+    KEY_USERS,
+    KEY_PRODUCTS,
+    KEY_ORDERS,
+    KEY_CURRENT_USER
 } from '/JS/Core/constants.js';
 
 import { getLS, setLS } from '/JS/Core/storage.js';
@@ -33,6 +33,11 @@ export function getCurrentUser() {
 
 export function saveUsers(users) {
     setLS(KEY_USERS, users);
+}
+
+export function saveSellers(sellers) {
+    const allUsers = getUsers().filter(u => u.role !== ROLES.SELLER);
+    saveUsers([...allUsers, ...sellers]);
 }
 
 export function saveProducts(products) {
