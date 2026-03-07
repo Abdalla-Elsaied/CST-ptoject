@@ -40,7 +40,7 @@
                 <span class="nav-icon"><i class="bi bi-people"></i></span> Seller Management
             </a>
             <a href="#" class="nav-link" data-section="customers">
-                <span class="nav-icon"><i class="bi bi-person"></i></span> Customers
+                <span class="nav-icon"><i class="bi bi-person"></i></span> User Management
             </a>
             <a href="#" class="nav-link" data-section="products">
                 <span class="nav-icon"><i class="bi bi-box-seam"></i></span> Products
@@ -53,10 +53,11 @@
             </a>
         </nav>
 
-        <!-- Sidebar footer — quick links to teammate's pages -->
+        <!-- Sidebar footer — quick action -->
         <div class="sidebar-footer">
-            <a href="/Html/Admin/AddSeller.html" class="sidebar-quick-link">+ Add Seller</a>
-            <a href="/Html/Admin/ShowSellers.html" class="sidebar-quick-link">View Sellers Page</a>
+            <a href="#" onclick="openAddSellerModal(); return false;" class="sidebar-quick-link">
+                <i class="bi bi-plus-lg"></i> Add Seller
+            </a>
         </div>
 
     </aside>
@@ -136,7 +137,9 @@
                     <h2 class="section-title">Seller Management</h2>
                     <p class="section-subtitle" id="sellersCount">Loading...</p>
                 </div>
-                <a href="/Html/Admin/AddSeller.html" class="btn-primary-green">+ Onboard New Vendor</a>
+                <button class="btn-primary-green" onclick="openAddSellerModal()">
+                    <i class="bi bi-plus-lg"></i> Onboard New Vendor
+                </button>
             </div>
 
             <!-- Search bar -->
@@ -171,7 +174,7 @@
         <section id="customersSection" class="admin-section" style="display:none">
             <div class="section-header">
                 <div>
-                    <h2 class="section-title">Customer Accounts</h2>
+                    <h2 class="section-title">User Management</h2>
                     <p class="section-subtitle" id="customersCount">Loading...</p>
                 </div>
             </div>
@@ -179,7 +182,7 @@
             <!-- Search bar -->
             <div class="filter-bar">
                 <input type="text" id="customerSearchInput" class="filter-input"
-                    placeholder="Search by name or email...">
+                    placeholder="Search by name, email, or role...">
             </div>
 
             <!-- Table -->
@@ -191,6 +194,7 @@
                                 <th>#</th>
                                 <th>Name</th>
                                 <th>Email</th>
+                                <th>Role</th>
                                 <th>Registered</th>
                                 <th>Orders</th>
                                 <th class="text-center">Actions</th>
@@ -456,6 +460,89 @@
     </div>
 
 
+    <!-- Add Seller Modal -->
+    <div class="modal fade" id="addSellerModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-person-plus"></i> Onboard New Seller</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="addSellerForm" class="needs-validation" novalidate>
+                    <div class="modal-body">
+                        <!-- Vendor Information -->
+                        <h6 class="mb-3" style="color: var(--green-dark); font-weight: 600;">Vendor Information</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addSellerFullName" required>
+                                <div class="invalid-feedback">Please enter full name.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="addSellerEmail" required>
+                                <div class="invalid-feedback">Please enter a valid email.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Password <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="addSellerPassword" minlength="6" required>
+                                <div class="invalid-feedback">Password must be at least 6 characters.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="addSellerPhone" required>
+                                <div class="invalid-feedback">Please enter phone number.</div>
+                            </div>
+                        </div>
+
+                        <!-- Store Profile -->
+                        <h6 class="mb-3" style="color: var(--green-dark); font-weight: 600;">Store Profile</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Store Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addSellerStoreName" required>
+                                <div class="invalid-feedback">Please enter store name.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">City <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addSellerCity" required>
+                                <div class="invalid-feedback">Please enter city.</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Store Description <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="addSellerDescription" rows="3" required></textarea>
+                                <div class="invalid-feedback">Please add a description.</div>
+                            </div>
+                        </div>
+
+                        <!-- Payout Preferences -->
+                        <h6 class="mb-3" style="color: var(--green-dark); font-weight: 600;">Payout Preferences</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Payment Method <span class="text-danger">*</span></label>
+                                <select class="form-select" id="addSellerPayment" required>
+                                    <option value="" selected disabled>Select a method...</option>
+                                    <option>Bank Transfer</option>
+                                    <option>Vodafone Cash</option>
+                                    <option>InstaPay</option>
+                                    <option>PayPal</option>
+                                </select>
+                                <div class="invalid-feedback">Please select a payment method.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn-primary-green">
+                            <i class="bi bi-check-lg"></i> Submit Registration
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
     <!-- ══════════════════════════════════════════════════════
          SCRIPTS — ORDER IS CRITICAL, DO NOT CHANGE
     ═══════════════════════════════════════════════════════ -->
@@ -477,9 +564,9 @@
     <!-- 5. Section files — order between these doesn't matter -->
     <script src="/JS/Admin/admin-dashboard.js" type="module"></script>
     <script src="/JS/Admin/admin-sellers.js" type="module"></script>
+    <script src="/JS/Admin/admin-customers.js" type="module"></script>
     <script src="/JS/Admin/admin-products.js" type="module"></script>
     <script src="/JS/Admin/admin-orders.js" type="module"></script>
-    <script src="/JS/Admin/admin-customers.js" type="module"></script>
     <script src="/JS/Admin/admin-analytics.js" type="module"></script>
     <script src="/JS/Admin/admin-panel.js" type="module"></script>
 
