@@ -35,6 +35,41 @@ $(function () {
     $('#sidebarOverlay').removeClass('active');
   }
 
+  function setActiveNavLink(linkSelector) {
+    $('.nav-link').removeClass('active');
+    $(linkSelector).addClass('active');
+  }
+
+  function syncNavFromEmbeddedPage() {
+    const iframe = $embeddedPageFrame.get(0);
+    if (!iframe || !iframe.contentWindow) return;
+
+    let fileName = '';
+    try {
+      const path = iframe.contentWindow.location.pathname || '';
+      fileName = path.split('/').pop().toLowerCase();
+    } catch (err) {
+      return;
+    }
+
+    if (fileName === 'productlist.html') {
+      setActiveNavLink('#productListLink');
+      $pageTitle.text('Product List');
+      return;
+    }
+
+    if (fileName === 'addproductpage.html') {
+      setActiveNavLink('#addProductPageLink');
+      $pageTitle.text('Add Product');
+      return;
+    }
+
+    if (fileName === 'ordermanagement.html') {
+      setActiveNavLink('#orderManagementLink');
+      $pageTitle.text('Order Management');
+    }
+  }
+
   function syncEmbeddedTheme() {
     const iframe = $embeddedPageFrame.get(0);
     if (!iframe || !iframe.contentWindow || !iframe.contentWindow.document) return;
@@ -45,6 +80,7 @@ $(function () {
     $dashboardView.show();
     $orderManagementView.hide();
     $pageTitle.text('Dashboard');
+    setActiveNavLink('#dashboardLink');
     closeMobileSidebar();
   }
 
@@ -53,6 +89,7 @@ $(function () {
     $dashboardView.hide();
     $orderManagementView.show();
     $pageTitle.text('Order Management');
+    setActiveNavLink('#orderManagementLink');
     closeMobileSidebar();
   }
 
@@ -61,11 +98,13 @@ $(function () {
     $dashboardView.hide();
     $orderManagementView.show();
     $pageTitle.text('Product List');
+    setActiveNavLink('#productListLink');
     closeMobileSidebar();
   }
 
   $embeddedPageFrame.on('load', function () {
     syncEmbeddedTheme();
+    syncNavFromEmbeddedPage();
   });
 
   /* ─────────────────────────────────────────
@@ -73,8 +112,7 @@ $(function () {
   ───────────────────────────────────────── */
   $('.nav-link').on('click', function (e) {
     e.preventDefault();
-    $('.nav-link').removeClass('active');
-    $(this).addClass('active');
+    setActiveNavLink(this);
   });
 
   $('#dashboardLink').on('click', function () {
@@ -103,6 +141,7 @@ $(function () {
     $dashboardView.hide();
     $orderManagementView.show();
     $pageTitle.text('Add Product');
+    setActiveNavLink('#addProductPageLink');
     closeMobileSidebar();
   }
 
