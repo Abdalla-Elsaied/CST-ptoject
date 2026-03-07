@@ -1,9 +1,12 @@
 
 // ==== Product Class ====
+const STORAGE_KEY = "products";
+
 class Product {
     constructor(formData) {
         this.id = Date.now(); // unique product ID
         this.productName = formData.get("productName");
+        this.name = this.productName; // alias used by product list
         this.description = formData.get("description");
 
         // Pricing
@@ -16,6 +19,7 @@ class Product {
 
         // Inventory
         this.stockQuantity = Number(formData.get("stockQuantity")) || 0;
+        this.stock = this.stockQuantity; // alias used by product list
         this.stockStatus = formData.get("stockStatus");
 
         // Extra data
@@ -27,7 +31,7 @@ class Product {
         this.tag = document.getElementById("tagSelect").value || "";
 
 
-        this.createdAt = new Date();
+        this.createdAt = new Date().toISOString();
     }
 
     addImage(image) {
@@ -109,7 +113,7 @@ colorDivs.forEach(div => {
 
 // ==== Save Products as JSON File ====
 function saveProductsAsJSON() {
-    const products = JSON.parse(localStorage.getItem("products")) || [];
+    const products = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
     const jsonStr = JSON.stringify(products, null, 2);
     const blob = new Blob([jsonStr], { type: "application/json" });
     const a = document.createElement("a");
@@ -131,9 +135,9 @@ productForm.addEventListener("submit", function (e) {
     selectedColors.forEach(color => product.addColor(color));
 
     // Save to localStorage
-    const storedProducts = JSON.parse(localStorage.getItem("products")) || [];
+    const storedProducts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
     storedProducts.push(product);
-    localStorage.setItem("products", JSON.stringify(storedProducts));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(storedProducts));
 
     // ✅ Print product to console
     console.log(product);
