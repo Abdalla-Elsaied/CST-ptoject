@@ -89,6 +89,24 @@ $(function () {
     showProductList();
   });
 
+//---------------------------------------------------------------------------------------------------------
+  // moshady21   addProductPage --Add
+
+  $('#addProductPageLink').on('click', function () {
+    showaddProductPage();
+  });
+
+
+   function showaddProductPage() {
+    $embeddedPageFrame.attr('src', 'addProductPage.html');
+    $dashboardView.hide();
+    $orderManagementView.show();
+    $pageTitle.text('Add Product');
+    closeMobileSidebar();
+  }
+
+//---------------------------------------------------------------------------------------------------------
+
   /* ─────────────────────────────────────────
      THEME TOGGLE (light ↔ dark)
   ───────────────────────────────────────── */
