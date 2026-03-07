@@ -223,3 +223,38 @@ select {
 .color:hover {
     transform: scale(1.1);
 }
+
+.colors .color {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 44px;
+    margin: 6px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.colors input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.colors input[type="checkbox"]:checked + span {
+    position: absolute;
+    inset: 0;
+    border: 3px solid #000;
+    border-radius: 10px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.4);
+}
+
+.colors input[type="checkbox"]:checked + span::after {
+    content: "✔";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 22px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px black;
+}

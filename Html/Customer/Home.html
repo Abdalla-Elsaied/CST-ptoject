@@ -1,285 +1,278 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Ecommerce - Home</title>
-
-  <!-- Bootstrap 5.3 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-
-  <!-- Bootstrap Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home - My Shop</title>
   <style>
     :root {
-      --primary: #16a34a;
-      --primary-dark: #15803d;
-      --light: #f8fafc;
-      --dark: #0f172a;
-      --muted: #64748b;
+      --primary: #4f46e5;
+      --gray: #6b7280;
+      --light: #f9fafb;
     }
 
     body {
-      background: var(--light);
-      color: var(--dark);
+      margin: 0;
       font-family: system-ui, -apple-system, sans-serif;
+      background: var(--light);
+      color: #111827;
     }
 
-    .navbar {
+    header {
       background: white;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      border-bottom: 1px solid #e5e7eb;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
 
-    .navbar-brand {
-      font-weight: 800;
-      font-size: 1.6rem;
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
       color: var(--primary);
     }
 
-    .nav-link {
-      font-weight: 500;
-      color: var(--dark);
+    main {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
     }
 
-    .nav-link:hover, .nav-link.active {
-      color: var(--primary);
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      border-color: var(--primary);
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-dark);
-      border-color: var(--primary-dark);
-    }
-
-    .hero {
-      background: linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url('https://images.unsplash.com/photo-1556740714-a8395b3a74dd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
-      background-size: cover;
-      background-position: center;
-      color: white;
-      padding: 8rem 1rem;
+    #loadSection {
       text-align: center;
-      border-radius: 0 0 30px 30px;
+      margin-bottom: 2.5rem;
     }
 
-    .hero h1 {
-      font-size: 3.2rem;
-      font-weight: 800;
-      margin-bottom: 1rem;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    }
-
-    .hero p {
-      font-size: 1.25rem;
-      max-width: 700px;
-      margin: 0 auto 2rem;
-    }
-
-    .category-card {
+    button {
+      background: var(--primary);
+      color: white;
       border: none;
-      border-radius: 14px;
-      overflow: hidden;
-      transition: transform 0.25s, box-shadow 0.25s;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      padding: 0.75rem 1.5rem;
+      font-size: 1.05rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
     }
 
-    .category-card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+    button:hover {
+      background: #4338ca;
     }
 
-    .category-img {
-      height: 180px;
-      object-fit: cover;
+    #status {
+      margin-top: 1rem;
+      color: var(--gray);
+      font-size: 0.95rem;
+    }
+
+    #productsContainer {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
     }
 
     .product-card {
-      border: none;
-      border-radius: 14px;
+      background: white;
+      border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-      transition: all 0.25s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transition: transform 0.15s, box-shadow 0.15s;
     }
 
     .product-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
     }
 
-    .product-img {
+    .product-image-container {
       height: 220px;
+      overflow: hidden;
+      background: #f3f4f6;
+    }
+
+    .product-image-container img {
+      width: 100%;
+      height: 100%;
       object-fit: cover;
     }
 
-    footer {
-      background: var(--dark);
-      color: white;
-      padding: 3rem 0 1.5rem;
-      margin-top: 4rem;
+    .product-info {
+      padding: 1.25rem;
     }
 
-    .badge-cart {
-      font-size: 0.7rem;
-      padding: 0.35em 0.65em;
-      position: absolute;
-      top: -8px;
-      right: -8px;
+    .product-title {
+      margin: 0 0 0.5rem;
+      font-size: 1.25rem;
+      line-height: 1.4;
     }
 
-    @media (max-width: 768px) {
-      .hero { padding: 6rem 1rem; }
-      .hero h1 { font-size: 2.4rem; }
+    .product-price {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0.75rem 0;
+    }
+
+    .product-description {
+      color: #6b7280;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin: 0.5rem 0 1rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .no-products {
+      text-align: center;
+      color: #9ca3af;
+      font-size: 1.1rem;
+      padding: 4rem 1rem;
+    }
+
+    @media (max-width: 640px) {
+      #productsContainer {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
+
 <body>
 
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-light sticky-top">
-    <div class="container">
-      <a class="navbar-brand" href="#">Ecommerce</a>
-
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav me-auto">
-          <li class="nav-item">
-            <a class="nav-link active" href="#">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">Categories</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">Deals</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">New Arrivals</a>
-          </li>
-        </ul>
-
-        <form class="d-flex me-3" role="search">
-          <input class="form-control me-2" type="search" placeholder="Search products..." aria-label="Search" style="width: 280px;">
-          <button class="btn btn-outline-success" type="submit"><i class="bi bi-search"></i></button>
-        </form>
-
-        <ul class="navbar-nav">
-          <li class="nav-item position-relative">
-            <a class="nav-link" href="cart.html">
-              <i class="bi bi-cart3 fs-4"></i>
-              <span class="badge bg-danger badge-cart">3</span>
-            </a>
-          </li>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="bi bi-person-circle fs-4"></i>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li><a class="dropdown-item" href="profile.html">My Profile</a></li>
-              <li><a class="dropdown-item" href="orders.html">My Orders</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-danger" href="logout.html">Logout</a></li>
-            </ul>
-          </li>
-        </ul>
-      </div>
+  <header>
+    <h1>My Shop</h1>
+    <div>
+      <!-- You can add cart icon, login, etc. later -->
+      <span>Welcome!</span>
     </div>
-  </nav>
+  </header>
 
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="container">
-      <h1>Welcome to Ecommerce</h1>
-      <p>Discover thousands of quality products from trusted sellers in your city and beyond.</p>
-      <div class="d-flex justify-content-center gap-3 flex-wrap">
-        <a href="#categories" class="btn btn-light btn-lg px-5 py-3 fw-semibold">Shop Now</a>
-        <a href="categories.html" class="btn btn-outline-light btn-lg px-5 py-3">Browse Categories</a>
-      </div>
+  <main>
+    <section id="loadSection">
+      <h2>Browse Products</h2>
+      <p>Click below to select your shop data folder and load products.</p>
+      <button id="loadProductsBtn">Load Products</button>
+      <div id="status"></div>
+    </section>
+
+    <div id="productsContainer" class="no-products">
+      No products loaded yet. Click the button above.
     </div>
-  </section>
+  </main>
 
-  <!-- Categories Section -->
-  <section class="py-5" id="categories">
-    <div class="container">
-      <h3 class="text-center mb-5 fw-bold">Popular Categories</h3>
-      <div class="row g-4">
-        <div class="col-6 col-md-4 col-lg-3">
-          <a href="#" class="text-decoration-none">
-            <div class="category-card text-center p-4 bg-white rounded-4">
-              <img src="https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=300" class="category-img rounded mb-3" alt="Electronics">
-              <h6 class="mb-0">Electronics</h6>
-            </div>
-          </a>
-        </div>
-        <div class="col-6 col-md-4 col-lg-3">
-          <a href="#" class="text-decoration-none">
-            <div class="category-card text-center p-4 bg-white rounded-4">
-              <img src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=300" class="category-img rounded mb-3" alt="Fashion">
-              <h6 class="mb-0">Fashion</h6>
-            </div>
-          </a>
-        </div>
-        <div class="col-6 col-md-4 col-lg-3">
-          <a href="#" class="text-decoration-none">
-            <div class="category-card text-center p-4 bg-white rounded-4">
-              <img src="https://images.unsplash.com/photo-1618220048045-1a6a9e6c0e2f?w=300" class="category-img rounded mb-3" alt="Home">
-              <h6 class="mb-0">Home & Kitchen</h6>
-            </div>
-          </a>
-        </div>
-        <div class="col-6 col-md-4 col-lg-3">
-          <a href="#" class="text-decoration-none">
-            <div class="category-card text-center p-4 bg-white rounded-4">
-              <img src="https://images.unsplash.com/photo-1625772299848-361b803ffa25?w=300" class="category-img rounded mb-3" alt="Beauty">
-              <h6 class="mb-0">Beauty</h6>
-            </div>
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
+  <script type="module">
+    import { loadProductsFromFolder } from '/JS/Core/FileStorage.js'; // adjust path
 
-  <!-- Featured Products (placeholder) -->
-  <section class="py-5 bg-white">
-    <div class="container">
-      <h3 class="text-center mb-5 fw-bold">Featured Products</h3>
-      <div class="row g-4">
-        <!-- Repeat this block for each product -->
-        <div class="col-6 col-md-4 col-lg-3">
-          <div class="product-card bg-white">
-            <img src="https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=400" class="product-img" alt="Product">
-            <div class="p-3">
-              <h6 class="mb-1">Wireless Headphones</h6>
-              <p class="text-muted mb-2 small">Brand Name</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <span class="fw-bold">$89.99</span>
-                <button class="btn btn-sm btn-outline-success"><i class="bi bi-cart-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Add 3-7 more similar cards here -->
-      </div>
-    </div>
-  </section>
+    const loadBtn = document.getElementById('loadProductsBtn');
+    const statusEl = document.getElementById('status');
+    const container = document.getElementById('productsContainer');
 
-  <!-- Footer -->
-  <footer class="text-white text-center py-4">
-    <div class="container">
-      <p class="mb-2">© 2026 Ecommerce. All rights reserved.</p>
-      <div class="d-flex justify-content-center gap-4">
-        <a href="#" class="text-white small">Privacy Policy</a>
-        <a href="#" class="text-white small">Terms of Service</a>
-        <a href="#" class="text-white small">Contact Us</a>
-      </div>
-    </div>
-  </footer>
+    loadBtn.addEventListener('click', async () => {
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+      loadBtn.disabled = true;
+      loadBtn.textContent = 'Loading...';
+
+      statusEl.textContent = 'Loading products from server...';
+
+      container.innerHTML = '<p>Loading products...</p>';
+
+      try {
+
+        const products = await loadProductsFromFolder();
+
+        container.innerHTML = '';
+
+        if (!products || products.length === 0) {
+
+          container.innerHTML =
+            '<p class="no-products">No products found.</p>';
+
+          statusEl.textContent = '';
+
+          return;
+        }
+
+        statusEl.textContent = `Loaded ${products.length} product(s)`;
+
+        products.forEach(product => {
+
+          const card = document.createElement('div');
+          card.className = 'product-card';
+
+          let imagesHtml = '<p>No image</p>';
+
+          if (product.images && product.images.length > 0) {
+
+            imagesHtml = product.images
+              .map(img =>
+                `<img src="${img.url}" alt="${product.name || 'Product image'}">`
+              )
+              .join('');
+          }
+
+          card.innerHTML = `
+                <div class="product-image-container">
+                    ${imagesHtml}
+                </div>
+
+                <div class="product-info">
+
+                    <h3 class="product-title">
+                        ${product.name || 'Unnamed Product'}
+                    </h3>
+
+                    <p class="product-price">
+                        $${Number(product.price || 0).toFixed(2)}
+                    </p>
+
+                    ${product.discountPrice
+              ? `<p style="color:#dc2626;">
+                                Discount: $${Number(product.discountPrice).toFixed(2)}
+                               </p>`
+              : ''
+            }
+
+                    <p class="product-description">
+                        ${product.description || ''}
+                    </p>
+
+                    <small style="color:#6b7280;">
+                        ${product.category ? `Category: ${product.category}` : ''}
+                        ${product.stockQuantity != null
+              ? ` • Stock: ${product.stockQuantity}`
+              : ''
+            }
+                    </small>
+
+                </div>
+            `;
+
+          container.appendChild(card);
+        });
+
+      } catch (err) {
+
+        console.error(err);
+
+        container.innerHTML =
+          `<p style="color:#dc2626;">Error: ${err.message}</p>`;
+
+        statusEl.textContent = '';
+
+      } finally {
+
+        loadBtn.disabled = false;
+        loadBtn.textContent = 'Load Products';
+
+      }
+
+    });
+  </script>
+
 </body>
+
 </html>
