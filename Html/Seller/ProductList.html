@@ -26,10 +26,10 @@
 
 <div class="filters">
   <div class="tabs">
-    <div class="tab active" onclick="filterBy('all')">All</div>
-    <div class="tab" onclick="filterBy('In Stock')">In Stock</div>
-    <div class="tab" onclick="filterBy('Low Stock')">Low Stock</div>
-    <div class="tab" onclick="filterBy('Out of Stock')">Out of Stock</div>
+    <div class="tab active" onclick="filterBy('all', this)">All</div>
+    <div class="tab" onclick="filterBy('In Stock', this)">In Stock</div>
+    <div class="tab" onclick="filterBy('Low Stock', this)">Low Stock</div>
+    <div class="tab" onclick="filterBy('Out of Stock', this)">Out of Stock</div>
   </div>
   <input class="search" placeholder="Search product..." onkeyup="searchProduct(this.value)">
 </div>

@@ -46,10 +46,10 @@
 <div class="filters">
 
 <div class="tabs">
-<div class="tab active" onclick="filterStatus('all')">All</div>
-<div class="tab" onclick="filterStatus('Delivered')">Completed</div>
-<div class="tab" onclick="filterStatus('Pending')">Pending</div>
-<div class="tab" onclick="filterStatus('Cancelled')">Canceled</div>
+<div class="tab active" onclick="filterStatus('all', this)">All</div>
+<div class="tab" onclick="filterStatus('Delivered', this)">Completed</div>
+<div class="tab" onclick="filterStatus('Pending', this)">Pending</div>
+<div class="tab" onclick="filterStatus('Cancelled', this)">Canceled</div>
 </div>
 
 <input class="search" placeholder="Search order..." onkeyup="searchOrder(this.value)">
@@ -110,7 +110,7 @@
 </div>
 </div>
 
-<script src="/JS/Seller/OrderManagement.js"></script>
+<script type="module" src="/JS/Seller/OrderManagement.js"></script>
 
 </div>
 

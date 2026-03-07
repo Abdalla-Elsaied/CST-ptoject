@@ -5,6 +5,7 @@ const pageSize = 8;
 let page = 1;
 let filter = 'all';
 let search = '';
+let products = [];
 
 function defaultImage(name){
   const safeName = encodeURIComponent(name || 'Product');
@@ -17,16 +18,58 @@ function toDateValue(raw){
   return parsed.toISOString();
 }
 
+function firstImage(raw){
+  if(Array.isArray(raw.images) && raw.images.length){
+    const first = raw.images[0];
+    if(typeof first === 'string') return first;
+    if(first && typeof first.url === 'string') return first.url;
+  }
+  return raw.image ?? raw.imageUrl ?? raw.productImage ?? defaultImage(raw.productName ?? raw.name ?? '');
+}
+
+function formatCategory(value){
+  const text = String(value ?? '').trim();
+  if(!text) return '-';
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function getCategoryValue(raw){
+  const direct =
+    raw.category ??
+    raw.productCategory ??
+    raw.product_category ??
+    raw.categoryName ??
+    raw.productCategoryName ??
+    raw.type ??
+    raw.tag;
+
+  if(Array.isArray(direct)){
+    const first = direct[0];
+    if(typeof first === 'string') return first;
+    if(first && typeof first === 'object'){
+      return first.name ?? first.title ?? first.label ?? first.value ?? '';
+    }
+    return '';
+  }
+
+  if(direct && typeof direct === 'object'){
+    return direct.name ?? direct.title ?? direct.label ?? direct.value ?? '';
+  }
+
+  return direct;
+}
+
 function normalizeProduct(raw, idx){
+  const categoryValue = getCategoryValue(raw);
   return {
-    id: raw.id ?? idx,
+    id: raw.id ?? String(idx + 1),
     name: raw.productName ?? raw.name ?? '',
-    category: raw.category ?? '',
+    category: formatCategory(categoryValue),
     price: Number(raw.price) || 0,
     stock: Number(raw.stockQuantity ?? raw.stock) || 0,
     createdAt: toDateValue(raw.createdAt ?? raw.date),
     views: Number(raw.views) || 0,
-    image: raw.image ?? raw.imageUrl ?? raw.productImage ?? raw.images?.[0] ?? defaultImage(raw.productName ?? raw.name ?? '')
+    image: firstImage(raw)
   };
 }
 
@@ -34,7 +77,7 @@ function save(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
 }
 
-function loadProducts(){
+function loadLocalProducts(){
   const current = JSON.parse(localStorage.getItem(STORAGE_KEY));
   if(Array.isArray(current) && current.length){
     return current.map((item, idx) => {
@@ -46,7 +89,8 @@ function loadProducts(){
         stockQuantity: p.stock,
         createdAt: p.createdAt,
         views: p.views,
-        image: p.image
+        image: p.image,
+        category: p.category
       };
     });
   }
@@ -60,7 +104,8 @@ function loadProducts(){
       stockQuantity: Number(item.stockQuantity ?? item.stock) || 0,
       createdAt: toDateValue(item.createdAt ?? item.date),
       views: Number(item.views) || 0,
-      image: item.image ?? item.imageUrl ?? item.productImage ?? item.images?.[0] ?? defaultImage(item.productName ?? item.name ?? '')
+      image: firstImage(item),
+      category: formatCategory(item.category)
     }));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
     return migrated;
@@ -82,7 +127,33 @@ function loadProducts(){
   return seed;
 }
 
-let products = loadProducts();
+async function loadProducts(){
+  try{
+    const storage = await import('../Core/FileStorage.js');
+    const remote = await storage.loadProductsFromFolder();
+    if(Array.isArray(remote) && remote.length){
+      products = remote.map((item, idx) => {
+        const p = normalizeProduct(item, idx);
+        return {
+          ...item,
+          id: p.id,
+          productName: p.name,
+          stockQuantity: p.stock,
+          createdAt: p.createdAt,
+          views: p.views,
+          image: p.image,
+          category: p.category
+        };
+      });
+      save();
+      return;
+    }
+  }catch(_err){
+    // keep local fallback when API/network is unavailable
+  }
+
+  products = loadLocalProducts();
+}
 
 function getStatus(stock){
   if(stock <= 0) return 'Out of Stock';
@@ -115,10 +186,12 @@ function render(){
   let html = '';
   paginated.forEach((p, i) => {
     const status = getStatus(p.stock);
+    const numericId = String(p.id).replace(/\D/g, '').slice(-6).padStart(4, '0');
+    const safeId = String(p.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     html += `
-      <tr class="clickable-row" onclick="openProductDetails(${JSON.stringify(p.id)})">
+      <tr class="clickable-row" onclick="openProductDetails('${safeId}')">
         <td>${start + i + 1}</td>
-        <td>#PRD${1000 + start + i + 1}</td>
+        <td>#PRD${numericId}</td>
         <td>${p.name}</td>
         <td>${p.category}</td>
         <td class="price">$${p.price.toFixed(2)}</td>
@@ -147,11 +220,11 @@ function goto(p){
   render();
 }
 
-function filterBy(s){
+function filterBy(s, tabEl){
   filter = s;
   page = 1;
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  event.target.classList.add('active');
+  if(tabEl) tabEl.classList.add('active');
   render();
 }
 
@@ -173,7 +246,7 @@ function openProductDetails(productId){
   original.views = Number(original.views) || 0;
   original.views += 1;
   original.createdAt = toDateValue(original.createdAt ?? original.date);
-  original.image = original.image ?? original.imageUrl ?? original.productImage ?? defaultImage(original.productName ?? original.name ?? '');
+  original.image = firstImage(original);
 
   save();
 
@@ -192,4 +265,4 @@ function closeProductDetails(event){
   render();
 }
 
-render();
+loadProducts().then(render);
