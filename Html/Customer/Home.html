@@ -184,6 +184,8 @@
 
         const products = await loadProductsFromFolder();
 
+        console.log('Loaded products:', products);
+
         container.innerHTML = '';
 
         if (!products || products.length === 0) {
