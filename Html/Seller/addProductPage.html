@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Add New Product</title>
+    <link rel="stylesheet" href="../../CSS/Seller/addProductPageStyle.css">
+    <!-- <script src="../../JS/Seller/ProductClass.js"></script>  -->
+   
+</head>
+
+<body>
+
+    <div class="page-wrapper">
+
+        <header class="topbar">
+            <h1>Add New Product</h1>
+
+            <div class="actions">
+                <!-- <input type="text" placeholder="Search product for add"> -->
+                <button type="submit" form="productForm" class="btn publish">Publish Product </button>
+
+
+                <!-- <button class="btn draft" type="button">Cancel</button> -->
+            </div>
+        </header>
+
+
+        <div class="container">
+
+            <!-- LEFT COLUMN -->
+            <form class="card" id="productForm">
+
+                <h2>Basic Details</h2>
+
+                <label>Product Name</label>
+                <input type="text" name="productName" required>
+
+                <label>Product Description</label>
+                <textarea name="description" rows="5"></textarea>
+
+
+                <h3>Pricing</h3>
+
+                <label>Product Price</label>
+                <input type="number" name="price" placeholder="$" required>
+
+
+                <div class="row">
+
+                    <div>
+                        <label>Discounted Price</label>
+                        <input type="number" name="discountPrice" placeholder="$">
+                    </div>
+
+                    <div>
+                        <label>Tax Included</label>
+                        <select name="taxIncluded">
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <h3>Expiration</h3>
+                <div class="row">
+
+                    <div>
+                        <label>Start</label>
+                        <input type="date" name="expirationStart">
+                    </div>
+
+                    <div>
+                        <label>End</label>
+                        <input type="date" name="expirationEnd">
+                    </div>
+
+                </div>
+
+
+                <h3>Inventory</h3>
+
+                <div class="row">
+
+                    <div>
+                        <label>Stock Quantity</label>
+                        <input type="number" name="stockQuantity">
+                    </div>
+
+                    <div>
+                        <label>Stock Status</label>
+                        <select name="stockStatus">
+                            <option value="in_stock">In Stock</option>
+                            <option value="out_of_stock">Out of Stock</option>
+                        </select>
+                    </div>
+
+                </div>
+
+
+                <div class="buttons">
+                    <!-- <button type="button" class="btn draft">Save to draft</button> -->
+                    <button type="submit" class="btn publish">Publish Product</button>
+                </div>
+
+            </form>
+
+
+            <!-- RIGHT COLUMN -->
+            <form class="" id="productForm">
+                <div class="card">
+
+                    <h2>Upload Product Image</h2>
+
+                    <div class="upload-box">
+
+                        <input type="file" name="productImages" form="productForm" id="imageUpload" multiple>
+
+                        <div id="previewContainer"></div>
+
+                    </div>
+
+
+                    <label>Product Categories</label>
+                    <select id="categorySelect" name="category">
+                        <option value="">Select category</option>
+                        <option value="electronics">Electronics</option>
+                        <option value="clothing">Clothing</option>
+                        <option value="books">Books</option>
+                    </select>
+
+                    <label>Product Tag</label>
+                    <select id="tagSelect" name="tag">
+                        <option value="">Select tag</option>
+                        <option value="new">New</option>
+                        <option value="sale">Sale</option>
+                        <option value="featured">Featured</option>
+                    </select>
+
+
+                    <h3>Select your color</h3>
+
+                    <div class="colors">
+
+                        <label class="color c1">
+                            <input type="checkbox" name="colors" value="red">
+                        </label>
+
+                        <label class="color c2">
+                            <input type="checkbox" name="colors" value="blue">
+                        </label>
+
+                        <label class="color c3">
+                            <input type="checkbox" name="colors" value="green">
+                        </label>
+
+                        <label class="color c4">
+                            <input type="checkbox" name="colors" value="black">
+                        </label>
+
+                        <label class="color c5">
+                            <input type="checkbox" name="colors" value="white">
+                        </label>
+
+                    </div>
+
+                </div>
+            </form>
+
+
+        </div>
+
+        
+        
+
+    </div>
+
+        <script src="../../JS/Seller/ProductClass.js"></script> 
+</body>
+
+</html>
