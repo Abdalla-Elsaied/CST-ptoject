@@ -1,0 +1,245 @@
+import {
+    getSellers,
+    getUsers,
+    getOrders
+} from '/JS/Admin/admin-helpers.js';
+
+
+/**
+ * Main entry point for the analytics section.
+ * Called every time the user clicks "Analytics" in the sidebar.
+ * Rebuilds all 4 charts from fresh localStorage data each time.
+ */
+export function renderAnalytics() {
+    // Set Chart.js global font defaults
+    Chart.defaults.font.family = 'Arial, sans-serif';
+    Chart.defaults.color = '#1f2937';
+
+    renderUserDistributionChart();
+    renderOrdersByStatusChart();
+    renderTopSellersChart();
+    renderDailyOrdersChart();
+}
+
+
+// ─── CHART HELPER ────────────────────────────────────────────
+
+/**
+ * Destroys an existing chart on a canvas before creating a new one.
+ * MUST be called before every new Chart() to avoid "Canvas already in use" error.
+ * @param {string} canvasId - the id of the <canvas> element
+ */
+function destroyChart(canvasId) {
+    const existing = Chart.getChart(canvasId);
+    if (existing) existing.destroy();
+}
+
+
+// ─── CHART 1: USER DISTRIBUTION ──────────────────────────────
+
+/**
+ * Doughnut chart showing how many sellers vs customers exist.
+ */
+function renderUserDistributionChart() {
+    destroyChart('userDistributionChart');
+
+    const sellersCount = getSellers().length;
+    const customersCount = getUsers().filter(u => u.role === 'customer').length;
+
+    new Chart(document.getElementById('userDistributionChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Sellers', 'Customers'],
+            datasets: [{
+                data: [sellersCount, customersCount],
+                backgroundColor: ['#22c55e', '#3b82f6'],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { position: 'bottom' },
+                title: { display: true, text: 'User Distribution', font: { size: 15, weight: 'bold' } }
+            },
+            cutout: '60%'
+        }
+    });
+}
+
+
+// ─── CHART 2: ORDERS BY STATUS ───────────────────────────────
+
+/**
+ * Bar chart showing how many orders are in each status.
+ */
+function renderOrdersByStatusChart() {
+    destroyChart('ordersByStatusChart');
+
+    const orders = getOrders();
+    const statuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+
+    // Count orders per status
+    const counts = statuses.map(s => orders.filter(o => o.status === s).length);
+
+    new Chart(document.getElementById('ordersByStatusChart'), {
+        type: 'bar',
+        data: {
+            labels: statuses,
+            datasets: [{
+                label: 'Orders',
+                data: counts,
+                backgroundColor: ['#f59e0b', '#3b82f6', '#8b5cf6', '#22c55e', '#ef4444'],
+                borderRadius: 6,
+                borderWidth: 0
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: 'Orders by Status', font: { size: 15, weight: 'bold' } }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+        }
+    });
+}
+
+
+// ─── CHART 3: TOP 5 SELLERS BY REVENUE ───────────────────────
+
+/**
+ * Horizontal bar chart of top 5 sellers ranked by total revenue.
+ * Revenue = sum of subtotals from orders belonging to each seller.
+ */
+function renderTopSellersChart() {
+    destroyChart('topSellersChart');
+
+    const orders = getOrders();
+    const sellers = getSellers();
+
+    // Group orders by sellerId and sum subtotals
+    const revenueMap = {};
+    orders.forEach(o => {
+        const id = o.sellerId;
+        if (!id) return;
+        revenueMap[id] = (revenueMap[id] || 0) + (o.subtotal || 0);
+    });
+
+    // Sort and take top 5
+    const top5 = Object.entries(revenueMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+
+    // Map seller IDs to store names
+    const labels = top5.map(([id]) => {
+        const seller = sellers.find(s => s.id == id);
+        return seller ? seller.storeName : 'Unknown';
+    });
+    const data = top5.map(([, revenue]) => Number(revenue.toFixed(2)));
+
+    // Empty state
+    const chartCanvas = document.getElementById('topSellersChart');
+    if (!chartCanvas) return;
+
+    let emptyMsg = document.getElementById('topSellersEmptyMsg');
+    if (data.length === 0) {
+        if (!emptyMsg) {
+            emptyMsg = document.createElement('p');
+            emptyMsg.id = 'topSellersEmptyMsg';
+            emptyMsg.className = 'empty-state';
+            emptyMsg.textContent = 'No order data yet.';
+            chartCanvas.parentElement.appendChild(emptyMsg);
+        }
+        chartCanvas.style.display = 'none';
+        emptyMsg.style.display = 'block';
+        return;
+    } else {
+        if (emptyMsg) emptyMsg.style.display = 'none';
+        chartCanvas.style.display = 'block';
+    }
+
+    new Chart(document.getElementById('topSellersChart'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Revenue ($)',
+                data,
+                backgroundColor: '#16a34a',
+                borderRadius: 6,
+                borderWidth: 0
+            }]
+        },
+        options: {
+            indexAxis: 'y',   // horizontal bar
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: 'Top 5 Sellers by Revenue', font: { size: 15, weight: 'bold' } }
+            },
+            scales: {
+                x: { beginAtZero: true }
+            }
+        }
+    });
+}
+
+
+// ─── CHART 4: DAILY ORDERS (LAST 14 DAYS) ───────────────────
+
+/**
+ * Line chart showing order count per day for the last 14 days.
+ * Days with no orders show 0.
+ */
+function renderDailyOrdersChart() {
+    destroyChart('dailyOrdersChart');
+
+    const orders = getOrders();
+
+    // Build array of last 14 days as "YYYY-MM-DD" strings
+    const days = [];
+    for (let i = 13; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        days.push(d.toISOString().slice(0, 10));
+    }
+
+    // Count how many orders fall on each day
+    const counts = days.map(day =>
+        orders.filter(o => o.createdAt && o.createdAt.slice(0, 10) === day).length
+    );
+
+    // Short label format: "Mar 5"
+    const labels = days.map(d => {
+        const date = new Date(d + 'T00:00:00');
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+
+    new Chart(document.getElementById('dailyOrdersChart'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Orders',
+                data: counts,
+                borderColor: '#22c55e',
+                backgroundColor: '#ecfdf5',
+                borderWidth: 2,
+                pointRadius: 4,
+                pointBackgroundColor: '#16a34a',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: 'Orders — Last 14 Days', font: { size: 15, weight: 'bold' } }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+        }
+    });
+}

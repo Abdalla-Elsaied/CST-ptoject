@@ -84,15 +84,19 @@ export function renderProductsTable() {
         return;
     }
 
-    tbody.innerHTML = filtered.map((p, i) => `
+    tbody.innerHTML = filtered.map((p, i) => {
+        // Better image fallback - use data URL placeholder if image fails
+        const imageUrl = p.imageUrl || p.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"%3E%3Crect fill="%23e5e7eb" width="40" height="40"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="12" fill="%239ca3af"%3ENo Img%3C/text%3E%3C/svg%3E';
+        
+        return `
         <tr>
             <td><span class="text-muted small fw-bold">${i + 1}</span></td>
             <td>
-                <img src="${p.imageUrl || p.image || '/Assets/Images/no-image.png'}"
+                <img src="${imageUrl}"
                      alt="${p.name}"
                      class="product-thumb rounded shadow-sm"
                      style="width: 40px; height: 40px; object-fit: cover;"
-                     onerror="this.src='/Assets/Images/no-image.png'">
+                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22%3E%3Crect fill=%22%23e5e7eb%22 width=%2240%22 height=%2240%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-size=%2212%22 fill=%22%239ca3af%22%3ENo Img%3C/text%3E%3C/svg%3E'">
             </td>
             <td><div class="fw-bold">${p.name}</div></td>
             <td>${getSellerName(p.sellerId)}</td>
@@ -113,7 +117,8 @@ export function renderProductsTable() {
                 </div>
             </td>
         </tr>
-    `).join('');
+    `;
+    }).join('');
 }
 
 

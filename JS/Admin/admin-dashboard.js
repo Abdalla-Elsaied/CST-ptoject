@@ -14,7 +14,7 @@ import {
  * Main function for the dashboard section.
  * Called every time the user clicks "Dashboard" in the sidebar.
  */
-function renderDashboard() {
+export function renderDashboard() {
     renderKPICards();
     renderRecentSellers();
     renderRecentOrders();
@@ -135,13 +135,31 @@ function renderRecentOrders() {
         return;
     }
 
-    tbody.innerHTML = orders.map(o => `
+    tbody.innerHTML = orders.map(o => {
+        // Handle multiple sellers in one order
+        let sellerText = '—';
+        if (o.items && o.items.length > 0) {
+            const uniqueSellerIds = [...new Set(o.items.map(item => item.sellerId).filter(Boolean))];
+            if (uniqueSellerIds.length === 0) {
+                sellerText = '—';
+            } else if (uniqueSellerIds.length > 1) {
+                sellerText = 'Multiple Sellers';
+            } else {
+                sellerText = getSellerName(uniqueSellerIds[0]);
+            }
+        } else if (o.sellerId) {
+            // Fallback to order-level sellerId if items not available
+            sellerText = getSellerName(o.sellerId);
+        }
+
+        return `
         <tr>
             <td class="order-id">${o.id || 'N/A'}</td>
             <td>${getCustomerName(o.customerId)}</td>
-            <td>${getSellerName(o.sellerId)}</td>
-            <td>${formatPrice(o.subtotal)}</td>
+            <td>${sellerText}</td>
+            <td>${formatPrice(o.subtotal || o.totalPrice || o.total)}</td>
             <td>${statusBadge(o.status)}</td>
         </tr>
-    `).join('');
+    `;
+    }).join('');
 }
