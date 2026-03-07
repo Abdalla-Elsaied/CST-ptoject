@@ -43,8 +43,8 @@ export function renderCustomers() {
  */
 export function renderCustomersTable() {
     const allUsers = getUsers();
-    // Show both customers AND sellers (but not admins in the list)
-    const users = allUsers.filter(u => u.role === ROLES.CUSTOMER || u.role === ROLES.SELLER);
+    // Show all valid users so we can see admins (admins have protected UI state)
+    const users = allUsers.filter(u => u.role === ROLES.CUSTOMER || u.role === ROLES.SELLER || u.role === 'admin');
     const query = customerSearchQuery.toLowerCase();
     const tbody = document.getElementById('customersTableBody');
 
@@ -84,9 +84,9 @@ export function renderCustomersTable() {
         const isAdmin = c.role === 'admin';
         const isSeller = c.role === ROLES.SELLER;
         const isCustomer = c.role === ROLES.CUSTOMER;
-        
-        const suspendBadge = isSuspended 
-            ? '<span class="badge bg-danger ms-2">SUSPENDED</span>' 
+
+        const suspendBadge = isSuspended
+            ? '<span class="badge bg-danger ms-2">SUSPENDED</span>'
             : '';
         const adminBadge = isAdmin
             ? '<span class="badge bg-dark ms-2">ADMIN</span>'
@@ -94,7 +94,7 @@ export function renderCustomersTable() {
         const roleBadge = isSeller
             ? '<span class="badge bg-info ms-2">SELLER</span>'
             : '';
-        
+
         return `
         <tr class="${isSuspended ? 'table-danger' : isAdmin ? 'table-info' : ''}">
             <td><span class="text-muted small fw-bold">${i + 1}</span></td>
@@ -103,41 +103,41 @@ export function renderCustomersTable() {
             </td>
             <td>${c.email}</td>
             <td>
-                ${isAdmin 
-                    ? '<span class="badge bg-dark">Admin</span>'
-                    : isSeller
+                ${isAdmin
+                ? '<span class="badge bg-dark">Admin</span>'
+                : isSeller
                     ? '<span class="badge bg-info">Seller</span>'
                     : '<span class="badge bg-secondary">Customer</span>'
-                }
+            }
             </td>
             <td>${formatDate(c.createdAt)}</td>
             <td>${getCustomerOrderCount(c.id)}</td>
             <td class="text-center">
-                ${isAdmin 
-                    ? '<span class="text-muted small">Protected Account</span>'
-                    : `<div class="d-flex gap-2 justify-content-center flex-wrap">
-                        ${isSuspended 
-                            ? `<button class="btn-action btn-success" title="Unsuspend"
+                ${isAdmin
+                ? '<span class="text-muted small">Protected Account</span>'
+                : `<div class="d-flex gap-2 justify-content-center flex-wrap">
+                        ${isSuspended
+                    ? `<button class="btn-action btn-success" title="Unsuspend"
                                     data-id="${c.id}" data-action="unsuspend">
                                 <i class="bi bi-check-circle"></i> Unsuspend
                             </button>`
-                            : `<button class="btn-action btn-warn" title="Suspend"
+                    : `<button class="btn-action btn-warn" title="Suspend"
                                     data-id="${c.id}" data-action="suspend">
                                 <i class="bi bi-ban"></i> Suspend
                             </button>`
-                        }
-                        ${isSeller 
-                            ? `<button class="btn-action btn-info" title="Change to Customer"
+                }
+                        ${isSeller
+                    ? `<button class="btn-action btn-info" title="Change to Customer"
                                     data-id="${c.id}" data-action="changeToCustomer">
                                 <i class="bi bi-arrow-left-right"></i> To Customer
                             </button>`
-                            : isCustomer
-                            ? `<button class="btn-action btn-info" title="Change to Seller"
+                    : isCustomer
+                        ? `<button class="btn-action btn-info" title="Change to Seller"
                                     data-id="${c.id}" data-action="changeToSeller">
                                 <i class="bi bi-arrow-left-right"></i> To Seller
                             </button>`
-                            : ''
-                        }
+                        : ''
+                }
                         <button class="btn-action btn-info" title="Reset Password"
                                 data-id="${c.id}" data-action="resetPassword">
                             <i class="bi bi-key"></i>
@@ -147,7 +147,7 @@ export function renderCustomersTable() {
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>`
-                }
+            }
             </td>
         </tr>
     `;
@@ -206,13 +206,13 @@ export function confirmSuspendCustomer(id) {
         () => {
             const index = users.findIndex(u => String(u.id) === String(id));
             if (index === -1) return;
-            
+
             users[index].isSuspended = true;
             users[index].suspendedAt = new Date().toISOString();
             users[index].suspendedBy = getCurrentUser()?.id;
             saveUsers(users);
             renderCustomersTable();
-            
+
             console.log(`[AUDIT] Customer ${customer.email} suspended by admin`);
             showToast('Customer account suspended.', 'warning');
         }
@@ -232,13 +232,13 @@ export function confirmUnsuspendCustomer(id) {
         () => {
             const index = users.findIndex(u => String(u.id) === String(id));
             if (index === -1) return;
-            
+
             users[index].isSuspended = false;
             users[index].unsuspendedAt = new Date().toISOString();
             users[index].unsuspendedBy = getCurrentUser()?.id;
             saveUsers(users);
             renderCustomersTable();
-            
+
             console.log(`[AUDIT] Customer ${customer.email} unsuspended by admin`);
             showToast('Customer account unsuspended.', 'success');
         }
@@ -270,12 +270,12 @@ export function confirmChangeToCustomer(id) {
     const user = users.find(u => String(u.id) === String(id));
     if (!user || user.role !== ROLES.SELLER) return;
 
-    // Check if seller has active products
+    // Check if seller has ANY products (active or inactive)
     const products = getLS('ls_products') || [];
-    const activeProducts = products.filter(p => String(p.sellerId) === String(id) && p.isActive);
-    
-    if (activeProducts.length > 0) {
-        showToast(`Cannot change role. Seller has ${activeProducts.length} active product(s). Please deactivate or delete them first.`, 'error');
+    const sellerProducts = products.filter(p => String(p.sellerId) === String(id));
+
+    if (sellerProducts.length > 0) {
+        showToast(`Cannot change role. Seller still has ${sellerProducts.length} product(s) in the catalog. Please delete them first.`, 'error');
         return;
     }
 
@@ -284,7 +284,7 @@ export function confirmChangeToCustomer(id) {
         () => {
             const index = users.findIndex(u => String(u.id) === String(id));
             if (index === -1) return;
-            
+
             // Change role and remove seller-specific fields
             users[index].role = ROLES.CUSTOMER;
             delete users[index].storeName;
@@ -294,14 +294,14 @@ export function confirmChangeToCustomer(id) {
             delete users[index].phone;
             delete users[index].paymentMethod;
             delete users[index].isApproved;
-            
+
             users[index].roleChangedAt = new Date().toISOString();
             users[index].roleChangedBy = getCurrentUser()?.id;
             users[index].previousRole = ROLES.SELLER;
-            
+
             saveUsers(users);
             renderCustomersTable();
-            
+
             console.log(`[AUDIT] User ${user.email} role changed from Seller to Customer by admin`);
             showToast('User role changed to Customer successfully.', 'success');
         }
@@ -388,14 +388,14 @@ function openSellerInfoModal(userId) {
     document.getElementById('sellerInfoPhone').value = '';
     document.getElementById('sellerInfoPayment').value = '';
     document.getElementById('sellerInfoDescription').value = '';
-    
+
     new bootstrap.Modal(modal).show();
 }
 
 /**
  * Saves seller information and completes role change from customer to seller.
  */
-window.saveSellerInfo = function() {
+window.saveSellerInfo = function () {
     const userId = document.getElementById('sellerInfoUserId').value;
     const storeName = document.getElementById('sellerInfoStoreName').value.trim();
     const city = document.getElementById('sellerInfoCity').value.trim();
@@ -434,7 +434,7 @@ window.saveSellerInfo = function() {
     if (modal) modal.hide();
 
     renderCustomersTable();
-    
+
     console.log(`[AUDIT] User ${users[index].email} role changed from Customer to Seller by admin`);
     showToast('User role changed to Seller successfully.', 'success');
 };
