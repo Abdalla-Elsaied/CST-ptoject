@@ -76,10 +76,10 @@ export function renderSellersTable() {
     tbody.innerHTML = filtered.map((s, i) => {
         const isApproved = s.isApproved !== false; // default true for backward compatibility
         const isSuspended = s.isSuspended || false;
-        
+
         let statusBadge = '';
         let rowClass = '';
-        
+
         if (!isApproved) {
             statusBadge = '<span class="badge bg-warning text-dark ms-2">PENDING APPROVAL</span>';
             rowClass = 'table-warning';
@@ -87,7 +87,7 @@ export function renderSellersTable() {
             statusBadge = '<span class="badge bg-danger ms-2">SUSPENDED</span>';
             rowClass = 'table-danger';
         }
-        
+
         return `
         <tr class="${rowClass}">
             <td>${i + 1}</td>
@@ -99,8 +99,8 @@ export function renderSellersTable() {
             <td>${s.paymentMethod}</td>
             <td class="actions-col text-center">
                 <div class="d-flex gap-2 justify-content-center flex-wrap">
-                    ${!isApproved 
-                        ? `<button class="btn-action btn-success" title="Approve"
+                    ${!isApproved
+                ? `<button class="btn-action btn-success" title="Approve"
                                 data-id="${s.id}" data-action="approve">
                             <i class="bi bi-check-circle"></i> Approve
                         </button>
@@ -108,23 +108,23 @@ export function renderSellersTable() {
                                 data-id="${s.id}" data-action="reject">
                             <i class="bi bi-x-circle"></i> Reject
                         </button>`
-                        : isSuspended
-                        ? `<button class="btn-action btn-success" title="Unsuspend"
+                : isSuspended
+                    ? `<button class="btn-action btn-success" title="Unsuspend"
                                 data-id="${s.id}" data-action="unsuspend">
                             <i class="bi bi-check-circle"></i> Unsuspend
                         </button>`
-                        : `<button class="btn-action btn-warn" title="Suspend"
+                    : `<button class="btn-action btn-warn" title="Suspend"
                                 data-id="${s.id}" data-action="suspend">
                             <i class="bi bi-ban"></i> Suspend
                         </button>
                         <button class="btn-action btn-edit"
                                 data-id="${s.id}" data-action="edit">Edit</button>`
-                    }
-                    ${isApproved 
-                        ? `<button class="btn-action btn-warn"
+            }
+                    ${isApproved
+                ? `<button class="btn-action btn-warn"
                                 data-id="${s.id}" data-action="resetPassword">Reset Password</button>`
-                        : ''
-                    }
+                : ''
+            }
                     <button class="btn-action btn-delete"
                             data-id="${s.id}" data-action="delete">Delete</button>
                 </div>
@@ -210,9 +210,9 @@ export function openAddSellerModal() {
  */
 export function submitAddSeller(e) {
     e.preventDefault();
-    
+
     const form = document.getElementById('addSellerForm');
-    
+
     // Validate form
     if (!form.checkValidity()) {
         e.stopPropagation();
@@ -233,7 +233,7 @@ export function submitAddSeller(e) {
     // Check for duplicate email
     const allUsers = getUsers();
     const emailExists = allUsers.some(u => u.email.toLowerCase() === email);
-    
+
     if (emailExists) {
         showToast('Email already exists. Please use a different email.', 'error');
         return;
@@ -241,7 +241,7 @@ export function submitAddSeller(e) {
 
     // Create seller object
     const sellerId = 'seller_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-    
+
     const newSeller = {
         id: sellerId,
         fullName: fullName,
@@ -270,10 +270,10 @@ export function submitAddSeller(e) {
 
     // Show success message
     showToast('Seller account created successfully. Pending admin approval.', 'success');
-    
+
     // Refresh table
     renderSellersTable();
-    
+
     console.log(`[AUDIT] New seller ${email} created - pending approval`);
 }
 
@@ -299,7 +299,7 @@ export function confirmApproveSeller(id) {
             sellers[index].approvedBy = getCurrentUser()?.id;
             saveSellers(sellers);
             renderSellersTable();
-            
+
             console.log(`[AUDIT] Seller ${seller.email} approved by admin`);
             showToast('Seller approved successfully.', 'success');
         }
@@ -318,8 +318,16 @@ export function confirmRejectSeller(id) {
         () => {
             const updated = getSellers().filter(s => s.id != id);
             saveSellers(updated);
+
+            // Delete any products they might have created
+            const products = getProducts();
+            const updatedProducts = products.filter(p => String(p.sellerId) !== String(id));
+            if (products.length !== updatedProducts.length) {
+                saveProducts(updatedProducts);
+            }
+
             renderSellersTable();
-            
+
             console.log(`[AUDIT] Seller ${seller.email} rejected and deleted by admin`);
             showToast('Seller registration rejected.', 'error');
         }
@@ -363,7 +371,7 @@ export function confirmSuspendSeller(id) {
             saveProducts(products);
 
             renderSellersTable();
-            
+
             console.log(`[AUDIT] Seller ${seller.email} suspended by admin - ${sellerProducts.length} products hidden`);
             showToast(`Seller suspended. ${sellerProducts.length} products hidden.`, 'warning');
         }
@@ -378,7 +386,7 @@ export function confirmUnsuspendSeller(id) {
     if (!seller) return;
 
     const products = getProducts();
-    const hiddenProducts = products.filter(p => 
+    const hiddenProducts = products.filter(p =>
         String(p.sellerId) === String(id) && p.hiddenBySuspension
     );
 
@@ -406,7 +414,7 @@ export function confirmUnsuspendSeller(id) {
             saveProducts(products);
 
             renderSellersTable();
-            
+
             console.log(`[AUDIT] Seller ${seller.email} unsuspended by admin - ${hiddenProducts.length} products restored`);
             showToast(`Seller unsuspended. ${hiddenProducts.length} products restored.`, 'success');
         }
@@ -479,8 +487,16 @@ export function confirmDeleteSeller(id) {
         () => {
             const updated = getSellers().filter(s => s.id != id);
             saveSellers(updated);
+
+            // Delete all their products to prevent dangling active items
+            const products = getProducts();
+            const updatedProducts = products.filter(p => String(p.sellerId) !== String(id));
+            if (products.length !== updatedProducts.length) {
+                saveProducts(updatedProducts);
+            }
+
             renderSellersTable();
-            showToast('Seller deleted.', 'error');
+            showToast('Seller and their products deleted.', 'error');
         }
     );
 }
