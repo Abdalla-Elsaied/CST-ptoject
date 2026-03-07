@@ -53,6 +53,18 @@
 
 <div class="pagination" id="pagination"></div>
 
+<div class="modal" id="productDetailsModal" onclick="closeProductDetails(event)">
+  <div class="modal-content product-details" onclick="event.stopPropagation()">
+    <h3 id="detailName">Product Details</h3>
+    <img id="detailImage" class="detail-image" alt="Product image">
+    <p><strong>Date:</strong> <span id="detailDate">-</span></p>
+    <p><strong>Views:</strong> <span id="detailViews">0</span></p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeProductDetails()">Close</button>
+    </div>
+  </div>
+</div>
+
 <script src="/JS/Seller/ProductList.js"></script>
 </body>
 </html>
