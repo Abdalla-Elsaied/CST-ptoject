@@ -4,7 +4,12 @@ import {
   loginUser,
   getCurrentUser,
   ROLES
-} from '../Core/Auth.js';  
+} from '../Core/Auth.js';
+
+import { seedAdmin } from '../Core/SeedData.js';
+
+// Seed default admin account on page load
+seedAdmin();
 
 // Wait for DOM and jQuery to be ready
 $(document).ready(function () {
@@ -49,6 +54,21 @@ $(document).ready(function () {
 
     if (!user) {
       alert("Something went wrong after login. Please try again.");
+      return;
+    }
+
+    // Check if user is suspended
+    if (user.isSuspended) {
+      alert("Your account has been suspended. Please contact support.");
+      // Log them out immediately
+      localStorage.removeItem('ls_currentUser');
+      return;
+    }
+
+    // Check if seller is not approved yet
+    if (user.role === ROLES.SELLER && user.isApproved === false) {
+      alert("Your seller account is pending approval. Please wait for admin approval.");
+      localStorage.removeItem('ls_currentUser');
       return;
     }
 

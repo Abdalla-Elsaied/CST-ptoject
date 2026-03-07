@@ -7,12 +7,18 @@
 import {
     getSellers,
     saveSellers,
+    getCurrentUser,
+    getProducts,
+    saveProducts,
+    getUsers,
+    saveUsers,
     showToast,
     showConfirm
 } from '../Admin/admin-helpers.js';
 
-// Current search filter value — kept outside function so it persists
-// while the user stays on the sellers section
+import { ROLES } from '../Core/Auth.js';
+
+// Current search filter value
 let sellerSearchQuery = '';
 
 
@@ -33,7 +39,6 @@ export function renderSellers() {
 
 /**
  * Renders the sellers table, filtered by the current search query.
- * Called on initial load AND every time the search input changes.
  */
 export function renderSellersTable() {
     const sellers = getSellers();
@@ -59,7 +64,7 @@ export function renderSellersTable() {
     if (filtered.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" class="empty-state">
+                <td colspan="9" class="empty-state">
                     ${sellers.length === 0
                 ? 'No sellers registered yet. <a href="/Html/Admin/AddSeller.html">Add one now.</a>'
                 : 'No sellers match your search.'}
@@ -68,27 +73,65 @@ export function renderSellersTable() {
         return;
     }
 
-    tbody.innerHTML = filtered.map((s, i) => `
-        <tr>
+    tbody.innerHTML = filtered.map((s, i) => {
+        const isApproved = s.isApproved !== false; // default true for backward compatibility
+        const isSuspended = s.isSuspended || false;
+
+        let statusBadge = '';
+        let rowClass = '';
+
+        if (!isApproved) {
+            statusBadge = '<span class="badge bg-warning text-dark ms-2">PENDING APPROVAL</span>';
+            rowClass = 'table-warning';
+        } else if (isSuspended) {
+            statusBadge = '<span class="badge bg-danger ms-2">SUSPENDED</span>';
+            rowClass = 'table-danger';
+        }
+
+        return `
+        <tr class="${rowClass}">
             <td>${i + 1}</td>
-            <td>${s.fullName}</td>
+            <td>${s.fullName}${statusBadge}</td>
             <td>${s.email}</td>
             <td>${s.phone}</td>
             <td>${s.storeName}</td>
             <td>${s.city}</td>
             <td>${s.paymentMethod}</td>
             <td class="actions-col text-center">
-                <div class="d-flex gap-2 justify-content-center">
-                    <button class="btn-action btn-edit"
-                            data-id="${s.id}" data-action="edit">Edit</button>
-                    <button class="btn-action btn-warn"
-                            data-id="${s.id}" data-action="resetPassword">Reset Password</button>
+                <div class="d-flex gap-2 justify-content-center flex-wrap">
+                    ${!isApproved
+                ? `<button class="btn-action btn-success" title="Approve"
+                                data-id="${s.id}" data-action="approve">
+                            <i class="bi bi-check-circle"></i> Approve
+                        </button>
+                        <button class="btn-action btn-delete" title="Reject"
+                                data-id="${s.id}" data-action="reject">
+                            <i class="bi bi-x-circle"></i> Reject
+                        </button>`
+                : isSuspended
+                    ? `<button class="btn-action btn-success" title="Unsuspend"
+                                data-id="${s.id}" data-action="unsuspend">
+                            <i class="bi bi-check-circle"></i> Unsuspend
+                        </button>`
+                    : `<button class="btn-action btn-warn" title="Suspend"
+                                data-id="${s.id}" data-action="suspend">
+                            <i class="bi bi-ban"></i> Suspend
+                        </button>
+                        <button class="btn-action btn-edit"
+                                data-id="${s.id}" data-action="edit">Edit</button>`
+            }
+                    ${isApproved
+                ? `<button class="btn-action btn-warn"
+                                data-id="${s.id}" data-action="resetPassword">Reset Password</button>`
+                : ''
+            }
                     <button class="btn-action btn-delete"
                             data-id="${s.id}" data-action="delete">Delete</button>
                 </div>
             </td>
         </tr>
-    `).join('');
+    `;
+    }).join('');
 }
 
 
@@ -96,11 +139,9 @@ export function renderSellersTable() {
 
 /**
  * Binds all events for the sellers section.
- * Uses event delegation on the table — one listener handles all rows.
- * Called once when the section loads.
  */
 function bindSellersEvents() {
-    // Search input — filter table on every keystroke
+    // Search input
     const searchInput = document.getElementById('sellerSearchInput');
     if (searchInput) {
         searchInput.oninput = (e) => {
@@ -109,7 +150,7 @@ function bindSellersEvents() {
         };
     }
 
-    // Table action buttons (Edit / Delete) via event delegation
+    // Table action buttons via event delegation
     const tbody = document.getElementById('sellersTableBody');
     if (tbody) {
         tbody.onclick = (e) => {
@@ -119,6 +160,10 @@ function bindSellersEvents() {
             const id = btn.dataset.id;
             const action = btn.dataset.action;
 
+            if (action === 'approve') confirmApproveSeller(id);
+            if (action === 'reject') confirmRejectSeller(id);
+            if (action === 'suspend') confirmSuspendSeller(id);
+            if (action === 'unsuspend') confirmUnsuspendSeller(id);
             if (action === 'edit') openSellerEditModal(id);
             if (action === 'resetPassword') {
                 if (window.openResetPasswordModal) {
@@ -133,17 +178,259 @@ function bindSellersEvents() {
 }
 
 
+// ─── ADD SELLER ──────────────────────────────────────────────
+
+/**
+ * Opens the Add Seller modal with empty form.
+ */
+export function openAddSellerModal() {
+    // Reset form
+    const form = document.getElementById('addSellerForm');
+    if (form) {
+        form.reset();
+        form.classList.remove('was-validated');
+    }
+
+    // Clear all fields
+    document.getElementById('addSellerFullName').value = '';
+    document.getElementById('addSellerEmail').value = '';
+    document.getElementById('addSellerPassword').value = '';
+    document.getElementById('addSellerPhone').value = '';
+    document.getElementById('addSellerStoreName').value = '';
+    document.getElementById('addSellerCity').value = '';
+    document.getElementById('addSellerDescription').value = '';
+    document.getElementById('addSellerPayment').value = '';
+
+    // Show modal
+    new bootstrap.Modal(document.getElementById('addSellerModal')).show();
+}
+
+/**
+ * Handles Add Seller form submission.
+ */
+export function submitAddSeller(e) {
+    e.preventDefault();
+
+    const form = document.getElementById('addSellerForm');
+
+    // Validate form
+    if (!form.checkValidity()) {
+        e.stopPropagation();
+        form.classList.add('was-validated');
+        return;
+    }
+
+    // Get form values
+    const fullName = document.getElementById('addSellerFullName').value.trim();
+    const email = document.getElementById('addSellerEmail').value.trim().toLowerCase();
+    const password = document.getElementById('addSellerPassword').value;
+    const phone = document.getElementById('addSellerPhone').value.trim();
+    const storeName = document.getElementById('addSellerStoreName').value.trim();
+    const city = document.getElementById('addSellerCity').value.trim();
+    const description = document.getElementById('addSellerDescription').value.trim();
+    const paymentMethod = document.getElementById('addSellerPayment').value;
+
+    // Check for duplicate email
+    const allUsers = getUsers();
+    const emailExists = allUsers.some(u => u.email.toLowerCase() === email);
+
+    if (emailExists) {
+        showToast('Email already exists. Please use a different email.', 'error');
+        return;
+    }
+
+    // Create seller object
+    const sellerId = 'seller_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+    const newSeller = {
+        id: sellerId,
+        fullName: fullName,
+        name: fullName,
+        email: email,
+        password: password,
+        phone: phone,
+        role: ROLES.SELLER,
+        storeName: storeName,
+        storeDescription: description,
+        description: description,
+        city: city,
+        paymentMethod: paymentMethod,
+        isApproved: false,  // Requires admin approval
+        createdAt: new Date().toISOString()
+    };
+
+    // Add to users array
+    allUsers.push(newSeller);
+    saveUsers(allUsers);
+
+    // Close modal
+    const modalEl = document.getElementById('addSellerModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+
+    // Show success message
+    showToast('Seller account created successfully. Pending admin approval.', 'success');
+
+    // Refresh table
+    renderSellersTable();
+
+    console.log(`[AUDIT] New seller ${email} created - pending approval`);
+}
+
+
+// ─── APPROVE / REJECT SELLER ─────────────────────────────────
+
+/**
+ * Approves a seller registration - allows them to login and sell.
+ */
+export function confirmApproveSeller(id) {
+    const seller = getSellers().find(s => s.id == id);
+    if (!seller) return;
+
+    showConfirm(
+        `Approve seller "${seller.fullName}" (${seller.storeName})? They will be able to login and start selling.`,
+        () => {
+            const sellers = getSellers();
+            const index = sellers.findIndex(s => s.id == id);
+            if (index === -1) return;
+
+            sellers[index].isApproved = true;
+            sellers[index].approvedAt = new Date().toISOString();
+            sellers[index].approvedBy = getCurrentUser()?.id;
+            saveSellers(sellers);
+            renderSellersTable();
+
+            console.log(`[AUDIT] Seller ${seller.email} approved by admin`);
+            showToast('Seller approved successfully.', 'success');
+        }
+    );
+}
+
+/**
+ * Rejects a seller registration - deletes their account.
+ */
+export function confirmRejectSeller(id) {
+    const seller = getSellers().find(s => s.id == id);
+    if (!seller) return;
+
+    showConfirm(
+        `Reject seller "${seller.fullName}" (${seller.storeName})? Their account will be deleted.`,
+        () => {
+            const updated = getSellers().filter(s => s.id != id);
+            saveSellers(updated);
+
+            // Delete any products they might have created
+            const products = getProducts();
+            const updatedProducts = products.filter(p => String(p.sellerId) !== String(id));
+            if (products.length !== updatedProducts.length) {
+                saveProducts(updatedProducts);
+            }
+
+            renderSellersTable();
+
+            console.log(`[AUDIT] Seller ${seller.email} rejected and deleted by admin`);
+            showToast('Seller registration rejected.', 'error');
+        }
+    );
+}
+
+
+// ─── SUSPEND / UNSUSPEND SELLER ──────────────────────────────
+
+/**
+ * Suspends a seller - blocks login and hides ALL their products.
+ */
+export function confirmSuspendSeller(id) {
+    const seller = getSellers().find(s => s.id == id);
+    if (!seller) return;
+
+    const products = getProducts();
+    const sellerProducts = products.filter(p => String(p.sellerId) === String(id));
+
+    showConfirm(
+        `Suspend seller "${seller.fullName}" (${seller.storeName})? They will not be able to login and all ${sellerProducts.length} of their products will be hidden.`,
+        () => {
+            const sellers = getSellers();
+            const index = sellers.findIndex(s => s.id == id);
+            if (index === -1) return;
+
+            // Suspend seller
+            sellers[index].isSuspended = true;
+            sellers[index].suspendedAt = new Date().toISOString();
+            sellers[index].suspendedBy = getCurrentUser()?.id;
+            saveSellers(sellers);
+
+            // Hide all seller's products
+            sellerProducts.forEach(p => {
+                const pIndex = products.findIndex(prod => prod.id === p.id);
+                if (pIndex !== -1) {
+                    products[pIndex].isActive = false;
+                    products[pIndex].hiddenBySuspension = true;
+                }
+            });
+            saveProducts(products);
+
+            renderSellersTable();
+
+            console.log(`[AUDIT] Seller ${seller.email} suspended by admin - ${sellerProducts.length} products hidden`);
+            showToast(`Seller suspended. ${sellerProducts.length} products hidden.`, 'warning');
+        }
+    );
+}
+
+/**
+ * Unsuspends a seller - allows login and restores their products.
+ */
+export function confirmUnsuspendSeller(id) {
+    const seller = getSellers().find(s => s.id == id);
+    if (!seller) return;
+
+    const products = getProducts();
+    const hiddenProducts = products.filter(p =>
+        String(p.sellerId) === String(id) && p.hiddenBySuspension
+    );
+
+    showConfirm(
+        `Unsuspend seller "${seller.fullName}" (${seller.storeName})? They will be able to login again and ${hiddenProducts.length} products will be restored.`,
+        () => {
+            const sellers = getSellers();
+            const index = sellers.findIndex(s => s.id == id);
+            if (index === -1) return;
+
+            // Unsuspend seller
+            sellers[index].isSuspended = false;
+            sellers[index].unsuspendedAt = new Date().toISOString();
+            sellers[index].unsuspendedBy = getCurrentUser()?.id;
+            saveSellers(sellers);
+
+            // Restore products that were hidden by suspension
+            hiddenProducts.forEach(p => {
+                const pIndex = products.findIndex(prod => prod.id === p.id);
+                if (pIndex !== -1) {
+                    products[pIndex].isActive = true;
+                    delete products[pIndex].hiddenBySuspension;
+                }
+            });
+            saveProducts(products);
+
+            renderSellersTable();
+
+            console.log(`[AUDIT] Seller ${seller.email} unsuspended by admin - ${hiddenProducts.length} products restored`);
+            showToast(`Seller unsuspended. ${hiddenProducts.length} products restored.`, 'success');
+        }
+    );
+}
+
+
 // ─── EDIT SELLER ─────────────────────────────────────────────
 
 /**
  * Opens the edit modal and fills it with the seller's current data.
- * @param {string|number} id - seller.id
  */
 export function openSellerEditModal(id) {
     const seller = getSellers().find(s => s.id == id);
     if (!seller) return;
 
-    // Fill modal fields
     document.getElementById('editSellerId').value = seller.id;
     document.getElementById('editSellerFullName').value = seller.fullName;
     document.getElementById('editSellerEmail').value = seller.email;
@@ -157,8 +444,7 @@ export function openSellerEditModal(id) {
 }
 
 /**
- * Saves the edited seller data from the modal back to localStorage.
- * Called by the "Save Changes" button inside the edit modal.
+ * Saves the edited seller data from the modal.
  */
 export function saveSellerEdit() {
     const id = document.getElementById('editSellerId').value;
@@ -166,7 +452,6 @@ export function saveSellerEdit() {
     const index = sellers.findIndex(s => s.id == id);
     if (index === -1) return;
 
-    // Merge updated fields into existing seller object
     sellers[index] = {
         ...sellers[index],
         fullName: document.getElementById('editSellerFullName').value.trim(),
@@ -191,8 +476,7 @@ export function saveSellerEdit() {
 // ─── DELETE SELLER ───────────────────────────────────────────
 
 /**
- * Shows a confirm dialog then deletes the seller from localStorage.
- * @param {string|number} id - seller.id
+ * Shows a confirm dialog then deletes the seller.
  */
 export function confirmDeleteSeller(id) {
     const seller = getSellers().find(s => s.id == id);
@@ -203,13 +487,34 @@ export function confirmDeleteSeller(id) {
         () => {
             const updated = getSellers().filter(s => s.id != id);
             saveSellers(updated);
+
+            // Delete all their products to prevent dangling active items
+            const products = getProducts();
+            const updatedProducts = products.filter(p => String(p.sellerId) !== String(id));
+            if (products.length !== updatedProducts.length) {
+                saveProducts(updatedProducts);
+            }
+
             renderSellersTable();
-            showToast('Seller deleted.', 'error');
+            showToast('Seller and their products deleted.', 'error');
         }
     );
 }
 
-// Global exposure for non-module integration (modals)
+// Global exposure
+window.openAddSellerModal = openAddSellerModal;
 window.saveSellerEdit = saveSellerEdit;
 window.confirmDeleteSeller = confirmDeleteSeller;
 window.openSellerEditModal = openSellerEditModal;
+window.confirmApproveSeller = confirmApproveSeller;
+window.confirmRejectSeller = confirmRejectSeller;
+window.confirmSuspendSeller = confirmSuspendSeller;
+window.confirmUnsuspendSeller = confirmUnsuspendSeller;
+
+// Bind Add Seller form submission
+document.addEventListener('DOMContentLoaded', () => {
+    const addSellerForm = document.getElementById('addSellerForm');
+    if (addSellerForm) {
+        addSellerForm.addEventListener('submit', submitAddSeller);
+    }
+});

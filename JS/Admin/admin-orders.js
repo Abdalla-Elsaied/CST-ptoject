@@ -9,6 +9,7 @@ import {
     saveOrders,
     getCustomerName,
     getSellerName,
+    getCurrentUser,
     formatPrice,
     formatDate,
     statusBadge,
@@ -83,10 +84,11 @@ export function renderOrdersTable() {
         const filterVal = status === 'All Statuses' ? 'All' : status;
         const matchStatus = filterVal === 'All' || o.status === filterVal;
 
-        // 3. Date Filter
+        // 3. Date Filter - handle both 'date' and 'createdAt' fields
         let matchDate = true;
-        if (o.date && (fromDateObj || toDateObj)) {
-            const orderDateObj = new Date(o.date);
+        const orderDate = o.date || o.createdAt;
+        if (orderDate && (fromDateObj || toDateObj)) {
+            const orderDateObj = new Date(orderDate);
             if (fromDateObj && orderDateObj < fromDateObj) matchDate = false;
             if (toDateObj && orderDateObj > toDateObj) matchDate = false;
         }
@@ -112,17 +114,25 @@ export function renderOrdersTable() {
     }
 
     // Since a single order can have multiple items from different sellers,
-    // we take the seller of the first item for display brevity, or 'Mixed' if multiple.
+    // we take the seller of the first item for display brevity, or 'Multiple Sellers' if multiple.
     tbody.innerHTML = filtered.map((o, i) => {
         let sellerText = '—';
         if (o.items && o.items.length > 0) {
-            const uniqueSellerIds = [...new Set(o.items.map(item => item.sellerId))];
-            if (uniqueSellerIds.length > 1) sellerText = 'Multiple Sellers';
-            else sellerText = getSellerName(uniqueSellerIds[0]);
+            const uniqueSellerIds = [...new Set(o.items.map(item => item.sellerId).filter(Boolean))];
+            if (uniqueSellerIds.length === 0) {
+                sellerText = '—';
+            } else if (uniqueSellerIds.length > 1) {
+                sellerText = 'Multiple Sellers';
+            } else {
+                sellerText = getSellerName(uniqueSellerIds[0]);
+            }
+        } else if (o.sellerId) {
+            // Fallback to order-level sellerId if items not available
+            sellerText = getSellerName(o.sellerId);
         }
 
         // Dropdown to change order status
-        const statuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+        const statuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Refunded'];
         const statusOptions = statuses.map(st =>
             `<option value="${st}" ${st === o.status ? 'selected' : ''}>${st}</option>`
         ).join('');
@@ -136,7 +146,7 @@ export function renderOrdersTable() {
                 <td>${o.items ? o.items.length : 0} item(s)</td>
                 <td><span class="fw-bold text-success">${formatPrice(o.totalPrice || o.total)}</span></td>
                 <td>${statusBadge(o.status)}</td>
-                <td>${formatDate(o.date)}</td>
+                <td>${formatDate(o.date || o.createdAt)}</td>
                 <td>
                     <select class="form-select form-select-sm status-dropdown" 
                             data-id="${o.id}" 
@@ -213,8 +223,8 @@ function bindOrdersEvents() {
 // ─── ORDER ACTIONS ───────────────────────────────────────────
 
 /**
- * Prompts user before changing order status.
- * Reverts the dropdown if the user cancels.
+ * Prompts user before changing order status with business validation.
+ * Prevents invalid status transitions.
  * @param {string|number} orderId 
  * @param {string} newStatus 
  * @param {HTMLSelectElement} selectElement 
@@ -226,11 +236,57 @@ export function confirmChangeOrderStatus(orderId, newStatus, selectElement) {
 
     const currentStatus = orders[index].status;
 
-    showConfirm(`Change order #${orderId} status from ${currentStatus} to ${newStatus}?`, () => {
+    // Business Rule: Cannot change from Delivered, Cancelled, or Refunded
+    if (currentStatus === 'Delivered' || currentStatus === 'Cancelled' || currentStatus === 'Refunded') {
+        showToast(`Cannot change status from ${currentStatus}. Order is finalized.`, 'error');
+        selectElement.value = currentStatus;
+        return;
+    }
+
+    // Business Rule: Cannot skip directly to Delivered (must go through Shipped first)
+    if (currentStatus === 'Pending' && newStatus === 'Delivered') {
+        showToast('Cannot deliver directly from Pending. Process through Shipped first.', 'error');
+        selectElement.value = currentStatus;
+        return;
+    }
+
+    // Business Rule: Refunded can only be set from Delivered or Cancelled
+    if (newStatus === 'Refunded' && currentStatus !== 'Delivered' && currentStatus !== 'Cancelled') {
+        showToast('Refund can only be issued for Delivered or Cancelled orders.', 'error');
+        selectElement.value = currentStatus;
+        return;
+    }
+
+    // Business Rule: Cannot go backwards in the flow (except to Cancelled or Refunded)
+    const statusFlow = ['Pending', 'Processing', 'Shipped', 'Delivered'];
+    const currentIndex = statusFlow.indexOf(currentStatus);
+    const newIndex = statusFlow.indexOf(newStatus);
+    
+    if (newStatus !== 'Cancelled' && newStatus !== 'Refunded' && newIndex < currentIndex) {
+        showToast(`Cannot move backwards from ${currentStatus} to ${newStatus}.`, 'error');
+        selectElement.value = currentStatus;
+        return;
+    }
+
+    const confirmMessage = newStatus === 'Refunded' 
+        ? `Issue refund for order #${orderId}? This will mark the order as refunded and cannot be undone.`
+        : `Change order #${orderId} status from ${currentStatus} to ${newStatus}?`;
+
+    showConfirm(confirmMessage, () => {
         // Confirmed
         orders[index].status = newStatus;
+        orders[index].statusUpdatedAt = new Date().toISOString();
+        orders[index].statusUpdatedBy = getCurrentUser()?.id;
+        
+        if (newStatus === 'Refunded') {
+            orders[index].refundedAt = new Date().toISOString();
+            orders[index].refundedBy = getCurrentUser()?.id;
+        }
+        
         saveOrders(orders);
         renderOrdersTable();
+        
+        console.log(`[AUDIT] Order #${orderId} status changed from ${currentStatus} to ${newStatus}`);
         showToast(`Order #${orderId} marked as ${newStatus}.`, 'success');
 
         // Refresh dashboard KPIs in case revenue/recent orders changed
@@ -240,9 +296,7 @@ export function confirmChangeOrderStatus(orderId, newStatus, selectElement) {
         }
     });
 
-    // Handle cancellation by resetting the dropdown if user closed modal without confirming
-    // Since showConfirm doesn't have a direct "onCancel" callback, we watch the modal hidden event
-    // or just reset it, and let renderOrdersTable fix the view when confirmed.
+    // Handle cancellation by resetting the dropdown
     const modalEl = document.getElementById('confirmModal');
     if (modalEl) {
         const resetDropdown = () => {
@@ -252,8 +306,6 @@ export function confirmChangeOrderStatus(orderId, newStatus, selectElement) {
             modalEl.removeEventListener('hidden.bs.modal', resetDropdown);
         };
         modalEl.addEventListener('hidden.bs.modal', resetDropdown);
-
-        // Remove listener safely if confirmed (renderOrdersTable will recreate DOM anyway)
     }
 }
 

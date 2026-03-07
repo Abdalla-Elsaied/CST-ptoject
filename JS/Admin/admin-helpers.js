@@ -3,9 +3,9 @@ import {
     KEY_PRODUCTS,
     KEY_ORDERS,
     KEY_CURRENT_USER
-} from '/JS/Core/constants.js';
+} from '/JS/Core/Constants.js';
 
-import { getLS, setLS } from '/JS/Core/storage.js';
+import { getLS, setLS } from '/JS/Core/Storage.js';
 import { ROLES } from '../Core/Auth.js';
 
 // ─── DATA ACCESS ─────────────────────────────────────────────
@@ -53,7 +53,6 @@ export function saveOrders(orders) {
 
 /**
  * Returns a colored badge HTML string based on order status.
- * Used in orders table and dashboard recent orders.
  */
 export function statusBadge(status) {
     const map = {
@@ -62,6 +61,7 @@ export function statusBadge(status) {
         'Shipped': { bg: '#8b5cf6', color: '#fff' },
         'Delivered': { bg: '#22c55e', color: '#fff' },
         'Cancelled': { bg: '#ef4444', color: '#fff' },
+        'Refunded': { bg: '#6b7280', color: '#fff' },
     };
     const style = map[status] || { bg: '#6b7280', color: '#fff' };
     return `<span class="status-badge" style="background:${style.bg};color:${style.color}">${status}</span>`;
