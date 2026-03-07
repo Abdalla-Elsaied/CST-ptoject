@@ -1,157 +1,80 @@
+// Your add product script
 
-// ==== Product Class ====
-const STORAGE_KEY = "products";
+import { saveProductToDisk } from '../Core/FileStorage.js';  
 
-class Product {
-    constructor(formData) {
-        this.id = Date.now(); // unique product ID
-        this.productName = formData.get("productName");
-        this.name = this.productName; // alias used by product list
-        this.description = formData.get("description");
+document.addEventListener('DOMContentLoaded', () => {
 
-        // Pricing
-        this.price = Number(formData.get("price"));
-        this.discountPrice = Number(formData.get("discountPrice")) || 0;
-        this.taxIncluded = formData.get("taxIncluded");
+    const form = document.getElementById('productForm');
+    const fileInput = document.getElementById('imageUpload');
+    const previewContainer = document.getElementById('previewContainer');
 
-        this.expirationStart = formData.get("expirationStart");
-        this.expirationEnd = formData.get("expirationEnd");
+    fileInput.addEventListener('change', () => {
 
-        // Inventory
-        this.stockQuantity = Number(formData.get("stockQuantity")) || 0;
-        this.stock = this.stockQuantity; // alias used by product list
-        this.stockStatus = formData.get("stockStatus");
+        previewContainer.innerHTML = '';
 
-        // Extra data
-        this.images = [];
-        this.colors = [];
+        Array.from(fileInput.files).forEach(file => {
 
-        // Read category and tag
-        this.category = document.getElementById("categorySelect").value || "";
-        this.tag = document.getElementById("tagSelect").value || "";
+            if (!file.type.startsWith('image/')) return;
 
+            const div = document.createElement('div');
+            div.style.margin = '8px';
 
-        this.createdAt = new Date().toISOString();
-    }
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.style.maxWidth = '140px';
+            img.style.borderRadius = '6px';
 
-    addImage(image) {
-        this.images.push(image);
-    }
+            div.appendChild(img);
+            previewContainer.appendChild(div);
 
-    addColor(color) {
-        this.colors.push(color);
-    }
-}
+        });
 
-
-
-
-// select all color boxes  
-const colorBoxes = document.querySelectorAll('.color');
-
-colorBoxes.forEach(box => {
-    box.addEventListener('click', (e) => {
-        e.preventDefault(); // prevent default just in case
-
-        const input = box.querySelector('input[type="checkbox"]');
-        if (!input) return;
-
-        // toggle the selected class
-        box.classList.toggle('selected');
-
-        // toggle checkbox checked status to match selected class
-        input.checked = box.classList.contains('selected');
     });
-});
 
+    form.addEventListener('submit', async (e) => {
 
+        e.preventDefault();
 
-/// what to do when submit  click ?? ==> all tha addProuct functionality 
+        const formData = new FormData(form);
 
-// ==== DOM Elements ====
-const productForm = document.getElementById("productForm");
-const imageInput = document.getElementById("imageUpload");
-const previewBox = document.getElementById("previewContainer");
-const colorDivs = document.querySelectorAll(".colors .color");
+        const selectedColors = formData.getAll('colors');
 
-// === Variables ===
-let uploadedImages = [];
-let selectedColors = [];
-
-// ==== Image Upload & Preview ====
-imageInput.addEventListener("change", function () {
-    previewBox.innerHTML = "";
-    uploadedImages = [];
-
-    Array.from(this.files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const img = document.createElement("img");
-            img.src = e.target.result;
-            img.style.width = "80px";
-            img.style.marginRight = "5px";
-            previewBox.appendChild(img);
-            uploadedImages.push(e.target.result);
+        const product = {
+            name: formData.get('productName')?.trim() || '(no name)',
+            description: formData.get('description')?.trim() || '',
+            price: Number(formData.get('price')) || 0,
+            discountPrice: Number(formData.get('discountPrice')) || null,
+            taxIncluded: formData.get('taxIncluded') === 'yes',
+            expirationStart: formData.get('expirationStart') || null,
+            expirationEnd: formData.get('expirationEnd') || null,
+            stockQuantity: Number(formData.get('stockQuantity')) || 0,
+            stockStatus: formData.get('stockStatus'),
+            category: formData.get('category') || '',
+            tag: formData.get('tag') || '',
+            colors: selectedColors,
+            createdAt: new Date().toISOString(),
+            images: []
         };
-        reader.readAsDataURL(file);
-    });
-});
 
-// ==== Color Selection ====
-colorDivs.forEach(div => {
-    div.addEventListener("click", function () {
-        const colorClass = this.classList[1]; // c1, c2, etc.
-        if (selectedColors.includes(colorClass)) {
-            selectedColors = selectedColors.filter(c => c !== colorClass);
-            this.classList.remove("selected");
-        } else {
-            selectedColors.push(colorClass);
-            this.classList.add("selected");
+        const imageFiles = Array.from(fileInput.files || []);
+
+        try {
+
+            await saveProductToDisk(product, imageFiles);
+
+            alert('Product saved successfully!');
+
+            form.reset();
+            previewContainer.innerHTML = '';
+            fileInput.value = '';
+
+        } catch (err) {
+
+            console.error(err);
+            alert('Save failed. Check console (F12).');
+
         }
+
     });
+
 });
-
-// ==== Save Products as JSON File ====
-function saveProductsAsJSON() {
-    const products = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    const jsonStr = JSON.stringify(products, null, 2);
-    const blob = new Blob([jsonStr], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "products.json";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-}
-
-// ==== Form Submission ====
-productForm.addEventListener("submit", function (e) {
-    e.preventDefault();
-
-    const formData = new FormData(productForm);
-    const product = new Product(formData);
-
-    uploadedImages.forEach(img => product.addImage(img));
-    selectedColors.forEach(color => product.addColor(color));
-
-    // Save to localStorage
-    const storedProducts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    storedProducts.push(product);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(storedProducts));
-
-    // ✅ Print product to console
-    console.log(product);
-
-    // ✅ Download JSON file automatically
-    saveProductsAsJSON();
-
-    // Reset form and previews
-    productForm.reset();
-    previewBox.innerHTML = "";
-    uploadedImages = [];
-    selectedColors = [];
-    colorDivs.forEach(div => div.classList.remove("selected"));
-});
-
-
-
