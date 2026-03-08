@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DEALPORT – Discover the Latest Deals</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+  <link rel="stylesheet" href="../../CSS/Customer/CustomerHomePage.css"/>
+</head>
+<body>
+
+<!-- ===== TOP NAVBAR ===== -->
+<header class="navbar-top sticky-top">
+  <div class="container-fluid px-3 px-lg-4">
+    <div class="d-flex align-items-center gap-3 gap-lg-4 py-2">
+
+      <!-- Logo -->
+      <a href="#" class="logo-brand text-decoration-none flex-shrink-0">
+        <span class="logo-deal">DEAL</span><span class="logo-port"><i class="bi bi-shop"></i>RT</span>
+      </a>
+
+      <!-- Location -->
+      <div class="location-selector d-none d-md-flex align-items-center gap-1 flex-shrink-0">
+        <i class="bi bi-geo-alt-fill text-success fs-5"></i>
+        <div>
+          <div class="loc-label">Deliver to</div>
+          <div class="loc-addr">Your address <i class="bi bi-chevron-down small"></i></div>
+        </div>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="search-wrapper flex-grow-1">
+        <div class="input-group search-group">
+          <select class="form-select search-cat d-none d-lg-block">
+            <option>All</option>
+            <option>Electronics</option>
+            <option>Fashion</option>
+            <option>Grocery</option>
+            <option>Beauty</option>
+          </select>
+          <input type="text" class="form-control search-input" placeholder="What you're looking for..."/>
+          <button class="btn btn-search" type="button"><i class="bi bi-search"></i> <span class="d-none d-sm-inline">Search</span></button>
+        </div>
+      </div>
+
+      <!-- Right Icons -->
+      <div class="nav-icons d-flex align-items-center gap-2 gap-lg-3 flex-shrink-0">
+        <a href="#" class="nav-icon-btn d-none d-md-flex flex-column align-items-center">
+          <i class="bi bi-heart"></i>
+          <span>Wishlist</span>
+        </a>
+        <a href="#" class="nav-icon-btn d-none d-md-flex flex-column align-items-center">
+          <i class="bi bi-person"></i>
+          <span>Account</span>
+        </a>
+        <a href="#" class="nav-icon-btn d-flex flex-column align-items-center position-relative">
+          <i class="bi bi-cart3"></i>
+          <span class="cart-badge">3</span>
+          <span>Cart</span>
+        </a>
+        <button class="btn btn-sm d-md-none border-0" id="mobileMenuBtn">
+          <i class="bi bi-list fs-4"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== CATEGORY MENU BAR ===== -->
+<nav class="category-nav">
+  <div class="container-fluid px-3 px-lg-4">
+    <div class="cat-scroll">
+      <a href="#" class="cat-link active">Men</a>
+      <a href="#" class="cat-link">Women</a>
+      <a href="#" class="cat-link">Baby</a>
+      <a href="#" class="cat-link">Grocery & Essentials</a>
+      <a href="#" class="cat-link">Electronics</a>
+      <a href="#" class="cat-link">Beauty</a>
+      <a href="#" class="cat-link">Accessories</a>
+      <a href="#" class="cat-link">Shoes</a>
+      <a href="#" class="cat-link">Outdoor</a>
+      <a href="#" class="cat-link">Industrial Equipment</a>
+      <div class="dropdown d-inline-block">
+        <a href="#" class="cat-link dropdown-toggle" data-bs-toggle="dropdown">More</a>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item" href="#">Sports</a></li>
+          <li><a class="dropdown-item" href="#">Books</a></li>
+          <li><a class="dropdown-item" href="#">Automotive</a></li>
+          <li><a class="dropdown-item" href="#">Garden & Patio</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== HERO BANNER ===== -->
+<section class="hero-section">
+  <div class="swiper hero-swiper">
+    <div class="swiper-wrapper">
+
+      <!-- Slide 1 -->
+      <div class="swiper-slide">
+        <div class="hero-slide slide-1">
+          <div class="container-fluid px-3 px-lg-4 h-100">
+            <div class="row h-100 align-items-center">
+              <div class="col-lg-5 hero-content">
+                <span class="hero-badge">🔥 Hot Deals</span>
+                <h1 class="hero-title">Discover the<br><span>Latest Deals –</span><br>Up to <span class="deal-pct">50% Off!</span></h1>
+                <p class="hero-sub">Shop thousands of products with incredible discounts. Free delivery on orders over $49.</p>
+                <div class="d-flex gap-3 flex-wrap">
+                  <a href="#" class="btn btn-hero-primary">Shop Now <i class="bi bi-arrow-right ms-1"></i></a>
+                  <a href="#" class="btn btn-hero-outline">View Deals</a>
+                </div>
+              </div>
+              <div class="col-lg-7 hero-img-col d-none d-lg-block">
+                <div class="hero-img-wrap">
+                  <div class="hero-float-card">
+                    <i class="bi bi-truck text-success"></i> Free Delivery
+                  </div>
+                  <div class="hero-float-card card-2">
+                    <i class="bi bi-shield-check text-success"></i> Secure Payment
+                  </div>
+                  <img src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=700&q=80" alt="Fashion" class="hero-main-img"/>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 2 -->
+      <div class="swiper-slide">
+        <div class="hero-slide slide-2">
+          <div class="container-fluid px-3 px-lg-4 h-100">
+            <div class="row h-100 align-items-center">
+              <div class="col-lg-5 hero-content">
+                <span class="hero-badge">⚡ Flash Sale</span>
+                <h1 class="hero-title">Tech Deals<br><span>Going Fast –</span><br>Save up to <span class="deal-pct">40%!</span></h1>
+                <p class="hero-sub">Latest gadgets, electronics, and accessories at unbeatable prices.</p>
+                <a href="#" class="btn btn-hero-primary">Shop Electronics <i class="bi bi-arrow-right ms-1"></i></a>
+              </div>
+              <div class="col-lg-7 hero-img-col d-none d-lg-block">
+                <img src="https://images.unsplash.com/photo-1498049794561-7780e7231661?w=700&q=80" alt="Electronics" class="hero-main-img"/>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="swiper-button-prev hero-prev"><i class="bi bi-chevron-left"></i></div>
+    <div class="swiper-button-next hero-next"><i class="bi bi-chevron-right"></i></div>
+    <div class="swiper-pagination hero-pagination"></div>
+  </div>
+</section>
+
+<!-- ===== FEATURED CATEGORIES ===== -->
+<section class="section-pad">
+  <div class="container-fluid px-3 px-lg-4">
+    <div class="row g-3">
+
+      <!-- Large left card -->
+      <div class="col-md-4">
+        <div class="feat-card feat-large" style="background-image:url('https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=500&q=80')">
+          <div class="feat-overlay"></div>
+          <div class="feat-content">
+            <span class="feat-tag">New Arrivals</span>
+            <h3>New Year<br>New Fashion</h3>
+            <a href="#" class="btn btn-feat">Shop Now <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top right -->
+      <div class="col-md-8">
+        <div class="row g-3">
+          <div class="col-6 col-lg-3">
+            <div class="feat-card feat-sm" style="background-image:url('https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=400&q=80')">
+              <div class="feat-overlay"></div>
+              <div class="feat-content">
+                <h4>Gaming<br>Accessories</h4>
+                <a href="#" class="btn btn-feat-sm">View All</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="feat-card feat-sm" style="background-image:url('https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?w=400&q=80')">
+              <div class="feat-overlay"></div>
+              <div class="feat-content">
+                <h4>Men's<br>Fashion</h4>
+                <a href="#" class="btn btn-feat-sm">View All</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="feat-card feat-sm" style="background-image:url('https://images.unsplash.com/photo-1602810316693-3667c854239a?w=400&q=80')">
+              <div class="feat-overlay"></div>
+              <div class="feat-content">
+                <h4>Denim<br>Collection</h4>
+                <a href="#" class="btn btn-feat-sm">View All</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="feat-card feat-sm" style="background-image:url('https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=400&q=80')">
+              <div class="feat-overlay"></div>
+              <div class="feat-content">
+                <h4>Philips<br>Appliances</h4>
+                <a href="#" class="btn btn-feat-sm">View All</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom row -->
+          <div class="col-6">
+            <div class="feat-card feat-sm" style="background-image:url('https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80')">
+              <div class="feat-overlay"></div>
+              <div class="feat-content">
+                <h4>Trending<br>Sneakers</h4>
+                <a href="#" class="btn btn-feat-sm">Shop Now</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="feat-card feat-sm" style="background-image:url('https://images.unsplash.com/photo-1526178613552-2b45c6c302f0?w=400&q=80')">
+              <div class="feat-overlay"></div>
+              <div class="feat-content">
+                <h4>Beauty &<br>Skincare</h4>
+                <a href="#" class="btn btn-feat-sm">Explore</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== TRENDING PRODUCTS ===== -->
+<section class="section-pad bg-page">
+  <div class="container-fluid px-3 px-lg-4">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Trending Product</h2>
+        <p class="section-sub">Most popular picks this week</p>
+      </div>
+      <a href="#" class="btn btn-view-all">View All <i class="bi bi-arrow-right"></i></a>
+    </div>
+
+    <div class="row g-3">
+
+      <!-- Product Card 1 -->
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="product-card">
+          <div class="product-img-wrap">
+            <img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&q=80" alt="Serum" class="product-img"/>
+            <span class="badge-discount">20% OFF</span>
+            <button class="btn-wishlist"><i class="bi bi-heart"></i></button>
+          </div>
+          <div class="product-body">
+            <p class="product-category">Skincare</p>
+            <h5 class="product-name">Natural Glow Hydrating Serum</h5>
+            <div class="product-stars">
+              <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+              <span>(349 reviews)</span>
+            </div>
+            <div class="product-price">
+              <span class="price-now">$29.99</span>
+              <span class="price-old">$37.99</span>
+            </div>
+            <div class="product-actions">
+              <button class="btn btn-add-cart"><i class="bi bi-cart-plus me-1"></i>Add to Cart</button>
+              <a href="#" class="btn-view">View Details</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Product Card 2 -->
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="product-card">
+          <div class="product-img-wrap">
+            <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&q=80" alt="Vase" class="product-img"/>
+            <button class="btn-wishlist"><i class="bi bi-heart"></i></button>
+          </div>
+          <div class="product-body">
+            <p class="product-category">Home Décor</p>
+            <h5 class="product-name">Modern Minimalist Vase</h5>
+            <div class="product-stars">
+              <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+              <span>(142 reviews)</span>
+            </div>
+            <div class="product-price">
+              <span class="price-now">$40.99</span>
+            </div>
+            <div class="product-actions">
+              <button class="btn btn-add-cart"><i class="bi bi-cart-plus me-1"></i>Add to Cart</button>
+              <a href="#" class="btn-view">View Details</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Product Card 3 -->
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="product-card">
+          <div class="product-img-wrap">
+            <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80" alt="Smartwatch" class="product-img"/>
+            <span class="badge-discount">15% OFF</span>
+            <button class="btn-wishlist"><i class="bi bi-heart"></i></button>
+          </div>
+          <div class="product-body">
+            <p class="product-category">Electronics</p>
+            <h5 class="product-name">FitPro 3000 Smartwatch</h5>
+            <div class="product-stars">
+              <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+              <span>(203 reviews)</span>
+            </div>
+            <div class="product-price">
+              <span class="price-now">$119.99</span>
+              <span class="price-old">$139.99</span>
+            </div>
+            <div class="product-actions">
+              <button class="btn btn-add-cart"><i class="bi bi-cart-plus me-1"></i>Add to Cart</button>
+              <a href="#" class="btn-view">View Details</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trending Collection banner (right) -->
+      <div class="col-6 col-md-12 col-lg-3">
+        <div class="trending-banner">
+          <h4>Trend Collection<br>for Men</h4>
+          <img src="https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=300&q=80" alt="Men fashion"/>
+          <a href="#" class="btn btn-add-cart mt-2 w-100">Shop Now</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== START EXPLORING NOW ===== -->
+<section class="section-pad">
+  <div class="container-fluid px-3 px-lg-4">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Start Exploring Now</h2>
+        <p class="section-sub">Browse by category and find what you love</p>
+      </div>
+      <a href="#" class="btn btn-view-all">View All <i class="bi bi-arrow-right"></i></a>
+    </div>
+
+    <div class="explore-scroll">
+      <div class="explore-card">
+        <div class="explore-icon" style="background:#fef3c7">🛒</div>
+        <span>Grocery</span>
+      </div>
+      <div class="explore-card">
+        <div class="explore-icon" style="background:#ede9fe">🏠</div>
+        <span>Home</span>
+      </div>
+      <div class="explore-card">
+        <div class="explore-icon" style="background:#fce7f3">👗</div>
+        <span>Fashion</span>
+      </div>
+      <div class="explore-card">
+        <div class="explore-icon" style="background:#dbeafe">📱</div>
+        <span>Electronic</span>
+      </div>
+      <div class="explore-card">
+        <div class="explore-icon" style="background:#fef2f2">🧸</div>
+        <span>Toys</span>
+      </div>
+      <div class="explore-card">
+        <div class="explore-icon" style="background:#d1fae5">🌿</div>
+        <span>Garden</span>
+      </div>
+      <div class="explore-card">
+        <div class="explore-icon" style="background:#fee2e2">💄</div>
+        <span>Beauty</span>
+      </div>
+      <div class="explore-card">
+        <div class="explore-icon" style="background:#e0f2fe">⚽</div>
+        <span>Sports</span>
+      </div>
+      <div class="explore-card">
+        <div class="explore-icon" style="background:#fef9c3">📚</div>
+        <span>Books</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== BEST SELLING PRODUCTS ===== -->
+<section class="section-pad bg-page">
+  <div class="container-fluid px-3 px-lg-4">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Best Selling Product</h2>
+        <p class="section-sub">Our top picks loved by thousands</p>
+      </div>
+      <a href="#" class="btn btn-view-all">View All <i class="bi bi-arrow-right"></i></a>
+    </div>
+
+    <div class="swiper best-swiper">
+      <div class="swiper-wrapper">
+
+        <!-- Promo 1 -->
+        <div class="swiper-slide">
+          <div class="promo-card promo-dark">
+            <div class="promo-tag">Computer Accessories</div>
+            <img src="https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=300&q=80" alt="Computer"/>
+            <div class="promo-price-badge">$49</div>
+            <a href="#" class="btn btn-promo">OBI Shop Now</a>
+          </div>
+        </div>
+
+        <!-- Promo 2 -->
+        <div class="swiper-slide">
+          <div class="promo-card promo-light">
+            <div class="promo-tag">Men Fashion</div>
+            <img src="https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?w=300&q=80" alt="Men Fashion"/>
+            <div class="promo-price-badge">$200</div>
+            <a href="#" class="btn btn-promo-dark">New Arrival</a>
+          </div>
+        </div>
+
+        <!-- Promo 3 -->
+        <div class="swiper-slide">
+          <div class="promo-card promo-red">
+            <div class="promo-tag">Pomegranate Juice</div>
+            <img src="https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=300&q=80" alt="Juice"/>
+            <div class="promo-price-badge">$49</div>
+            <a href="#" class="btn btn-promo">Shop Now</a>
+          </div>
+        </div>
+
+        <!-- Promo 4 Dog Food -->
+        <div class="swiper-slide">
+          <div class="promo-card promo-blue">
+            <div class="promo-tag">Dog Food</div>
+            <h3 class="promo-headline">DOG FOOD MADE WITH LOVE</h3>
+            <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=300&q=80" alt="Dog"/>
+            <a href="#" class="btn btn-hero-primary mt-2">Shop Now</a>
+          </div>
+        </div>
+
+        <!-- Promo 5 -->
+        <div class="swiper-slide">
+          <div class="promo-card promo-dark2">
+            <div class="promo-tag">Security Cameras</div>
+            <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&q=80" alt="Camera"/>
+            <div class="promo-price-badge">$420</div>
+            <a href="#" class="btn btn-promo">View Now</a>
+          </div>
+        </div>
+
+        <!-- Promo 6 -->
+        <div class="swiper-slide">
+          <div class="promo-card promo-purple">
+            <div class="promo-tag">Gaming Gear</div>
+            <img src="https://images.unsplash.com/photo-1593118247619-e2d6f056869e?w=300&q=80" alt="Gaming"/>
+            <div class="promo-price-badge">$149</div>
+            <a href="#" class="btn btn-promo">Shop Now</a>
+          </div>
+        </div>
+
+      </div>
+      <div class="swiper-button-prev best-prev"><i class="bi bi-chevron-left"></i></div>
+      <div class="swiper-button-next best-next"><i class="bi bi-chevron-right"></i></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== LIMITED TIME DEALS ===== -->
+<section class="section-pad">
+  <div class="container-fluid px-3 px-lg-4">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Limited-Time Deal</h2>
+        <p class="section-sub">Hurry! Offers expire soon ⏱</p>
+      </div>
+      <a href="#" class="btn btn-view-all">View All <i class="bi bi-arrow-right"></i></a>
+    </div>
+
+    <div class="swiper deals-swiper">
+      <div class="swiper-wrapper">
+
+        <!-- Deal 1 -->
+        <div class="swiper-slide">
+          <div class="product-card">
+            <div class="product-img-wrap">
+              <img src="https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=400&q=80" alt="Samsung" class="product-img"/>
+              <span class="badge-discount">20% OFF</span>
+              <button class="btn-wishlist"><i class="bi bi-heart"></i></button>
+            </div>
+            <div class="product-body">
+              <p class="product-category">Smartphones</p>
+              <h5 class="product-name">Samsung Galaxy S24</h5>
+              <div class="product-stars">
+                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+                <span>(342 reviews)</span>
+              </div>
+              <div class="product-price">
+                <span class="price-now">$789.99</span>
+                <span class="price-old">$1,100.49</span>
+              </div>
+              <div class="product-actions">
+                <button class="btn btn-add-cart w-100"><i class="bi bi-cart-plus me-1"></i>Add to Cart</button>
+              </div>
+              <a href="#" class="btn-view d-block mt-1">View Details</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deal 2 -->
+        <div class="swiper-slide">
+          <div class="product-card">
+            <div class="product-img-wrap">
+              <img src="https://images.unsplash.com/photo-1606220588913-b3aacb4d2f46?w=400&q=80" alt="Earbuds" class="product-img"/>
+              <span class="badge-discount">30% OFF</span>
+              <button class="btn-wishlist"><i class="bi bi-heart"></i></button>
+            </div>
+            <div class="product-body">
+              <p class="product-category">Audio</p>
+              <h5 class="product-name">Uii TWS 7002 Earbuds</h5>
+              <div class="product-stars">
+                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+                <span>(92 reviews)</span>
+              </div>
+              <div class="product-price">
+                <span class="price-now">$1.49</span>
+                <span class="price-old">$5.00</span>
+              </div>
+              <div class="product-actions">
+                <button class="btn btn-add-cart w-100"><i class="bi bi-cart-plus me-1"></i>Add to Cart</button>
+              </div>
+              <a href="#" class="btn-view d-block mt-1">View Details</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deal 3 -->
+        <div class="swiper-slide">
+          <div class="product-card">
+            <div class="product-img-wrap">
+              <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&q=80" alt="Jacket" class="product-img"/>
+              <span class="badge-discount">50% OFF</span>
+              <button class="btn-wishlist"><i class="bi bi-heart"></i></button>
+            </div>
+            <div class="product-body">
+              <p class="product-category">Fashion</p>
+              <h5 class="product-name">Winter Fashion Jacket</h5>
+              <div class="product-stars">
+                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+                <span>(348 reviews)</span>
+              </div>
+              <div class="product-price">
+                <span class="price-now">$250.99</span>
+                <span class="price-old">$502</span>
+              </div>
+              <div class="product-actions">
+                <button class="btn btn-add-cart w-100"><i class="bi bi-cart-plus me-1"></i>Add to Cart</button>
+              </div>
+              <a href="#" class="btn-view d-block mt-1">View Details</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deal 4 -->
+        <div class="swiper-slide">
+          <div class="product-card">
+            <div class="product-img-wrap">
+              <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80" alt="Sneakers" class="product-img"/>
+              <span class="badge-discount">35% OFF</span>
+              <button class="btn-wishlist"><i class="bi bi-heart"></i></button>
+            </div>
+            <div class="product-body">
+              <p class="product-category">Footwear</p>
+              <h5 class="product-name">New Balance 574 Sneakers</h5>
+              <div class="product-stars">
+                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                <span>(860 reviews)</span>
+              </div>
+              <div class="product-price">
+                <span class="price-now">$300</span>
+                <span class="price-old">$460</span>
+              </div>
+              <div class="product-actions">
+                <button class="btn btn-add-cart w-100"><i class="bi bi-cart-plus me-1"></i>Add to Cart</button>
+              </div>
+              <a href="#" class="btn-view d-block mt-1">View Details</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deal 5 -->
+        <div class="swiper-slide">
+          <div class="product-card">
+            <div class="product-img-wrap">
+              <img src="https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=400&q=80" alt="Perfume" class="product-img"/>
+              <span class="badge-discount">25% OFF</span>
+              <button class="btn-wishlist"><i class="bi bi-heart"></i></button>
+            </div>
+            <div class="product-body">
+              <p class="product-category">Beauty</p>
+              <h5 class="product-name">Luxury Perfume Set</h5>
+              <div class="product-stars">
+                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+                <span>(127 reviews)</span>
+              </div>
+              <div class="product-price">
+                <span class="price-now">$49.99</span>
+                <span class="price-old">$66.00</span>
+              </div>
+              <div class="product-actions">
+                <button class="btn btn-add-cart w-100"><i class="bi bi-cart-plus me-1"></i>Add to Cart</button>
+              </div>
+              <a href="#" class="btn-view d-block mt-1">View Details</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="swiper-button-prev deals-prev"><i class="bi bi-chevron-left"></i></div>
+      <div class="swiper-button-next deals-next"><i class="bi bi-chevron-right"></i></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TESTIMONIALS ===== -->
+<section class="section-pad bg-light-green">
+  <div class="container-fluid px-3 px-lg-4">
+    <div class="text-center mb-5">
+      <h2 class="section-title">Our Happy Customers</h2>
+      <p class="section-sub">"Don't just take our word for it — here are some reviews."</p>
+    </div>
+
+    <div class="row g-3">
+
+      <div class="col-md-6 col-lg-4">
+        <div class="testimonial-card featured-testimonial">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <img src="https://i.pravatar.cc/60?img=1" alt="Emily" class="testi-avatar"/>
+            <div>
+              <h6 class="mb-0">Emily R.</h6>
+              <div class="testi-stars">⭐⭐⭐⭐⭐</div>
+            </div>
+            <i class="bi bi-quote ms-auto testi-quote"></i>
+          </div>
+          <p class="testi-text">"Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!"</p>
+          <span class="testi-badge">Verified Purchase</span>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="testimonial-card featured-testimonial">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <img src="https://i.pravatar.cc/60?img=12" alt="John" class="testi-avatar"/>
+            <div>
+              <h6 class="mb-0">John D.</h6>
+              <div class="testi-stars">⭐⭐⭐⭐⭐</div>
+            </div>
+            <i class="bi bi-quote ms-auto testi-quote"></i>
+          </div>
+          <p class="testi-text">"Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!"</p>
+          <span class="testi-badge">Verified Purchase</span>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="testimonial-card featured-testimonial">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <img src="https://i.pravatar.cc/60?img=7" alt="Ahmed" class="testi-avatar"/>
+            <div>
+              <h6 class="mb-0">Ahmed M.</h6>
+              <div class="testi-stars">⭐⭐⭐⭐⭐</div>
+            </div>
+            <i class="bi bi-quote ms-auto testi-quote"></i>
+          </div>
+          <p class="testi-text">"Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!"</p>
+          <span class="testi-badge">Verified Purchase</span>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="testimonial-card">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <img src="https://i.pravatar.cc/60?img=33" alt="Alex" class="testi-avatar"/>
+            <div>
+              <h6 class="mb-0">Alex T.</h6>
+              <div class="testi-stars">⭐⭐⭐⭐⭐</div>
+            </div>
+          </div>
+          <p class="testi-text">"Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!"</p>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="testimonial-card">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <img src="https://i.pravatar.cc/60?img=45" alt="Priya" class="testi-avatar"/>
+            <div>
+              <h6 class="mb-0">Priya R.</h6>
+              <div class="testi-stars">⭐⭐⭐⭐⭐</div>
+            </div>
+          </div>
+          <p class="testi-text">"Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!"</p>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="testimonial-card">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <img src="https://i.pravatar.cc/60?img=22" alt="David" class="testi-avatar"/>
+            <div>
+              <h6 class="mb-0">David H.</h6>
+              <div class="testi-stars">⭐⭐⭐⭐⭐</div>
+            </div>
+          </div>
+          <p class="testi-text">"Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!"</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="text-center mt-4">
+      <a href="#" class="btn btn-cta-main">GET STARTED <i class="bi bi-arrow-right ms-1"></i></a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="site-footer">
+  <div class="container-fluid px-3 px-lg-4">
+    <div class="row g-4 py-5">
+
+      <!-- Company Info -->
+      <div class="col-md-6 col-lg-2">
+        <h6 class="footer-heading">Company Info</h6>
+        <ul class="footer-links">
+          <li><a href="#">About Us</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Press Releases</a></li>
+          <li><a href="#">Sustainability Practices</a></li>
+        </ul>
+      </div>
+
+      <!-- Customer Support -->
+      <div class="col-md-6 col-lg-2">
+        <h6 class="footer-heading">Customer Support</h6>
+        <ul class="footer-links">
+          <li><a href="#">Contact Us</a></li>
+          <li><a href="#">Help Center (FAQs)</a></li>
+          <li><a href="#">Track My Order</a></li>
+          <li><a href="#">Return & Refund Policy</a></li>
+          <li><a href="#">Shipping Information</a></li>
+        </ul>
+      </div>
+
+      <!-- Center Logo -->
+      <div class="col-lg-4 text-center">
+        <div class="footer-logo">
+          <span class="logo-deal">DEAL</span><span class="logo-port"><i class="bi bi-shop"></i>RT</span>
+        </div>
+        <p class="footer-tagline">Your one-stop shop for the best deals online. Quality products delivered to your door.</p>
+        <div class="newsletter-wrap mt-3">
+          <p class="fw-600 mb-2">Newsletter Signup</p>
+          <div class="input-group newsletter-group">
+            <input type="email" class="form-control" placeholder="Enter your email address"/>
+            <button class="btn btn-newsletter">Subscribe</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Explore -->
+      <div class="col-md-6 col-lg-2">
+        <h6 class="footer-heading">Explore</h6>
+        <ul class="footer-links">
+          <li><a href="#">Categories</a></li>
+          <li><a href="#">Best Sellers</a></li>
+          <li><a href="#">New Arrivals</a></li>
+          <li><a href="#">Deals & Promotions</a></li>
+        </ul>
+      </div>
+
+      <!-- Legal -->
+      <div class="col-md-6 col-lg-2">
+        <h6 class="footer-heading">Legal</h6>
+        <ul class="footer-links">
+          <li><a href="#">Terms & Conditions</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Cookie Policy</a></li>
+          <li><a href="#">Accessibility Statement</a></li>
+          <li><a href="#">Return & Refund Policy</a></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Footer Bottom -->
+    <div class="footer-bottom">
+      <p>© 2025 Dealport. All rights reserved.</p>
+      <div class="social-icons">
+        <span class="me-2 text-muted small">Connect with us</span>
+        <a href="#" class="social-btn fb"><i class="bi bi-facebook"></i></a>
+        <a href="#" class="social-btn ig"><i class="bi bi-instagram"></i></a>
+        <a href="#" class="social-btn tw"><i class="bi bi-twitter-x"></i></a>
+        <a href="#" class="social-btn li"><i class="bi bi-linkedin"></i></a>
+      </div>
+      <p class="text-muted small">Trusted Seller Certifications by SSL Secure</p>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script src="../../JS/Customer/CustomerHomePage.js"></script>
+</body>
+</html>
