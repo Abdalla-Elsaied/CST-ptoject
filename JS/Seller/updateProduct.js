@@ -149,11 +149,7 @@ form.addEventListener('submit', async (e) => {
     try {
         await saveProductToDisk(productData, imageFiles); // automatically does PUT if id exists
         alert('Product updated successfully!');
-        form.reset();
-        previewContainer.innerHTML = '';
-        fileInput.value = '';
-        currentProduct = null;
-        existingImages = [];
+        window.location.href = 'ProductList.html';
     } catch (err) {
         console.error(err);
         alert('Failed to update product');
