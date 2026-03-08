@@ -901,3 +901,119 @@ body {
 
 /* Utility */
 .fw-600 { font-weight: 600; }
+
+/* =====================================================
+   DYNAMIC PRODUCTS & SKELETONS
+   ===================================================== */
+
+/* Show More button */
+.btn-show-more {
+  background: transparent;
+  border: 1.5px solid var(--green-primary);
+  color: var(--green-primary);
+  font-weight: 700;
+  font-size: 0.85rem;
+  border-radius: 10px;
+  padding: 10px 32px;
+  transition: all 0.2s;
+}
+.btn-show-more:hover {
+  background: var(--green-primary);
+  color: #fff;
+}
+
+/* Out of stock button */
+.btn-out-of-stock {
+  background: #9ca3af !important;
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+/* ── Skeleton loader ─────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+.skeleton-line,
+.skeleton-img {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+.skeleton-img  { width: 100%; height: 200px; }
+.skeleton-line { height: 14px; margin-bottom: 8px; display: block; }
+.w-200px { width: 200px; }
+.w-80px  { width: 80px; }
+.w-60px  { width: 60px; }
+.w-full  { width: 100%; }
+.w-100px { width: 100px; }
+
+.skeleton-card {
+  pointer-events: none;
+  border: 1.5px solid var(--border) !important;
+  box-shadow: none !important;
+}
+
+/* ── Error / empty state ─────────────────────────── */
+.api-error-state {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--text-secondary);
+}
+.api-error-state i {
+  font-size: 3rem;
+  color: var(--warning);
+  display: block;
+  margin-bottom: 16px;
+}
+.api-error-state h4 {
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.api-error-state p {
+  font-size: 0.88rem;
+  margin-bottom: 20px;
+}
+
+/* ── Category divider label ─────────────────────── */
+.category-section {
+  border-top: 3px solid var(--green-light);
+  position: relative;
+}
+.category-section:first-child { border-top: none; }
+
+/* ── Tag badge (e.g. "new", "hot") ──────────────────────────── */
+.badge-tag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+  text-transform: capitalize;
+}
+.badge-tag--new    { background: var(--green-primary); }
+.badge-tag--hot    { background: #f97316; }
+.badge-tag--sale   { background: var(--danger); }
+
+/* Out-of-stock overlay badge */
+.badge-out-of-stock {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 5px;
+  letter-spacing: 0.3px;
+}
