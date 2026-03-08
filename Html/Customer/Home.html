@@ -166,6 +166,9 @@
 
   <script type="module">
     import { loadProductsFromFolder } from '/JS/Core/FileStorage.js'; // adjust path
+    import {getCurrentUser} from "/JS/Core/Auth.js"
+
+    console.log(getCurrentUser().id)
 
     const loadBtn = document.getElementById('loadProductsBtn');
     const statusEl = document.getElementById('status');
@@ -183,6 +186,8 @@
       try {
 
         const products = await loadProductsFromFolder();
+
+        console.log('Loaded products:', products);
 
         container.innerHTML = '';
 

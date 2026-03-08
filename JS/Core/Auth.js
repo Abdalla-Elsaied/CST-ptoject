@@ -3,6 +3,7 @@ import {
   KEY_USERS,
   KEY_CURRENT_USER,
   KEY_CART,
+  KEY_APPROVAL,
 } from './Constants.js';
 
 import {
@@ -36,7 +37,7 @@ const ALL_VALID_ROLES = [
 // ────────────────────────────────────────────────
 
 function generateId() {
-  return 'user-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+  return 'user-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
 }
 
 function isValidEmail(email) {
@@ -187,9 +188,7 @@ export function logoutUser() {
  * Get currently logged in user (or null)
  * @returns {object | null}
  */
-export function getCurrentUser() {
-  return getLS(KEY_CURRENT_USER) || null;
-}
+
 
 /**
  * Protect pages by required roles
@@ -248,6 +247,89 @@ export function updateCurrentUserInStorage(updates) {
 export function getCartCount() {
   const cart = getLS(KEY_CART) || [];
   return cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+}
+
+export function getCurrentUser() {
+  return getLS(KEY_CURRENT_USER) || null;
+}
+
+export function AddCustomerToSeller(userId, storeData) {
+
+  const requests = getLS(KEY_APPROVAL) || [];
+
+  // prevent duplicate requests
+  const alreadyRequested = requests.some(r => r.userId === userId && r.status === "pending");
+
+  if (alreadyRequested) {
+    return { success: false, error: "You already submitted a request" };
+  }
+
+  const newRequest = {
+    id: "req-" + Date.now().toString().slice(2,9),
+    userId,
+    ...storeData,
+    status: "pending",
+    createdAt: new Date().toISOString()
+  };
+
+  setLS(KEY_APPROVAL, [...requests, newRequest]);
+
+  return { success: true, request: newRequest };
+}
+
+export function GetAllCustomerToApproved() {
+  return getLS(KEY_APPROVAL) || [];
+}
+
+export function AcceptCustomerSellerRequest(requestId) {
+
+  const requests = getLS(KEY_APPROVAL) || [];
+
+  const requestIndex = requests.findIndex(r => {
+    console.log("Checking request ID:", r.id);
+    console.log("request id: ", requestId);
+    return r.id === requestId;
+  });
+  if (requestIndex === -1) {
+    console.log("Request not found")
+    return { success: false, error: "Request not found" };
+  }
+
+  const request = requests[requestIndex];
+
+  // get users
+  const users = getLS(KEY_USERS) || [];
+  const userIndex = users.findIndex(u => u.id === request.userId);
+
+  if (userIndex === -1) {
+    console.log("User not found")
+    return { success: false, error: "User not found" };
+    
+  }
+
+  console.log(users[userIndex])
+  // update user role to seller
+  users[userIndex].role = ROLES.SELLER;
+
+  // attach seller/store info from request
+  users[userIndex].storeName = request.storeName;
+  users[userIndex].storeDescription = request.description;
+  users[userIndex].category = request.category;
+  users[userIndex].city = request.city;
+  users[userIndex].phone = request.phone;
+  users[userIndex].paymentMethod = request.paymentMethod;
+
+  // optional timestamp
+  users[userIndex].sellerApprovedAt = new Date().toISOString();
+
+  // save updated users
+  setLS(KEY_USERS, users);
+
+  // remove request from pending approvals
+  requests.splice(requestIndex, 1);
+  setLS(KEY_APPROVAL, requests);
+
+  return { success: true };
 }
 
 // ────────────────────────────────────────────────
