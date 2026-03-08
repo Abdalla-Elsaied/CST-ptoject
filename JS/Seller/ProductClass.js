@@ -1,6 +1,6 @@
 // Your add product script
 
-import { saveProductToDisk } from '../Core/FileStorage.js';  
+import { saveProductToDisk } from '../Core/FileStorage.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -37,7 +37,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const formData = new FormData(form);
 
-        const selectedColors = formData.getAll('colors');
+        // const selectedColors = formData.getAll('colors');
+
+
+        const colorBoxes = document.querySelectorAll('.color');
+
+        colorBoxes.forEach(box => {
+            box.addEventListener('click', (e) => {
+                e.preventDefault(); // prevent default just in case
+
+                const input = box.querySelector('input[type="checkbox"]');
+                if (!input) return;
+
+                // toggle the selected class
+                box.classList.toggle('selected');
+
+                // toggle checkbox checked status to match selected class
+                input.checked = box.classList.contains('selected');
+            });
+        });
 
         const product = {
             name: formData.get('productName')?.trim() || '(no name)',
@@ -49,9 +67,11 @@ document.addEventListener('DOMContentLoaded', () => {
             expirationEnd: formData.get('expirationEnd') || null,
             stockQuantity: Number(formData.get('stockQuantity')) || 0,
             stockStatus: formData.get('stockStatus'),
-            category: formData.get('category') || '',
-            tag: formData.get('tag') || '',
-            colors: selectedColors,
+            // category: formData.get('category') || '',
+            category: document.getElementById("categorySelect").value || "",
+            // tag: formData.get('tag') || '',
+            tag: document.getElementById("tagSelect").value || "",
+            colors: colorBoxes,
             createdAt: new Date().toISOString(),
             images: []
         };

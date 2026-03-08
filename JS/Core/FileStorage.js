@@ -1,6 +1,12 @@
 const API_BASE = 'https://69abf0bc9ca639a5217dcac2.mockapi.io/api';
 const PRODUCTS_ENDPOINT = `${API_BASE}/Products`;
 
+
+/*
+https://69abf0bc9ca639a5217dcac2.mockapi.io/api/Products ;
+
+
+*/
 const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dfrz2rmsd/upload";
 const UPLOAD_PRESET = "Product_images";
 const CLOUD_FOLDER = "Product_Images";
