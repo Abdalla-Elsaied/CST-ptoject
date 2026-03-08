@@ -242,8 +242,19 @@
   </div>
 </section>
 
-<!-- ===== TRENDING PRODUCTS ===== -->
-<section class="section-pad bg-page">
+<!-- ===== DYNAMIC PRODUCT CATEGORIES (API) ===== -->
+<!-- No-results message -->
+<div id="no-results-msg" class="container-fluid px-3 px-lg-4 py-5 text-center" style="display:none">
+  <i class="bi bi-search fs-1 text-muted"></i>
+  <h5 class="mt-3 text-muted">No products found matching your search.</h5>
+  <p class="text-muted small">Try a different keyword or browse all categories.</p>
+</div>
+
+<!-- Each category section is injected here by ProductRenderer.js -->
+<div id="dynamic-categories"></div>
+
+<!-- ===== TRENDING PRODUCTS (kept as design anchor – hidden, replaced by API) ===== -->
+<section class="section-pad bg-page" style="display:none">
   <div class="container-fluid px-3 px-lg-4">
     <div class="section-header">
       <div>
@@ -346,8 +357,9 @@
     </div>
   </div>
 </section>
+<!-- /end hidden trending -->
 
-<!-- ===== START EXPLORING NOW ===== -->
+<!-- ===== START EXPLORING NOW (static icons kept for design; category nav is populated from API) ===== -->
 <section class="section-pad">
   <div class="container-fluid px-3 px-lg-4">
     <div class="section-header">
@@ -480,8 +492,10 @@
   </div>
 </section>
 
-<!-- ===== LIMITED TIME DEALS ===== -->
-<section class="section-pad">
+<!-- ===== LIMITED-TIME DEALS ===== -->
+<!-- Deals are now rendered by the API-driven #dynamic-categories section above -->
+<!-- Keeping the deals swiper section hidden as fallback UI -->
+<section class="section-pad" style="display:none">
   <div class="container-fluid px-3 px-lg-4">
     <div class="section-header">
       <div>
@@ -823,6 +837,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-<script src="../../JS/Customer/CustomerHomePage.js"></script>
+<script type="module" src="../../JS/Customer/CustomerHomePage.js"></script>
 </body>
 </html>
