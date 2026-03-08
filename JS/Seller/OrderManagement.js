@@ -31,17 +31,30 @@ function normalizeOrder(raw, idx){
 }
 
 function seedOrders(){
+  const now = new Date();
+  const at = (daysAgo, hour) => {
+    const d = new Date(now);
+    d.setDate(d.getDate() - daysAgo);
+    d.setHours(hour, Math.floor(Math.random() * 50) + 5, 0, 0);
+    return toIsoDate(d);
+  };
+
   return [
-    {id: makeOrderId(), product:"Wireless Bluetooth Headphones", price:49.99, payment:"Paid", status:"Delivered", createdAt:toIsoDate("2025-01-01")},
-    {id: makeOrderId(), product:"Men's T-Shirt", price:14.99, payment:"Unpaid", status:"Pending", createdAt:toIsoDate("2025-01-02")},
-    {id: makeOrderId(), product:"Men's Leather Wallet", price:49.99, payment:"Paid", status:"Delivered", createdAt:toIsoDate("2025-01-03")},
-    {id: makeOrderId(), product:"Memory Foam Pillow", price:39.99, payment:"Paid", status:"Shipped", createdAt:toIsoDate("2025-01-04")},
-    {id: makeOrderId(), product:"Adjustable Dumbbells", price:14.99, payment:"Unpaid", status:"Pending", createdAt:toIsoDate("2025-01-05")},
-    {id: makeOrderId(), product:"Coffee Maker", price:79.99, payment:"Unpaid", status:"Cancelled", createdAt:toIsoDate("2025-01-06")},
-    {id: makeOrderId(), product:"Casual Baseball Cap", price:49.99, payment:"Paid", status:"Delivered", createdAt:toIsoDate("2025-01-07")},
-    {id: makeOrderId(), product:"Full HD Webcam", price:39.99, payment:"Paid", status:"Delivered", createdAt:toIsoDate("2025-01-08")},
-    {id: makeOrderId(), product:"Smart LED Bulb", price:79.99, payment:"Unpaid", status:"Delivered", createdAt:toIsoDate("2025-01-09")},
-    {id: makeOrderId(), product:"Men's T-Shirt", price:14.99, payment:"Unpaid", status:"Delivered", createdAt:toIsoDate("2025-01-10")}
+    {id: makeOrderId(), product:"Wireless Bluetooth Headphones", price:49.99, payment:"Paid",   status:"Delivered", createdAt:at(13, 10)},
+    {id: makeOrderId(), product:"Gaming Mouse",                  price:24.99, payment:"Paid",   status:"Delivered", createdAt:at(11, 14)},
+    {id: makeOrderId(), product:"Coffee Maker",                  price:79.99, payment:"Unpaid", status:"Cancelled", createdAt:at(10, 16)},
+    {id: makeOrderId(), product:"Men's Leather Wallet",          price:39.99, payment:"Paid",   status:"Delivered", createdAt:at(9, 12)},
+    {id: makeOrderId(), product:"Smart LED Bulb",                price:19.99, payment:"Paid",   status:"Shipped",   createdAt:at(8, 18)},
+    {id: makeOrderId(), product:"Memory Foam Pillow",            price:34.99, payment:"Paid",   status:"Delivered", createdAt:at(7, 9)},
+    {id: makeOrderId(), product:"Adjustable Dumbbells",          price:129.99,payment:"Unpaid", status:"Pending",   createdAt:at(6, 13)},
+    {id: makeOrderId(), product:"USB-C Charger",                 price:17.50, payment:"Paid",   status:"Shipped",   createdAt:at(5, 15)},
+    {id: makeOrderId(), product:"Casual Baseball Cap",           price:14.99, payment:"Unpaid", status:"Pending",   createdAt:at(4, 11)},
+    {id: makeOrderId(), product:"Full HD Webcam",                price:59.99, payment:"Paid",   status:"Delivered", createdAt:at(3, 17)},
+    {id: makeOrderId(), product:"Men's T-Shirt",                 price:12.99, payment:"Paid",   status:"Delivered", createdAt:at(2, 20)},
+    {id: makeOrderId(), product:"Bluetooth Speaker",             price:44.99, payment:"Unpaid", status:"Pending",   createdAt:at(1, 19)},
+    {id: makeOrderId(), product:"Desk Lamp",                     price:27.99, payment:"Paid",   status:"Delivered", createdAt:at(0, 8)},
+    {id: makeOrderId(), product:"Phone Stand",                   price:9.99,  payment:"Paid",   status:"Shipped",   createdAt:at(0, 12)},
+    {id: makeOrderId(), product:"Mechanical Keyboard",           price:89.99, payment:"Unpaid", status:"Pending",   createdAt:at(0, 21)}
   ];
 }
 
