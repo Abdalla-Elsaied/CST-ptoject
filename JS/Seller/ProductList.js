@@ -197,6 +197,7 @@ function render(){
         <td class="price">$${p.price.toFixed(2)}</td>
         <td>${p.stock}</td>
         <td><span class="stock ${statusClass(status)}"><span class="dot"></span>${status}</span></td>
+        <td><button class="btn btn-update" onclick="goToUpdateProductPage(event, '${safeId}')">Update</button></td>
       </tr>
     `;
   });
@@ -236,6 +237,11 @@ function searchProduct(v){
 
 function goToAddProductPage(){
   window.location.href = './addProductPage.html';
+}
+
+function goToUpdateProductPage(event, productId){
+  if(event) event.stopPropagation();
+  window.location.href = `./updateProductPage.html?id=${encodeURIComponent(productId)}`;
 }
 
 function openProductDetails(productId){

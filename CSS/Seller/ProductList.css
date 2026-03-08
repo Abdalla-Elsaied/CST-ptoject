@@ -54,6 +54,10 @@ font-weight:600;
 cursor:pointer;
 }
 .btn:hover{ background:var(--green-dark); }
+.btn-update{
+padding:6px 12px;
+font-size:.8rem;
+}
 .stats{
 display:grid;
 grid-template-columns:repeat(4,1fr);
@@ -123,7 +127,7 @@ overflow:auto;
 }
 table{
 width:100%;
-min-width:850px;
+min-width:980px;
 border-collapse:collapse;
 }
 thead tr{ background:var(--green-light); }
