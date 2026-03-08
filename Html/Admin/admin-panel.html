@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <!-- Admin Panel CSS -->
-    <link rel="stylesheet" href="/CSS/Admin/admin-panel.css">
+    <link rel="stylesheet" href="../../CSS/Admin/admin-panel.css">
 </head>
 
 <body>
@@ -33,14 +33,23 @@
 
         <!-- Navigation links — data-section maps to section IDs and sectionRenderers -->
         <nav class="sidebar-nav">
+            <div class="sidebar-section-label">Core</div>
             <a href="#" class="nav-link" data-section="dashboard">
                 <span class="nav-icon"><i class="bi bi-grid-1x2"></i></span> Overview
             </a>
+            <a href="#" class="nav-link" data-section="analytics">
+                <span class="nav-icon"><i class="bi bi-graph-up-arrow"></i></span> Analytics
+            </a>
+            <a href="../Customer/CustomerHomePage.html" class="nav-link">
+                <span class="nav-icon"><i class="bi bi-box-arrow-up-right"></i></span> View Site
+            </a>
+
+            <div class="sidebar-section-label">Management</div>
             <a href="#" class="nav-link" data-section="sellers">
-                <span class="nav-icon"><i class="bi bi-people"></i></span> Seller Management
+                <span class="nav-icon"><i class="bi bi-shop"></i></span> Sellers
             </a>
             <a href="#" class="nav-link" data-section="customers">
-                <span class="nav-icon"><i class="bi bi-person"></i></span> User Management
+                <span class="nav-icon"><i class="bi bi-people"></i></span> Users
             </a>
             <a href="#" class="nav-link" data-section="products">
                 <span class="nav-icon"><i class="bi bi-box-seam"></i></span> Products
@@ -48,16 +57,22 @@
             <a href="#" class="nav-link" data-section="orders">
                 <span class="nav-icon"><i class="bi bi-receipt"></i></span> Orders
             </a>
-            <a href="#" class="nav-link" data-section="analytics">
-                <span class="nav-icon"><i class="bi bi-graph-up-arrow"></i></span> Analytics
-            </a>
         </nav>
 
-        <!-- Sidebar footer — quick action -->
+        <!-- Sidebar footer — quick action + user profile -->
         <div class="sidebar-footer">
             <a href="#" onclick="openAddSellerModal(); return false;" class="sidebar-quick-link">
-                <i class="bi bi-plus-lg"></i> Add Seller
+                <i class="bi bi-plus-lg"></i> Onboard Seller
             </a>
+        </div>
+
+        <!-- User profile at bottom -->
+        <div class="sidebar-user">
+            <div class="sidebar-user-avatar" id="sidebarUserAvatar">A</div>
+            <div class="sidebar-user-info">
+                <div class="sidebar-user-name" id="sidebarUserName">Admin</div>
+                <div class="sidebar-user-role">System Administrator</div>
+            </div>
         </div>
 
     </aside>
@@ -72,9 +87,12 @@
                 &#9776;
             </button>
 
-            <span class="topbar-title">Welcome back, <strong id="adminUserName">Admin</strong></span>
+            <div class="topbar-left">
+                <span class="topbar-title">Welcome back, <strong id="adminUserName">Admin</strong></span>
+                <span class="topbar-date" id="topbarDate"></span>
+            </div>
 
-            <button id="logoutBtn" class="btn-logout">Logout</button>
+            <button id="logoutBtn" class="btn-logout"><i class="bi bi-box-arrow-right"></i> Logout</button>
         </header>
 
         <!-- ── DASHBOARD SECTION ──────────────────────────── -->
@@ -485,7 +503,8 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Password <span class="text-danger">*</span></label>
-                                <input type="password" class="form-control" id="addSellerPassword" minlength="6" required>
+                                <input type="password" class="form-control" id="addSellerPassword" minlength="6"
+                                    required>
                                 <div class="invalid-feedback">Password must be at least 6 characters.</div>
                             </div>
                             <div class="col-md-6">
@@ -547,8 +566,8 @@
          SCRIPTS — ORDER IS CRITICAL, DO NOT CHANGE
     ═══════════════════════════════════════════════════════ -->
 
-    <!-- 1. jQuery (required by teammate's AddSeller.js) -->
-    <script src="/Libraries/JQuery.js"></script>
+    <!-- 1. jQuery (optional) -->
+    <script src="../../Libraries/JQuery.js"></script>
 
     <!-- 2. Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
@@ -559,16 +578,16 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- 4. Shared helpers — MUST load before all section files -->
-    <script src="/JS/Admin/admin-helpers.js" type="module"></script>
+    <script src="../../JS/Admin/admin-helpers.js" type="module"></script>
 
     <!-- 5. Section files — order between these doesn't matter -->
-    <script src="/JS/Admin/admin-dashboard.js" type="module"></script>
-    <script src="/JS/Admin/admin-sellers.js" type="module"></script>
-    <script src="/JS/Admin/admin-customers.js" type="module"></script>
-    <script src="/JS/Admin/admin-products.js" type="module"></script>
-    <script src="/JS/Admin/admin-orders.js" type="module"></script>
-    <script src="/JS/Admin/admin-analytics.js" type="module"></script>
-    <script src="/JS/Admin/admin-panel.js" type="module"></script>
+    <script src="../../JS/Admin/admin-dashboard.js" type="module"></script>
+    <script src="../../JS/Admin/admin-sellers.js" type="module"></script>
+    <script src="../../JS/Admin/admin-customers.js" type="module"></script>
+    <script src="../../JS/Admin/admin-products.js" type="module"></script>
+    <script src="../../JS/Admin/admin-orders.js" type="module"></script>
+    <script src="../../JS/Admin/admin-analytics.js" type="module"></script>
+    <script src="../../JS/Admin/admin-panel.js" type="module"></script>
 
 </body>
 

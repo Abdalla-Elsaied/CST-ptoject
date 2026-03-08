@@ -5,22 +5,20 @@
 // Depends on: admin-helpers.js + all admin-[section].js files
 // ============================================================
 
-import { getCurrentUser } from '/JS/Admin/admin-helpers.js';
-import { renderDashboard } from '/JS/Admin/admin-dashboard.js';
-import { renderSellers } from '/JS/Admin/admin-sellers.js';
-import { renderCustomers } from '/JS/Admin/admin-customers.js';
-import { renderProducts } from '/JS/Admin/admin-products.js';
-import { renderOrders } from '/JS/Admin/admin-orders.js';
-import { renderAnalytics } from '/JS/Admin/admin-analytics.js';
+import { getCurrentUser } from './admin-helpers.js';
+import { renderDashboard } from './admin-dashboard.js';
+import { renderSellers } from './admin-sellers.js';
+import { renderCustomers } from './admin-customers.js';
+import { renderProducts } from './admin-products.js';
+import { renderOrders } from './admin-orders.js';
+import { renderAnalytics } from './admin-analytics.js';
 
 // ─── AUTH GUARD ──────────────────────────────────────────────
 // Must be the very first thing that runs — before any DOM code.
-// If the user is not an admin, redirect immediately to login.
-
 const _currentUser = getCurrentUser();
 
 if (!_currentUser || _currentUser.role !== 'admin') {
-    window.location.href = '/Html/Customer/Login.html';
+    window.location.href = '../Customer/Login.html';
 }
 
 
@@ -29,15 +27,29 @@ if (!_currentUser || _currentUser.role !== 'admin') {
 document.addEventListener('DOMContentLoaded', () => {
 
     // Show admin name in the top navbar
+    const adminName = (_currentUser && (_currentUser.fullName || _currentUser.name)) || 'Admin';
     const nameEl = document.getElementById('adminUserName');
-    if (nameEl && _currentUser) {
-        nameEl.textContent = _currentUser.fullName || _currentUser.name || 'Admin';
+    if (nameEl) nameEl.textContent = adminName;
+
+    // Populate sidebar user profile
+    const sidebarNameEl = document.getElementById('sidebarUserName');
+    if (sidebarNameEl) sidebarNameEl.textContent = adminName;
+    const sidebarAvatarEl = document.getElementById('sidebarUserAvatar');
+    if (sidebarAvatarEl) sidebarAvatarEl.textContent = adminName.charAt(0).toUpperCase();
+
+    // Show current date in topbar
+    const dateEl = document.getElementById('topbarDate');
+    if (dateEl) {
+        const now = new Date();
+        dateEl.textContent = now.toLocaleDateString('en-US', {
+            weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+        });
     }
 
     // Logout button
     document.getElementById('logoutBtn').addEventListener('click', () => {
         localStorage.removeItem('ls_currentUser');
-        window.location.href = '/Html/Customer/Login.html';
+        window.location.href = '../Customer/Login.html';
     });
 
     // Sidebar mobile toggle (hamburger button)
