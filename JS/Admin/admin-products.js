@@ -13,7 +13,8 @@ import {
     stockBadge,
     activeBadge,
     showToast,
-    showConfirm
+    showConfirm,
+    escapeHTML
 } from '../Admin/admin-helpers.js';
 
 // Active filter state — persists while user stays on products section
@@ -87,7 +88,7 @@ export function renderProductsTable() {
     tbody.innerHTML = filtered.map((p, i) => {
         // Better image fallback - use data URL placeholder if image fails
         const imageUrl = p.imageUrl || p.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"%3E%3Crect fill="%23e5e7eb" width="40" height="40"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="12" fill="%239ca3af"%3ENo Img%3C/text%3E%3C/svg%3E';
-        
+
         return `
         <tr>
             <td><span class="text-muted small fw-bold">${i + 1}</span></td>
@@ -98,20 +99,20 @@ export function renderProductsTable() {
                      style="width: 40px; height: 40px; object-fit: cover;"
                      onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22%3E%3Crect fill=%22%23e5e7eb%22 width=%2240%22 height=%2240%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-size=%2212%22 fill=%22%239ca3af%22%3ENo Img%3C/text%3E%3C/svg%3E'">
             </td>
-            <td><div class="fw-bold">${p.name}</div></td>
+            <td><div class="fw-bold">${escapeHTML(p.name)}</div></td>
             <td>${getSellerName(p.sellerId)}</td>
-            <td><span class="badge bg-light text-dark border">${p.category || 'N/A'}</span></td>
+            <td><span class="badge bg-light text-dark border">${escapeHTML(p.category)}</span></td>
             <td class="fw-bold">${formatPrice(p.price)}</td>
             <td>${stockBadge(p.stock)}</td>
             <td>${activeBadge(p.isActive)}</td>
             <td class="text-center">
                 <div class="d-flex gap-2 justify-content-center">
                     ${p.isActive
-            ? `<button class="btn-action btn-warn" title="Deactivate"
+                ? `<button class="btn-action btn-warn" title="Deactivate"
                                    data-id="${p.id}" data-action="deactivate"><i class="bi bi-eye-slash"></i></button>`
-            : `<button class="btn-action btn-info" title="Activate"
+                : `<button class="btn-action btn-info" title="Activate"
                                    data-id="${p.id}" data-action="activate"><i class="bi bi-eye"></i></button>`
-        }
+            }
                     <button class="btn-action btn-delete" title="Delete"
                             data-id="${p.id}" data-action="delete"><i class="bi bi-trash"></i></button>
                 </div>

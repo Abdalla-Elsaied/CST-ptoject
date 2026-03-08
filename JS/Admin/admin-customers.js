@@ -13,7 +13,8 @@ import {
     getCurrentUser,
     formatDate,
     showConfirm,
-    showToast
+    showToast,
+    escapeHTML
 } from '../Admin/admin-helpers.js';
 
 import { getLS } from '../Core/Storage.js';
@@ -99,9 +100,9 @@ export function renderCustomersTable() {
         <tr class="${isSuspended ? 'table-danger' : isAdmin ? 'table-info' : ''}">
             <td><span class="text-muted small fw-bold">${i + 1}</span></td>
             <td>
-                <div class="fw-bold">${c.name || c.fullName || '—'}${suspendBadge}${adminBadge}${roleBadge}</div>
+                <div class="fw-bold">${escapeHTML(c.name || c.fullName)}${suspendBadge}${adminBadge}${roleBadge}</div>
             </td>
-            <td>${c.email}</td>
+            <td>${escapeHTML(c.email)}</td>
             <td>
                 ${isAdmin
                 ? '<span class="badge bg-dark">Admin</span>'

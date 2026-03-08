@@ -6,7 +6,8 @@ import {
     getCustomerName,
     getSellerName,
     formatPrice,
-    statusBadge
+    statusBadge,
+    escapeHTML
 } from '../Admin/admin-helpers.js';
 
 
@@ -107,10 +108,10 @@ function renderRecentSellers() {
 
     tbody.innerHTML = sellers.map(s => `
         <tr>
-            <td>${s.fullName || 'Unknown'}</td>
-            <td>${s.storeName || 'N/A'}</td>
-            <td>${s.city || 'N/A'}</td>
-            <td>${s.paymentMethod || 'N/A'}</td>
+            <td>${escapeHTML(s.fullName)}</td>
+            <td>${escapeHTML(s.storeName)}</td>
+            <td>${escapeHTML(s.city)}</td>
+            <td>${escapeHTML(s.paymentMethod)}</td>
         </tr>
     `).join('');
 }

@@ -13,7 +13,8 @@ import {
     getUsers,
     saveUsers,
     showToast,
-    showConfirm
+    showConfirm,
+    escapeHTML
 } from '../Admin/admin-helpers.js';
 
 import { ROLES } from '../Core/Auth.js';
@@ -91,12 +92,12 @@ export function renderSellersTable() {
         return `
         <tr class="${rowClass}">
             <td>${i + 1}</td>
-            <td>${s.fullName}${statusBadge}</td>
-            <td>${s.email}</td>
-            <td>${s.phone}</td>
-            <td>${s.storeName}</td>
-            <td>${s.city}</td>
-            <td>${s.paymentMethod}</td>
+            <td>${escapeHTML(s.fullName)}${statusBadge}</td>
+            <td>${escapeHTML(s.email)}</td>
+            <td>${escapeHTML(s.phone)}</td>
+            <td>${escapeHTML(s.storeName)}</td>
+            <td>${escapeHTML(s.city)}</td>
+            <td>${escapeHTML(s.paymentMethod)}</td>
             <td class="actions-col text-center">
                 <div class="d-flex gap-2 justify-content-center flex-wrap">
                     ${!isApproved

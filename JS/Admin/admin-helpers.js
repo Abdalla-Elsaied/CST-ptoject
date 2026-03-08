@@ -3,9 +3,9 @@ import {
     KEY_PRODUCTS,
     KEY_ORDERS,
     KEY_CURRENT_USER
-} from '/JS/Core/Constants.js';
+} from '../Core/Constants.js';
 
-import { getLS, setLS } from '/JS/Core/Storage.js';
+import { getLS, setLS } from '../Core/Storage.js';
 import { ROLES } from '../Core/Auth.js';
 
 // ─── DATA ACCESS ─────────────────────────────────────────────
@@ -178,8 +178,8 @@ export function showConfirm(message, onConfirm) {
  * Falls back to 'Unknown Seller' if not found.
  */
 export function getSellerName(sellerId) {
-    const seller = getSellers().find(s => s.id == sellerId); // == because id is Number
-    return seller ? seller.storeName : 'Unknown Seller';
+    const seller = getSellers().find(s => s.id == sellerId);
+    return escapeHTML(seller ? seller.storeName : 'Unknown Seller');
 }
 
 /**
@@ -188,5 +188,20 @@ export function getSellerName(sellerId) {
  */
 export function getCustomerName(customerId) {
     const user = getUsers().find(u => u.id == customerId);
-    return user ? (user.name || user.fullName || 'Unknown') : 'Unknown Customer';
+    return escapeHTML(user ? (user.name || user.fullName || 'Unknown') : 'Unknown Customer');
+}
+
+/**
+ * Escapes common HTML special characters to prevent XSS.
+ * @param {string} str 
+ * @returns {string}
+ */
+export function escapeHTML(str) {
+    if (str === null || str === undefined) return '—';
+    const stringValue = String(str);
+    if (!stringValue.trim()) return '—';
+
+    const div = document.createElement('div');
+    div.textContent = stringValue;
+    return div.innerHTML;
 }
