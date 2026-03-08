@@ -106,6 +106,26 @@ $(function () {
     closeMobileSidebar();
   }
 
+  // update product page-------------------------------------------------------------
+
+
+  $('#updateProductPageLink').on('click', function () {
+    showupdateProductPage();
+  });
+
+
+   function showupdateProductPage() {
+    $embeddedPageFrame.attr('src', 'updateProductPage.html');
+    $dashboardView.hide();
+    $orderManagementView.show();
+    $pageTitle.text('Update Product');
+    closeMobileSidebar();
+  }
+
+
+
+
+
 //---------------------------------------------------------------------------------------------------------
 
 
