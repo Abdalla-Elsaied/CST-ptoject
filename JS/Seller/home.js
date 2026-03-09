@@ -37,6 +37,7 @@ $(function () {
   let darkMode = $('body').hasClass('dark');
   let dashboardProductsCache = null;
   let dashboardProductsLoaded = false;
+  let usersBarChart = null;
   const REPORT_WEEK_START_DAY = 4; // 0=Sun ... 4=Thu
 
   function closeMobileSidebar() {
@@ -508,6 +509,7 @@ $(function () {
   }
 
   function renderOrdersStatusPanel() {
+    if (!usersBarChart) return;
     const totalEl = document.getElementById('orders30DaysValue');
     const recentOrders = getRecentOrders(30);
     if (totalEl) totalEl.textContent = formatCompactNumber(recentOrders.length);
@@ -1412,7 +1414,7 @@ $(function () {
   ═══════════════════════════════════════════ */
   const barCtx = document.getElementById('usersBarChart').getContext('2d');
 
-  const usersBarChart = new Chart(barCtx, {
+  usersBarChart = new Chart(barCtx, {
     type: 'bar',
     data: {
       labels: ['Delivered', 'Shipped', 'Pending', 'Cancelled'],
@@ -1458,6 +1460,8 @@ $(function () {
     }
   });
 
+  renderOrdersStatusPanel();
+
   /* ─────────────────────────────────────────
      Helper: update chart colors on theme toggle
   ───────────────────────────────────────── */
@@ -1500,18 +1504,8 @@ $(function () {
 
   renderDashboardOrderStats();
   renderPendingCanceledStats();
-  renderDashboardWeeklySalesMetric();
-  renderDashboardCanceledRevenueMetric();
-  renderDashboardTotalProductsMetric();
-  renderDashboardStockProductsMetric();
-  renderDashboardOutOfStockMetric();
-  renderOrdersStatusPanel();
-  renderTransactionTable();
-  renderBestSellingTable();
-  renderTopProductsList();
-  renderDashboardCategories();
+  showDashboard();
   renderWeeklyReportChart();
-  refreshDashboardProductsUI();
 
 });
 
