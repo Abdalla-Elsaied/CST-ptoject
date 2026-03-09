@@ -390,6 +390,22 @@ background:var(--green-light);
 color:var(--green-dark);
 border-color:var(--green);
 }
+
+.btn-inline{
+border:1.5px solid var(--border);
+background:transparent;
+color:var(--text-primary);
+border-radius:8px;
+padding:4px 10px;
+font-size:.78rem;
+font-weight:600;
+cursor:pointer;
+}
+.btn-inline:hover{
+border-color:var(--green);
+color:var(--green-dark);
+background:var(--green-light);
+}
 @media (max-width:992px){
 .cards{
 grid-template-columns:repeat(2,1fr);
