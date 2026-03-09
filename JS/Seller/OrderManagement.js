@@ -25,27 +25,6 @@ function toIsoDate(raw){
   return parsed.toISOString();
 }
 
-function toDatetimeLocalValue(raw){
-  const parsed = new Date(raw || Date.now());
-  if(Number.isNaN(parsed.getTime())) return '';
-  const pad = (n) => String(n).padStart(2, '0');
-  const y = parsed.getFullYear();
-  const m = pad(parsed.getMonth() + 1);
-  const d = pad(parsed.getDate());
-  const h = pad(parsed.getHours());
-  const min = pad(parsed.getMinutes());
-  return `${y}-${m}-${d}T${h}:${min}`;
-}
-
-function getOrderDateFromInput(){
-  const dateInput = document.getElementById('orderDate');
-  const raw = String(dateInput?.value || '').trim();
-  if(!raw) return null;
-  const parsed = new Date(raw);
-  if(Number.isNaN(parsed.getTime())) return null;
-  return parsed.toISOString();
-}
-
 function defaultImage(name){
   const safeName = encodeURIComponent(name || 'Product');
   return `https://placehold.co/600x400/ecfdf5/166534?text=${safeName}`;
@@ -427,7 +406,6 @@ function clearOrderForm(){
   editingOrderId = null;
   setModalMode('add');
   document.getElementById('price').value = '';
-  document.getElementById('orderDate').value = toDatetimeLocalValue(new Date());
   document.getElementById('payment').value = 'Paid';
   document.getElementById('status').value = 'Delivered';
   renderProductPicker();
@@ -548,7 +526,6 @@ function openEditModal(orderId){
 
   document.getElementById('payment').value = order.payment === 'Paid' ? 'Paid' : 'Unpaid';
   document.getElementById('status').value = order.status;
-  document.getElementById('orderDate').value = toDatetimeLocalValue(order.createdAt ?? order.date);
   updateSelectedTotal();
   document.getElementById('modal').style.display = 'flex';
 }
@@ -563,7 +540,6 @@ function saveOrder(){
 
   const payment = document.getElementById('payment').value;
   const status = document.getElementById('status').value;
-  const selectedDateIso = getOrderDateFromInput();
 
   const products = collectSelectedProducts();
 
@@ -581,7 +557,7 @@ function saveOrder(){
         price: finalPrice,
         payment,
         status,
-        createdAt: selectedDateIso || toIsoDate(orders[idx].createdAt ?? orders[idx].date)
+        createdAt: toIsoDate(orders[idx].createdAt ?? orders[idx].date)
       };
     }
   }else{
@@ -592,7 +568,7 @@ function saveOrder(){
       price: finalPrice,
       payment,
       status,
-      createdAt: selectedDateIso || new Date().toISOString()
+      createdAt: new Date().toISOString()
     });
   }
 

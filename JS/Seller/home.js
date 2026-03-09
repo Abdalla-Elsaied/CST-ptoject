@@ -37,6 +37,7 @@ $(function () {
   let darkMode = $('body').hasClass('dark');
   let dashboardProductsCache = null;
   let dashboardProductsLoaded = false;
+  let usersBarChart = null;
   const REPORT_WEEK_START_DAY = 4; // 0=Sun ... 4=Thu
 
   function closeMobileSidebar() {
@@ -109,7 +110,7 @@ $(function () {
   function loadDashboardOrders() {
     try {
       const parsed = JSON.parse(localStorage.getItem('ls_orders'));
-      if (!Array.isArray(parsed)) return [];
+      if (!Array.isArray(parsed) || parsed.length === 0) return [];
       const normalized = normalizeDashboardOrders(parsed);
       localStorage.setItem('ls_orders', JSON.stringify(normalized));
       return normalized;
@@ -190,6 +191,7 @@ $(function () {
     if (rawAmount > 100_000) return rawAmount / 100;
     return rawAmount;
   }
+
 
   function startOfWeek(dateValue) {
     const d = new Date(dateValue || Date.now());
@@ -508,6 +510,7 @@ $(function () {
   }
 
   function renderOrdersStatusPanel() {
+    if (!usersBarChart) return;
     const totalEl = document.getElementById('orders30DaysValue');
     const recentOrders = getRecentOrders(30);
     if (totalEl) totalEl.textContent = formatCompactNumber(recentOrders.length);
@@ -538,6 +541,16 @@ $(function () {
     usersBarChart.data.datasets[0].data = data;
     usersBarChart.data.datasets[0].backgroundColor = ['#16a34a', '#22c55e', '#f59e0b', '#ef4444'];
     usersBarChart.update('none');
+  }
+
+  function deferOrdersStatusRefresh() {
+    setTimeout(() => renderOrdersStatusPanel(), 0);
+  }
+
+  function refreshDashboardOrderWidgets() {
+    renderDashboardOrderStats();
+    renderPendingCanceledStats();
+    deferOrdersStatusRefresh();
   }
 
   function normalizeDashboardProduct(raw, idx) {
@@ -1079,7 +1092,7 @@ $(function () {
     renderDashboardTotalProductsMetric();
     renderDashboardStockProductsMetric();
     renderDashboardOutOfStockMetric();
-    renderOrdersStatusPanel();
+    deferOrdersStatusRefresh();
     setPendingCanceledDrilldown(pendingCanceledDrilldownStatus);
     renderTransactionTable();
     renderBestSellingTable();
@@ -1132,7 +1145,18 @@ $(function () {
 
   $embeddedPageFrame.on('load', function () {
     syncEmbeddedTheme();
-    syncNavFromEmbeddedPage();
+    if ($orderManagementView.is(':visible')) {
+      syncNavFromEmbeddedPage();
+    }
+    try {
+      const path = $embeddedPageFrame.get(0)?.contentWindow?.location?.pathname || '';
+      const fileName = path.split('/').pop().toLowerCase();
+      if (fileName === 'ordermanagement.html') {
+        refreshDashboardOrderWidgets();
+      }
+    } catch (_err) {
+      // ignore access errors
+    }
   });
 
   /* ─────────────────────────────────────────
@@ -1412,7 +1436,7 @@ $(function () {
   ═══════════════════════════════════════════ */
   const barCtx = document.getElementById('usersBarChart').getContext('2d');
 
-  const usersBarChart = new Chart(barCtx, {
+  usersBarChart = new Chart(barCtx, {
     type: 'bar',
     data: {
       labels: ['Delivered', 'Shipped', 'Pending', 'Cancelled'],
@@ -1458,6 +1482,14 @@ $(function () {
     }
   });
 
+  deferOrdersStatusRefresh();
+
+  window.addEventListener('storage', function (event) {
+    if (event.key === 'ls_orders') {
+      refreshDashboardOrderWidgets();
+    }
+  });
+
   /* ─────────────────────────────────────────
      Helper: update chart colors on theme toggle
   ───────────────────────────────────────── */
@@ -1500,18 +1532,8 @@ $(function () {
 
   renderDashboardOrderStats();
   renderPendingCanceledStats();
-  renderDashboardWeeklySalesMetric();
-  renderDashboardCanceledRevenueMetric();
-  renderDashboardTotalProductsMetric();
-  renderDashboardStockProductsMetric();
-  renderDashboardOutOfStockMetric();
-  renderOrdersStatusPanel();
-  renderTransactionTable();
-  renderBestSellingTable();
-  renderTopProductsList();
-  renderDashboardCategories();
+  showDashboard();
   renderWeeklyReportChart();
-  refreshDashboardProductsUI();
 
 });
 
