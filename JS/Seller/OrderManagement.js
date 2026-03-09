@@ -1,13 +1,19 @@
-import { KEY_ORDERS } from '../Core/Constants.js';
-const pageSize = 8
-let page = 1
-let filter="all"
-let search=""
+import { KEY_ORDERS, KEY_PRODUCTS } from '../Core/Constants.js';
 
-const STATUS_ALLOWED = new Set(["Delivered", "Pending", "Shipped", "Cancelled"]);
+const pageSize = 8;
+let page = 1;
+let filter = 'all';
+let search = '';
+
+const STATUS_ALLOWED = new Set(['Delivered', 'Pending', 'Shipped', 'Cancelled']);
+const PRODUCT_STORAGE_KEYS = [KEY_PRODUCTS, 'products', 'sellerProducts'];
+
+let productCatalog = [];
+let productById = new Map();
+let productByName = new Map();
 
 function makeOrderId(){
-  return `ORD${Date.now()}${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`;
+  return `ORD${Date.now()}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
 }
 
 function toIsoDate(raw){
@@ -16,90 +22,210 @@ function toIsoDate(raw){
   return parsed.toISOString();
 }
 
-function normalizeOrder(raw, idx){
-  const parsedPrice = Number(raw?.price);
-  const status = STATUS_ALLOWED.has(raw?.status) ? raw.status : "Pending";
-  const normalizedProducts = Array.isArray(raw?.products)
-    ? raw.products.map((p) => String(p || "").trim()).filter(Boolean)
-    : [];
-  if(normalizedProducts.length === 0){
-    if(Array.isArray(raw?.items)){
-      raw.items.forEach((item) => {
-        const itemName = String(item?.name ?? item?.productName ?? item?.title ?? "").trim();
-        if(itemName) normalizedProducts.push(itemName);
-      });
-    } else {
-      const singleProduct = String(raw?.product ?? "").trim();
-      if(singleProduct) normalizedProducts.push(singleProduct);
-    }
+function defaultImage(name){
+  const safeName = encodeURIComponent(name || 'Product');
+  return `https://placehold.co/600x400/ecfdf5/166534?text=${safeName}`;
+}
+
+function escapeHtml(value){
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function parseArrayFromStorage(key){
+  try{
+    const parsed = JSON.parse(localStorage.getItem(key));
+    return Array.isArray(parsed) ? parsed : null;
+  }catch(_err){
+    return null;
   }
+}
+
+function loadRawProducts(){
+  for(const key of PRODUCT_STORAGE_KEYS){
+    const arr = parseArrayFromStorage(key);
+    if(arr && arr.length) return arr;
+  }
+  return [];
+}
+
+function normalizeCatalogProduct(raw, idx){
+  const name = String(raw?.productName ?? raw?.name ?? `Product ${idx + 1}`).trim();
+  const id = String(raw?.id ?? idx + 1);
+  const price = Number(raw?.price);
+
+  let image = '';
+  if(typeof raw?.image === 'string' && raw.image.trim()) image = raw.image.trim();
+  else if(typeof raw?.imageUrl === 'string' && raw.imageUrl.trim()) image = raw.imageUrl.trim();
+  else if(Array.isArray(raw?.images) && raw.images.length){
+    const first = raw.images[0];
+    if(typeof first === 'string' && first.trim()) image = first.trim();
+    else if(first && typeof first?.url === 'string' && first.url.trim()) image = first.url.trim();
+  }
+
+  return {
+    id,
+    name,
+    image: image || defaultImage(name),
+    price: Number.isFinite(price) ? price : 0
+  };
+}
+
+function refreshProductCatalog(){
+  const rawProducts = loadRawProducts();
+  productCatalog = rawProducts.map((item, idx) => normalizeCatalogProduct(item, idx));
+  productById = new Map();
+  productByName = new Map();
+
+  productCatalog.forEach((p) => {
+    productById.set(String(p.id), p);
+    productByName.set(p.name.toLowerCase(), p);
+  });
+}
+
+function resolveProduct(name, id){
+  const byId = id ? productById.get(String(id)) : null;
+  if(byId) return byId;
+  const lowered = String(name || '').trim().toLowerCase();
+  if(!lowered) return null;
+  return productByName.get(lowered) ?? null;
+}
+
+function normalizeOrderItem(rawItem, idx){
+  const isObject = rawItem && typeof rawItem === 'object';
+  const id = isObject ? (rawItem.id ?? rawItem.productId ?? rawItem.product_id ?? '') : '';
+  const name = isObject
+    ? String(rawItem.name ?? rawItem.productName ?? rawItem.product ?? rawItem.title ?? '').trim()
+    : String(rawItem ?? '').trim();
+  const qtyRaw = isObject ? Number(rawItem.qty ?? rawItem.quantity ?? 1) : 1;
+  const qty = Number.isFinite(qtyRaw) && qtyRaw > 0 ? Math.floor(qtyRaw) : 1;
+  const priceRaw = isObject ? Number(rawItem.unitPrice ?? rawItem.price) : Number.NaN;
+  const imageRaw = isObject
+    ? String(rawItem.image ?? rawItem.imageUrl ?? rawItem.thumbnail ?? '').trim()
+    : '';
+
+  const matched = resolveProduct(name, id);
+  const resolvedName = (matched?.name ?? name) || `Product ${idx + 1}`;
+  const unitPrice = Number.isFinite(priceRaw) && priceRaw >= 0 ? priceRaw : (matched?.price ?? 0);
+
+  return {
+    id: String(id || matched?.id || resolvedName),
+    name: resolvedName,
+    image: imageRaw || matched?.image || defaultImage(resolvedName),
+    qty,
+    unitPrice
+  };
+}
+
+function normalizeOrderItems(raw){
+  const source = Array.isArray(raw?.products) && raw.products.length
+    ? raw.products
+    : (Array.isArray(raw?.items) && raw.items.length
+      ? raw.items
+      : [raw?.product]);
+
+  const items = source
+    .map((item, idx) => normalizeOrderItem(item, idx))
+    .filter((item) => item.name);
+
+  return items;
+}
+
+function normalizeOrder(raw, idx){
+  const status = STATUS_ALLOWED.has(raw?.status) ? raw.status : 'Pending';
+  const items = normalizeOrderItems(raw);
+  const parsedPrice = Number(raw?.price);
+  const calculatedTotal = Number(items.reduce((sum, item) => sum + (item.unitPrice * item.qty), 0).toFixed(2));
+
   return {
     ...raw,
     id: String(raw?.id ?? raw?.orderId ?? `ORD${Date.now()}${idx}`),
-    products: normalizedProducts,
-    product: normalizedProducts[0] ?? "",
-    price: Number.isFinite(parsedPrice) ? parsedPrice : 0,
-    payment: raw?.payment === "Paid" ? "Paid" : "Unpaid",
+    products: items,
+    product: items[0]?.name ?? '',
+    price: Number.isFinite(parsedPrice) ? parsedPrice : calculatedTotal,
+    payment: raw?.payment === 'Paid' ? 'Paid' : 'Unpaid',
     status,
     createdAt: toIsoDate(raw?.createdAt ?? raw?.date)
   };
 }
 
 function seedOrders(){
+  refreshProductCatalog();
+
+  const fallbackProducts = [
+    { id: 'p1', name: 'Wireless Headphones', image: defaultImage('Wireless Headphones'), price: 89.99 },
+    { id: 'p2', name: 'Gaming Mouse', image: defaultImage('Gaming Mouse'), price: 39.99 },
+    { id: 'p3', name: 'Coffee Maker', image: defaultImage('Coffee Maker'), price: 119.50 },
+    { id: 'p4', name: 'Desk Lamp', image: defaultImage('Desk Lamp'), price: 27.99 },
+    { id: 'p5', name: 'Mechanical Keyboard', image: defaultImage('Mechanical Keyboard'), price: 94.75 }
+  ];
+
+  const source = productCatalog.length ? productCatalog : fallbackProducts;
   const now = new Date();
+  const pick = (index) => source[index % source.length];
+
   const at = (daysAgo, hour) => {
     const d = new Date(now);
     d.setDate(d.getDate() - daysAgo);
     d.setHours(hour, Math.floor(Math.random() * 50) + 5, 0, 0);
     return toIsoDate(d);
   };
-  const order = (daysAgo, hour, products, price, payment, status) => ({
-    id: makeOrderId(),
-    products,
-    price,
-    payment,
-    status,
-    createdAt: at(daysAgo, hour)
+
+  const buildItems = (lineDefs) => lineDefs.map(([productIndex, qty]) => {
+    const p = pick(productIndex);
+    return {
+      id: p.id,
+      name: p.name,
+      image: p.image,
+      qty,
+      unitPrice: Number(p.price) || 0
+    };
   });
 
+  const buildOrder = (daysAgo, hour, lineDefs, payment, status) => {
+    const items = buildItems(lineDefs);
+    const total = Number(items.reduce((sum, item) => sum + (item.qty * item.unitPrice), 0).toFixed(2));
+    return {
+      id: makeOrderId(),
+      products: items,
+      product: items[0]?.name ?? '',
+      price: total,
+      payment,
+      status,
+      createdAt: at(daysAgo, hour)
+    };
+  };
+
   return [
-    order(21, 10, ["Wireless Noise-Canceling Headphones", "USB-C Cable 2m"], 134.98, "Paid", "Delivered"),
-    order(20, 13, ["Gaming Mouse Pro"], 39.99, "Paid", "Delivered"),
-    order(19, 17, ["Espresso Machine", "Coffee Beans 1kg"], 249.50, "Paid", "Delivered"),
-    order(18, 9, ["Men's Leather Wallet"], 42.00, "Paid", "Delivered"),
-    order(17, 15, ["Smart LED Bulb Pack (4)"], 29.99, "Paid", "Delivered"),
-    order(16, 19, ["Memory Foam Pillow", "Pillowcase Set"], 58.40, "Paid", "Delivered"),
-    order(15, 12, ["Adjustable Dumbbells 20kg"], 169.99, "Unpaid", "Cancelled"),
-    order(14, 11, ["USB-C Fast Charger 65W", "Braided Cable"], 44.90, "Paid", "Delivered"),
-    order(13, 16, ["Casual Baseball Cap"], 18.99, "Paid", "Delivered"),
-    order(12, 20, ["Full HD Webcam", "Ring Light 10in"], 88.75, "Paid", "Delivered"),
-    order(11, 8, ["Men's Cotton T-Shirt", "Crew Socks"], 31.50, "Paid", "Delivered"),
-    order(10, 14, ["Bluetooth Speaker Mini"], 36.00, "Paid", "Delivered"),
-    order(9, 18, ["Desk Lamp", "LED Bulb Warm White"], 39.25, "Paid", "Delivered"),
-    order(8, 10, ["Phone Stand Aluminum"], 12.49, "Paid", "Shipped"),
-    order(7, 13, ["Mechanical Keyboard", "Wrist Rest"], 104.90, "Paid", "Shipped"),
-    order(6, 17, ["Portable SSD 1TB"], 119.00, "Paid", "Shipped"),
-    order(5, 11, ["Wireless Earbuds", "Charging Case Cover"], 79.99, "Unpaid", "Pending"),
-    order(4, 15, ["Office Chair Ergonomic"], 189.00, "Unpaid", "Pending"),
-    order(3, 9, ["Air Fryer 5L", "Silicone Mat"], 126.30, "Paid", "Shipped"),
-    order(2, 12, ["Monitor Arm", "HDMI Cable"], 67.80, "Paid", "Shipped"),
-    order(1, 18, ["Tablet Stand", "Screen Cleaner Kit"], 26.50, "Unpaid", "Pending"),
-    order(0, 21, ["Smart Watch Series S", "Extra Strap"], 215.00, "Unpaid", "Pending")
+    buildOrder(14, 10, [[0, 1], [1, 1]], 'Paid', 'Delivered'),
+    buildOrder(13, 15, [[2, 1]], 'Paid', 'Delivered'),
+    buildOrder(12, 11, [[3, 2]], 'Paid', 'Delivered'),
+    buildOrder(11, 18, [[4, 1], [0, 1]], 'Unpaid', 'Cancelled'),
+    buildOrder(10, 9, [[1, 1]], 'Paid', 'Delivered'),
+    buildOrder(9, 13, [[2, 1], [3, 1]], 'Paid', 'Delivered'),
+    buildOrder(8, 16, [[0, 1]], 'Paid', 'Shipped'),
+    buildOrder(7, 20, [[4, 1]], 'Paid', 'Shipped'),
+    buildOrder(6, 12, [[1, 2]], 'Unpaid', 'Pending'),
+    buildOrder(5, 14, [[2, 1]], 'Unpaid', 'Pending'),
+    buildOrder(4, 17, [[3, 1]], 'Paid', 'Shipped'),
+    buildOrder(3, 19, [[0, 1], [4, 1]], 'Paid', 'Shipped'),
+    buildOrder(2, 8, [[2, 1]], 'Paid', 'Delivered'),
+    buildOrder(1, 21, [[1, 1], [3, 1]], 'Unpaid', 'Pending')
   ];
 }
 
 function loadOrders(){
-  let parsed = null;
-  try {
-    parsed = JSON.parse(localStorage.getItem(KEY_ORDERS));
-  } catch (_err) {
-    parsed = null;
-  }
+  refreshProductCatalog();
+  const parsed = parseArrayFromStorage(KEY_ORDERS);
 
   if(!Array.isArray(parsed) || parsed.length === 0){
     const seeded = seedOrders();
     localStorage.setItem(KEY_ORDERS, JSON.stringify(seeded));
-    return seeded;
+    return seeded.map((order, idx) => normalizeOrder(order, idx));
   }
 
   const normalized = parsed.map((order, idx) => normalizeOrder(order, idx));
@@ -110,193 +236,235 @@ function loadOrders(){
 let orders = loadOrders();
 
 function save(){
-localStorage.setItem(KEY_ORDERS,JSON.stringify(orders))
+  localStorage.setItem(KEY_ORDERS, JSON.stringify(orders));
 }
 
 function reseedOrders(){
-orders = seedOrders().map((o, idx) => normalizeOrder(o, idx))
-save()
-page = 1
-filter = "all"
-search = ""
-render()
+  refreshProductCatalog();
+  orders = seedOrders().map((o, idx) => normalizeOrder(o, idx));
+  save();
+  page = 1;
+  filter = 'all';
+  search = '';
+  render();
 }
 
 function updateCards(){
-
-document.getElementById("totalOrders").innerText=orders.length
-
-document.getElementById("completedOrders").innerText=
-orders.filter(o=>o.status=="Delivered").length
-
-document.getElementById("cancelOrders").innerText=
-orders.filter(o=>o.status=="Cancelled").length
-
-document.getElementById("newOrders").innerText=
-orders.filter(o=>o.status=="Pending").length
-
+  document.getElementById('totalOrders').innerText = orders.length;
+  document.getElementById('completedOrders').innerText = orders.filter((o) => o.status === 'Delivered').length;
+  document.getElementById('cancelOrders').innerText = orders.filter((o) => o.status === 'Cancelled').length;
+  document.getElementById('newOrders').innerText = orders.filter((o) => o.status === 'Pending').length;
 }
 
 function render(){
+  let data = orders;
 
-let data=orders
+  if(filter !== 'all') data = data.filter((o) => o.status === filter);
 
-if(filter!="all")
-data=data.filter(o=>o.status==filter)
+  if(search){
+    data = data.filter((o) => {
+      const names = Array.isArray(o.products) ? o.products.map((p) => p.name).join(' ') : '';
+      return names.toLowerCase().includes(search);
+    });
+  }
 
-if(search)
-data=data.filter((o)=>{
-  const products = Array.isArray(o.products) ? o.products : [];
-  return products.join(" ").toLowerCase().includes(search);
-})
+  const start = (page - 1) * pageSize;
+  const paginated = data.slice(start, start + pageSize);
+  let html = '';
 
-let start=(page-1)*pageSize
-let paginated=data.slice(start,start+pageSize)
+  paginated.forEach((o, i) => {
+    const products = Array.isArray(o.products) ? o.products : [];
+    const firstProduct = products[0]?.name ?? 'No products';
+    const summary = products.length > 1 ? `${firstProduct} +${products.length - 1} more` : firstProduct;
 
-let html=""
-
-paginated.forEach((o,i)=>{
-const products = Array.isArray(o.products) ? o.products : [];
-const firstProduct = products[0] ?? "No products";
-const summary = products.length > 1 ? `${firstProduct} +${products.length - 1} more` : firstProduct;
-
-html+=`
+    html += `
 <tr>
-<td>${start+i+1}</td>
-<td><button class="order-link" onclick="openOrderProducts('${o.id}')">#${o.id}</button></td>
-<td>${summary}</td>
+<td>${start + i + 1}</td>
+<td><button class="order-link" onclick="openOrderProducts('${escapeHtml(o.id)}')">#${escapeHtml(o.id)}</button></td>
+<td>${escapeHtml(summary)}</td>
 <td>${new Date(o.createdAt).toLocaleDateString('en-GB')}</td>
-<td>$${o.price.toFixed(2)}</td>
-<td class="${o.payment=='Paid'?'paid':'unpaid'}">${o.payment}</td>
+<td>$${Number(o.price || 0).toFixed(2)}</td>
+<td class="${o.payment === 'Paid' ? 'paid' : 'unpaid'}">${o.payment}</td>
 <td class="status ${o.status.toLowerCase()}">${o.status}</td>
 </tr>
-`
+`;
+  });
 
-})
-
-document.getElementById("tableBody").innerHTML=html
-
-renderPagination(data.length)
-
-updateCards()
-
+  document.getElementById('tableBody').innerHTML = html;
+  renderPagination(data.length);
+  updateCards();
 }
 
 function renderPagination(total){
+  const pages = Math.ceil(total / pageSize);
+  let html = '';
 
-let pages=Math.ceil(total/pageSize)
+  for(let i = 1; i <= pages; i++){
+    html += `<div class="page ${i === page ? 'active' : ''}" onclick="goto(${i})">${i}</div>`;
+  }
 
-let html=""
-
-for(let i=1;i<=pages;i++){
-
-html+=`<div class="page ${i==page?'active':''}" onclick="goto(${i})">${i}</div>`
-
-}
-
-document.getElementById("pagination").innerHTML=html
-
+  document.getElementById('pagination').innerHTML = html;
 }
 
 function goto(p){
-page=p
-render()
+  page = p;
+  render();
 }
 
 function filterStatus(s, tabEl){
+  filter = s;
+  page = 1;
 
-filter=s
-page=1
+  document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+  if(tabEl) tabEl.classList.add('active');
 
-document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"))
-if(tabEl) tabEl.classList.add("active")
-
-render()
-
+  render();
 }
 
 function searchOrder(v){
-search=v.toLowerCase()
-page=1
-render()
+  search = String(v || '').toLowerCase();
+  page = 1;
+  render();
 }
 
 function openModal(){
-document.getElementById("modal").style.display="flex"
+  renderProductPicker();
+  document.getElementById('modal').style.display = 'flex';
 }
 
 function closeModal(){
-document.getElementById("modal").style.display="none"
-clearOrderForm()
+  document.getElementById('modal').style.display = 'none';
+  clearOrderForm();
 }
 
 function clearOrderForm(){
-document.getElementById("product").value=""
-document.getElementById("price").value=""
-document.getElementById("payment").value="Paid"
-document.getElementById("status").value="Delivered"
+  document.getElementById('price').value = '';
+  document.getElementById('payment').value = 'Paid';
+  document.getElementById('status').value = 'Delivered';
+  renderProductPicker();
+}
+
+function renderProductPicker(){
+  refreshProductCatalog();
+  const picker = document.getElementById('productPicker');
+  if(!picker) return;
+
+  if(productCatalog.length === 0){
+    picker.innerHTML = '<div class="picker-empty">No products found. Add products first.</div>';
+    return;
+  }
+
+  picker.innerHTML = productCatalog.map((product, idx) => `
+<label class="picker-item">
+  <div class="picker-main">
+    <input type="checkbox" class="picker-check" data-id="${escapeHtml(product.id)}" data-index="${idx}" onchange="togglePickerQty(${idx}, this.checked)">
+    <img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}">
+    <span class="picker-name">${escapeHtml(product.name)}</span>
+  </div>
+  <input id="pickerQty${idx}" class="picker-qty" type="number" min="1" step="1" value="1" disabled oninput="updateSelectedTotal()">
+</label>
+`).join('');
+
+  updateSelectedTotal();
+}
+
+function togglePickerQty(index, checked){
+  const qtyInput = document.getElementById(`pickerQty${index}`);
+  if(!qtyInput) return;
+  qtyInput.disabled = !checked;
+  if(!checked) qtyInput.value = '1';
+  updateSelectedTotal();
+}
+
+function collectSelectedProducts(){
+  const checks = Array.from(document.querySelectorAll('.picker-check:checked'));
+  return checks.map((check) => {
+    const id = String(check.dataset.id);
+    const idx = Number(check.dataset.index);
+    const qtyInput = document.getElementById(`pickerQty${idx}`);
+    const qty = Number(qtyInput?.value);
+    const matched = productById.get(id);
+    return normalizeOrderItem({
+      id,
+      name: matched?.name ?? '',
+      image: matched?.image ?? '',
+      unitPrice: matched?.price ?? 0,
+      qty: Number.isFinite(qty) && qty > 0 ? Math.floor(qty) : 1
+    }, idx);
+  }).filter((item) => item.name);
+}
+
+function updateSelectedTotal(){
+  const selected = collectSelectedProducts();
+  const total = Number(selected.reduce((sum, item) => sum + (item.unitPrice * item.qty), 0).toFixed(2));
+  const priceInput = document.getElementById('price');
+  if(priceInput) priceInput.value = total ? total.toFixed(2) : '';
 }
 
 function openOrderProducts(orderId){
-const order = orders.find((o) => String(o.id) === String(orderId))
-if(!order) return
+  const order = orders.find((o) => String(o.id) === String(orderId));
+  if(!order) return;
 
-const products = Array.isArray(order.products) && order.products.length > 0
-  ? order.products
-  : [order.product].filter(Boolean)
+  const products = Array.isArray(order.products) ? order.products : [];
+  document.getElementById('productsModalTitle').innerText = `Order #${order.id} Products`;
 
-document.getElementById("productsModalTitle").innerText = `Order #${order.id} Products`
-document.getElementById("productsList").innerHTML = products
-  .map((name) => `<li>${name}</li>`)
-  .join("")
-document.getElementById("productsModal").style.display = "flex"
+  document.getElementById('productsList').innerHTML = products.length
+    ? products.map((item) => `
+<li class="product-media-item">
+  <img class="product-media-thumb" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}">
+  <div class="product-media-info">
+    <strong>${escapeHtml(item.name)}</strong>
+    <span>Qty: ${item.qty}</span>
+  </div>
+</li>
+`).join('')
+    : '<li>No products found.</li>';
+
+  document.getElementById('productsModal').style.display = 'flex';
 }
 
 function closeProductsModal(){
-document.getElementById("productsModal").style.display = "none"
-document.getElementById("productsList").innerHTML = ""
+  document.getElementById('productsModal').style.display = 'none';
+  document.getElementById('productsList').innerHTML = '';
 }
 
 function addOrder(){
+  refreshProductCatalog();
 
-let product=document.getElementById("product").value
-let price=Number(document.getElementById("price").value)
-let payment=document.getElementById("payment").value
-let status=document.getElementById("status").value
+  const payment = document.getElementById('payment').value;
+  const status = document.getElementById('status').value;
 
-if(!product.trim() || !Number.isFinite(price)) return
-const products = product
-  .split(",")
-  .map((p) => p.trim())
-  .filter(Boolean)
+  const products = collectSelectedProducts();
 
-orders.unshift({
-id: makeOrderId(),
-products,
-product: products[0] ?? "",
-price,
-payment,
-status,
-createdAt: new Date().toISOString()
-})
+  if(products.length === 0) return;
 
-save()
+  const finalPrice = Number(products.reduce((sum, item) => sum + (item.unitPrice * item.qty), 0).toFixed(2));
 
-closeModal()
+  orders.unshift({
+    id: makeOrderId(),
+    products,
+    product: products[0]?.name ?? '',
+    price: finalPrice,
+    payment,
+    status,
+    createdAt: new Date().toISOString()
+  });
 
-render()
-
+  save();
+  closeModal();
+  render();
 }
 
-render()
+render();
 
-window.goto = goto
-window.filterStatus = filterStatus
-window.searchOrder = searchOrder
-window.openModal = openModal
-window.closeModal = closeModal
-window.addOrder = addOrder
-window.openOrderProducts = openOrderProducts
-window.closeProductsModal = closeProductsModal
-window.reseedOrders = reseedOrders
-
+window.goto = goto;
+window.filterStatus = filterStatus;
+window.searchOrder = searchOrder;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.addOrder = addOrder;
+window.openOrderProducts = openOrderProducts;
+window.closeProductsModal = closeProductsModal;
+window.reseedOrders = reseedOrders;
+window.togglePickerQty = togglePickerQty;
+window.updateSelectedTotal = updateSelectedTotal;
