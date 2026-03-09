@@ -3,7 +3,10 @@ import { KEY_ORDERS, KEY_PRODUCTS } from '../Core/Constants.js';
 const pageSize = 8;
 let page = 1;
 let filter = 'all';
+let paymentFilter = 'all';
+let recentDaysFilter = 0;
 let search = '';
+let editingOrderId = null;
 
 const STATUS_ALLOWED = new Set(['Delivered', 'Pending', 'Shipped', 'Cancelled']);
 const PRODUCT_STORAGE_KEYS = [KEY_PRODUCTS, 'products', 'sellerProducts'];
@@ -19,6 +22,27 @@ function makeOrderId(){
 function toIsoDate(raw){
   const parsed = new Date(raw || Date.now());
   if(Number.isNaN(parsed.getTime())) return new Date().toISOString();
+  return parsed.toISOString();
+}
+
+function toDatetimeLocalValue(raw){
+  const parsed = new Date(raw || Date.now());
+  if(Number.isNaN(parsed.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  const y = parsed.getFullYear();
+  const m = pad(parsed.getMonth() + 1);
+  const d = pad(parsed.getDate());
+  const h = pad(parsed.getHours());
+  const min = pad(parsed.getMinutes());
+  return `${y}-${m}-${d}T${h}:${min}`;
+}
+
+function getOrderDateFromInput(){
+  const dateInput = document.getElementById('orderDate');
+  const raw = String(dateInput?.value || '').trim();
+  if(!raw) return null;
+  const parsed = new Date(raw);
+  if(Number.isNaN(parsed.getTime())) return null;
   return parsed.toISOString();
 }
 
@@ -260,6 +284,19 @@ function render(){
   let data = orders;
 
   if(filter !== 'all') data = data.filter((o) => o.status === filter);
+  if(paymentFilter !== 'all') data = data.filter((o) => String(o.payment || '').toLowerCase() === paymentFilter);
+  if(recentDaysFilter > 0){
+    const now = new Date();
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - (recentDaysFilter - 1));
+
+    data = data.filter((o) => {
+      const orderDate = new Date(o?.createdAt ?? o?.date ?? 0);
+      if(Number.isNaN(orderDate.getTime())) return false;
+      return orderDate >= start && orderDate <= now;
+    });
+  }
 
   if(search){
     data = data.filter((o) => {
@@ -286,6 +323,7 @@ function render(){
 <td>$${Number(o.price || 0).toFixed(2)}</td>
 <td class="${o.payment === 'Paid' ? 'paid' : 'unpaid'}">${o.payment}</td>
 <td class="status ${o.status.toLowerCase()}">${o.status}</td>
+<td><button class="btn-inline" onclick="openEditModal('${String(o.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')">Update</button></td>
 </tr>
 `;
   });
@@ -321,6 +359,37 @@ function filterStatus(s, tabEl){
   render();
 }
 
+function applyFiltersFromUrl(){
+  try{
+    const params = new URLSearchParams(window.location.search || '');
+    const statusParam = String(params.get('status') || '').trim();
+    const paymentParam = String(params.get('payment') || '').trim().toLowerCase();
+    const recentDaysParam = Number(params.get('recentDays'));
+
+    if(statusParam && (statusParam === 'Delivered' || statusParam === 'Pending' || statusParam === 'Cancelled' || statusParam === 'Shipped')){
+      filter = statusParam;
+    }
+
+    if(paymentParam === 'paid' || paymentParam === 'unpaid'){
+      paymentFilter = paymentParam;
+    }
+
+    if(Number.isFinite(recentDaysParam) && recentDaysParam > 0){
+      recentDaysFilter = Math.floor(recentDaysParam);
+    }
+
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach((tab) => tab.classList.remove('active'));
+
+    if(filter === 'Delivered' && tabs[1]) tabs[1].classList.add('active');
+    else if(filter === 'Pending' && tabs[2]) tabs[2].classList.add('active');
+    else if(filter === 'Cancelled' && tabs[3]) tabs[3].classList.add('active');
+    else if(tabs[0]) tabs[0].classList.add('active');
+  }catch(_err){
+    // keep defaults on malformed URL
+  }
+}
+
 function searchOrder(v){
   search = String(v || '').toLowerCase();
   page = 1;
@@ -328,6 +397,8 @@ function searchOrder(v){
 }
 
 function openModal(){
+  editingOrderId = null;
+  setModalMode('add');
   renderProductPicker();
   document.getElementById('modal').style.display = 'flex';
 }
@@ -337,8 +408,26 @@ function closeModal(){
   clearOrderForm();
 }
 
+function setModalMode(mode){
+  const titleEl = document.getElementById('orderModalTitle');
+  const saveBtnEl = document.getElementById('orderModalSaveBtn');
+  if(!titleEl || !saveBtnEl) return;
+
+  if(mode === 'edit'){
+    titleEl.innerText = 'Update Order';
+    saveBtnEl.innerText = 'Update';
+    return;
+  }
+
+  titleEl.innerText = 'Add Order';
+  saveBtnEl.innerText = 'Save';
+}
+
 function clearOrderForm(){
+  editingOrderId = null;
+  setModalMode('add');
   document.getElementById('price').value = '';
+  document.getElementById('orderDate').value = toDatetimeLocalValue(new Date());
   document.getElementById('payment').value = 'Paid';
   document.getElementById('status').value = 'Delivered';
   renderProductPicker();
@@ -423,16 +512,58 @@ function openOrderProducts(orderId){
   document.getElementById('productsModal').style.display = 'flex';
 }
 
+function openEditModal(orderId){
+  const order = orders.find((o) => String(o.id) === String(orderId));
+  if(!order) return;
+
+  editingOrderId = String(order.id);
+  setModalMode('edit');
+  renderProductPicker();
+
+  const items = Array.isArray(order.products) ? order.products : [];
+  const checksById = new Map(
+    Array.from(document.querySelectorAll('.picker-check')).map((el) => [String(el.dataset.id), el])
+  );
+  const checksByName = new Map(
+    Array.from(document.querySelectorAll('.picker-check')).map((el) => {
+      const idx = Number(el.dataset.index);
+      const name = String(productCatalog[idx]?.name || '').trim().toLowerCase();
+      return [name, el];
+    })
+  );
+
+  items.forEach((item) => {
+    const matchedCheck = checksById.get(String(item.id))
+      || checksByName.get(String(item.name || '').trim().toLowerCase());
+    if(!matchedCheck) return;
+
+    matchedCheck.checked = true;
+    const idx = Number(matchedCheck.dataset.index);
+    const qtyInput = document.getElementById(`pickerQty${idx}`);
+    if(qtyInput){
+      qtyInput.disabled = false;
+      qtyInput.value = String(Number(item.qty) > 0 ? Math.floor(Number(item.qty)) : 1);
+    }
+  });
+
+  document.getElementById('payment').value = order.payment === 'Paid' ? 'Paid' : 'Unpaid';
+  document.getElementById('status').value = order.status;
+  document.getElementById('orderDate').value = toDatetimeLocalValue(order.createdAt ?? order.date);
+  updateSelectedTotal();
+  document.getElementById('modal').style.display = 'flex';
+}
+
 function closeProductsModal(){
   document.getElementById('productsModal').style.display = 'none';
   document.getElementById('productsList').innerHTML = '';
 }
 
-function addOrder(){
+function saveOrder(){
   refreshProductCatalog();
 
   const payment = document.getElementById('payment').value;
   const status = document.getElementById('status').value;
+  const selectedDateIso = getOrderDateFromInput();
 
   const products = collectSelectedProducts();
 
@@ -440,29 +571,46 @@ function addOrder(){
 
   const finalPrice = Number(products.reduce((sum, item) => sum + (item.unitPrice * item.qty), 0).toFixed(2));
 
-  orders.unshift({
-    id: makeOrderId(),
-    products,
-    product: products[0]?.name ?? '',
-    price: finalPrice,
-    payment,
-    status,
-    createdAt: new Date().toISOString()
-  });
+  if(editingOrderId){
+    const idx = orders.findIndex((o) => String(o.id) === String(editingOrderId));
+    if(idx !== -1){
+      orders[idx] = {
+        ...orders[idx],
+        products,
+        product: products[0]?.name ?? '',
+        price: finalPrice,
+        payment,
+        status,
+        createdAt: selectedDateIso || toIsoDate(orders[idx].createdAt ?? orders[idx].date)
+      };
+    }
+  }else{
+    orders.unshift({
+      id: makeOrderId(),
+      products,
+      product: products[0]?.name ?? '',
+      price: finalPrice,
+      payment,
+      status,
+      createdAt: selectedDateIso || new Date().toISOString()
+    });
+  }
 
   save();
   closeModal();
   render();
 }
 
+applyFiltersFromUrl();
 render();
 
 window.goto = goto;
 window.filterStatus = filterStatus;
 window.searchOrder = searchOrder;
 window.openModal = openModal;
+window.openEditModal = openEditModal;
 window.closeModal = closeModal;
-window.addOrder = addOrder;
+window.saveOrder = saveOrder;
 window.openOrderProducts = openOrderProducts;
 window.closeProductsModal = closeProductsModal;
 window.reseedOrders = reseedOrders;

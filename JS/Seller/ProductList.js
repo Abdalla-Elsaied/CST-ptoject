@@ -5,6 +5,7 @@ const pageSize = 8;
 let page = 1;
 let filter = 'all';
 let search = '';
+let categoryFilter = '';
 let products = [];
 
 function defaultImage(name){
@@ -177,6 +178,16 @@ function updateCards(){
 
 function render(){
   let data = products.map((p, idx) => normalizeProduct(p, idx));
+  if(categoryFilter){
+    const wantedCategory = categoryFilter.toLowerCase();
+    data = data.filter((p) => {
+      const productCategory = String(p.category || '').trim().toLowerCase();
+      if(wantedCategory === 'other'){
+        return !productCategory || productCategory === '-' || productCategory === 'n/a' || productCategory === 'none';
+      }
+      return productCategory === wantedCategory;
+    });
+  }
   if(filter !== 'all') data = data.filter(p => getStatus(p.stock) === filter);
   if(search) data = data.filter(p => p.name.toLowerCase().includes(search));
 
@@ -271,4 +282,14 @@ function closeProductDetails(event){
   render();
 }
 
+function readCategoryFilterFromUrl(){
+  try{
+    const params = new URLSearchParams(window.location.search || '');
+    categoryFilter = String(params.get('category') || '').trim().toLowerCase();
+  }catch(_err){
+    categoryFilter = '';
+  }
+}
+
+readCategoryFilterFromUrl();
 loadProducts().then(render);

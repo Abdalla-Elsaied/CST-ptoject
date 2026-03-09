@@ -481,6 +481,18 @@ img { max-width: 100%; }
   gap: 2px;
 }
 
+#pendingOrdersCardLink,
+#canceledOrdersCardLink {
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+
+#pendingOrdersCardLink.active,
+#canceledOrdersCardLink.active {
+  background: var(--green-light);
+}
+
 .pending-label {
   font-size: .75rem;
   color: var(--text-sec);
@@ -908,62 +920,6 @@ img { max-width: 100%; }
 }
 
 .btn-see-more:hover { color: var(--green-dark); }
-
-/* Quick add */
-.quick-add-list { display: flex; flex-direction: column; gap: 8px; }
-
-.quick-add-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.quick-add-row:last-child { border-bottom: none; }
-
-.qa-img {
-  width: 40px; height: 40px;
-  border-radius: 8px;
-  object-fit: cover;
-}
-
-.qa-meta {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.qa-name {
-  font-size: .83rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.qa-price {
-  font-size: .75rem;
-  font-weight: 700;
-}
-
-.btn-add {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 12px;
-  border-radius: 999px;
-  background: var(--green);
-  color: #fff;
-  border: none;
-  font-family: var(--font);
-  font-size: .78rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background .18s;
-  white-space: nowrap;
-}
-
-.btn-add:hover { background: var(--green-dark); }
 
 /* ═══════════════════════════════════
    SIDEBAR OVERLAY (mobile)

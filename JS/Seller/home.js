@@ -30,7 +30,10 @@ $(function () {
   const $embeddedPageFrame = $('#embeddedPageFrame');
   let transactionPaymentFilter = 'all';
   let bestSellingInventoryFilter = 'all';
+  let pendingCanceledDrilldownStatus = 'Pending';
+  let reportChartSource = 'sales';
   let darkMode = $('body').hasClass('dark');
+  const REPORT_WEEK_START_DAY = 4; // 0=Sun ... 4=Thu
 
   function closeMobileSidebar() {
     $('#sidebar').removeClass('mobile-open');
@@ -102,17 +105,104 @@ $(function () {
   function loadDashboardOrders() {
     try {
       const parsed = JSON.parse(localStorage.getItem('ls_orders'));
-      return Array.isArray(parsed) ? parsed : [];
+      if (!Array.isArray(parsed)) return [];
+      const normalized = normalizeDashboardOrders(parsed);
+      localStorage.setItem('ls_orders', JSON.stringify(normalized));
+      return normalized;
     } catch (_err) {
       return [];
     }
   }
 
+  function getOrderItemsTotal(order) {
+    const items = Array.isArray(order?.products) && order.products.length
+      ? order.products
+      : (Array.isArray(order?.items) && order.items.length ? order.items : []);
+
+    if (!items.length) return 0;
+
+    const total = items.reduce((sum, item) => {
+      const qtyRaw = Number(item?.qty ?? item?.quantity ?? 1);
+      const qty = Number.isFinite(qtyRaw) && qtyRaw > 0 ? Math.floor(qtyRaw) : 1;
+      const unitRaw = Number(item?.unitPrice ?? item?.price ?? 0);
+      const unit = Number.isFinite(unitRaw) && unitRaw >= 0 ? unitRaw : 0;
+      return sum + (qty * unit);
+    }, 0);
+
+    return Number.isFinite(total) && total > 0 ? total : 0;
+  }
+
+  function normalizeDashboardOrder(order, idx) {
+    const createdAtRaw = order?.createdAt ?? order?.date ?? Date.now();
+    const createdAtDate = new Date(createdAtRaw);
+    const createdAt = Number.isNaN(createdAtDate.getTime())
+      ? new Date().toISOString()
+      : createdAtDate.toISOString();
+
+    const paymentRaw = String(order?.payment ?? '').toLowerCase();
+    const payment = paymentRaw === 'paid' ? 'Paid' : 'Unpaid';
+
+    const statusRaw = String(order?.status ?? '').toLowerCase();
+    let status = 'Pending';
+    if (statusRaw === 'delivered') status = 'Delivered';
+    else if (statusRaw === 'shipped') status = 'Shipped';
+    else if (statusRaw === 'cancelled' || statusRaw === 'canceled') status = 'Cancelled';
+
+    const id = String(order?.id ?? order?.orderId ?? `ORD-${idx + 1}`);
+    const safePrice = Number(getSafeOrderAmount(order).toFixed(2));
+
+    return {
+      ...order,
+      id,
+      payment,
+      status,
+      createdAt,
+      price: safePrice
+    };
+  }
+
+  function normalizeDashboardOrders(rawOrders) {
+    return rawOrders.map((order, idx) => normalizeDashboardOrder(order, idx));
+  }
+
+  function getSafeOrderAmount(order) {
+    const rawAmount = Number(order?.price ?? order?.total ?? order?.totalPrice);
+    const itemsTotal = getOrderItemsTotal(order);
+
+    if (itemsTotal > 0) {
+      if (!Number.isFinite(rawAmount) || rawAmount <= 0) return itemsTotal;
+
+      // Some data may store totals in cents.
+      const centsAsMajor = rawAmount / 100;
+      const centsLooksValid = Math.abs(centsAsMajor - itemsTotal) <= Math.max(1, itemsTotal * 0.05);
+      if (rawAmount >= itemsTotal * 50 && centsLooksValid) return centsAsMajor;
+
+      // Prevent extreme outliers when line-items exist.
+      if (rawAmount > itemsTotal * 10) return itemsTotal;
+      return rawAmount;
+    }
+
+    if (!Number.isFinite(rawAmount) || rawAmount < 0) return 0;
+    if (rawAmount > 100_000) return rawAmount / 100;
+    return rawAmount;
+  }
+
   function startOfWeek(dateValue) {
     const d = new Date(dateValue || Date.now());
     d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() - d.getDay());
+    const day = d.getDay(); // 0=Sun ... 6=Sat
+    const offset = (day - REPORT_WEEK_START_DAY + 7) % 7;
+    d.setDate(d.getDate() - offset);
     return d;
+  }
+
+  function mapDayToReportIndex(day) {
+    return (day - REPORT_WEEK_START_DAY + 7) % 7;
+  }
+
+  function buildReportWeekLabels() {
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return Array.from({ length: 7 }, (_, idx) => dayNames[(REPORT_WEEK_START_DAY + idx) % 7]);
   }
 
   function buildWeeklySalesData(weekOffset = 0) {
@@ -129,13 +219,56 @@ $(function () {
       if (Number.isNaN(dt.getTime())) return;
       if (dt < start || dt >= end) return;
 
-      const amount = Number(order?.price ?? order?.total ?? order?.totalPrice);
-      if (!Number.isFinite(amount)) return;
+      const payment = String(order?.payment ?? '').toLowerCase();
+      const status = String(order?.status ?? '').toLowerCase();
+      if (payment !== 'paid' || status !== 'delivered') return;
 
-      totals[dt.getDay()] += amount;
+      const amount = getSafeOrderAmount(order);
+      if (!Number.isFinite(amount) || amount <= 0) return;
+
+      const dayIndex = mapDayToReportIndex(dt.getDay());
+      totals[dayIndex] += amount;
     });
 
+    // For the current week, don't force future days to zero.
+    // Using null avoids the sharp drop line after "today".
+    if (weekOffset === 0) {
+      const today = mapDayToReportIndex(new Date().getDay());
+      return totals.map((v, idx) => (idx > today ? null : Number(v.toFixed(2))));
+    }
+
     return totals.map((v) => Number(v.toFixed(2)));
+  }
+
+  function buildWeeklyProductsData(weekOffset = 0) {
+    const start = startOfWeek(new Date());
+    start.setDate(start.getDate() - (weekOffset * 7));
+    const end = new Date(start);
+    end.setDate(end.getDate() + 7);
+
+    const totals = [0, 0, 0, 0, 0, 0, 0];
+    const products = loadDashboardProducts().map((p, idx) => normalizeDashboardProduct(p, idx));
+
+    products.forEach((product) => {
+      const dt = new Date(product?.createdAt ?? 0);
+      if (Number.isNaN(dt.getTime())) return;
+      if (dt < start || dt >= end) return;
+
+      const dayIndex = mapDayToReportIndex(dt.getDay());
+      totals[dayIndex] += 1;
+    });
+
+    if (weekOffset === 0) {
+      const today = mapDayToReportIndex(new Date().getDay());
+      return totals.map((v, idx) => (idx > today ? null : v));
+    }
+
+    return totals;
+  }
+
+  function getReportSeriesData(weekOffset = 0) {
+    if (reportChartSource === 'products') return buildWeeklyProductsData(weekOffset);
+    return buildWeeklySalesData(weekOffset);
   }
 
   function loadDashboardProducts() {
@@ -151,13 +284,53 @@ $(function () {
     return [];
   }
 
-  function escapeHtml(value) {
-    return String(value ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+  function formatCompactNumber(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return '0';
+    const abs = Math.abs(n);
+    if (abs < 1000) return String(Math.floor(n));
+    if (abs < 1_000_000) {
+      const compactK = (n / 1000).toFixed(abs >= 10000 ? 0 : 1).replace(/\.0$/, '');
+      return `${compactK}k`;
+    }
+    const compactM = (n / 1_000_000).toFixed(abs >= 10_000_000 ? 0 : 1).replace(/\.0$/, '');
+    return `${compactM}m`;
+  }
+
+  function formatCompactCurrency(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return '$0';
+    return `$${formatCompactNumber(n)}`;
+  }
+
+  function renderDashboardWeeklySalesMetric() {
+    const metricEl = document.getElementById('dashboardWeeklySalesMetricValue');
+    if (!metricEl) return;
+
+    const weeklyData = buildWeeklySalesData(0);
+    const weeklyTotal = weeklyData.reduce((sum, value) => {
+      const amount = Number(value);
+      return Number.isFinite(amount) ? sum + amount : sum;
+    }, 0);
+
+    metricEl.textContent = formatCompactCurrency(weeklyTotal);
+  }
+
+  function renderDashboardTotalProductsMetric() {
+    const metricEl = document.getElementById('dashboardTotalProductsMetricValue');
+    if (!metricEl) return;
+
+    const products = loadDashboardProducts();
+    metricEl.textContent = formatCompactNumber(products.length);
+  }
+
+  function renderDashboardStockProductsMetric() {
+    const metricEl = document.getElementById('dashboardStockProductsMetricValue');
+    if (!metricEl) return;
+
+    const products = loadDashboardProducts().map((p, idx) => normalizeDashboardProduct(p, idx));
+    const inStockCount = products.filter((p) => Number(p.stock) > 0).length;
+    metricEl.textContent = formatCompactNumber(inStockCount);
   }
 
   function normalizeDashboardProduct(raw, idx) {
@@ -213,10 +386,9 @@ $(function () {
 
     products.forEach((product) => {
       let key = String(product.category || '').trim();
-      if (key === '-' || key.toLowerCase() === 'n/a' || key.toLowerCase() === 'none') {
+      if (!key || key === '-' || key.toLowerCase() === 'n/a' || key.toLowerCase() === 'none') {
         key = 'Other';
       }
-      if (!key) return;
       categoryCounts.set(key, (categoryCounts.get(key) || 0) + 1);
     });
 
@@ -242,49 +414,10 @@ $(function () {
     }
 
     listEl.innerHTML = topCategories.map(([category, count]) => `
-      <div class="category-row">
+      <div class="category-row" data-category="${encodeURIComponent(category)}">
         <div class="cat-icon"><i class="bi ${categoryIconClass(category)}"></i></div>
         <span class="cat-name">${category} (${count})</span>
         <i class="bi bi-chevron-right ms-auto text-muted"></i>
-      </div>
-    `).join('');
-  }
-
-  function renderDashboardQuickProducts() {
-    const listEl = document.getElementById('dashboardQuickAddList');
-    if (!listEl) return;
-
-    const products = loadDashboardProducts()
-      .map((p, idx) => normalizeDashboardProduct(p, idx))
-      .sort((a, b) => {
-        const aDate = Number.isFinite(a.createdAt) ? a.createdAt : 0;
-        const bDate = Number.isFinite(b.createdAt) ? b.createdAt : 0;
-        return bDate - aDate;
-      })
-      .slice(0, 3);
-
-    if (!products.length) {
-      listEl.innerHTML = `
-        <div class="quick-add-row">
-          <div class="qa-meta">
-            <span class="qa-name">No products yet</span>
-            <span class="qa-price text-success">$0.00</span>
-          </div>
-        </div>
-      `;
-      return;
-    }
-
-    listEl.innerHTML = products.map((p) => `
-      <div class="quick-add-row">
-        <img src="${escapeHtml(p.image)}" class="qa-img" alt="${escapeHtml(p.name)}" />
-        <div class="qa-meta">
-          <span class="qa-name">${escapeHtml(p.name)}</span>
-          <span class="qa-price text-success">$${Number(p.price || 0).toFixed(2)}</span>
-        </div>
-        <button class="btn-add" data-product-id="${escapeHtml(p.id)}">
-          <i class="bi bi-plus-circle-fill me-1"></i>Add
-        </button>
       </div>
     `).join('');
   }
@@ -440,26 +573,120 @@ $(function () {
 
   function renderDashboardOrderStats() {
     const totalSalesEl = document.getElementById('totalSalesStatValue');
+    const salesGrowthBadgeEl = document.getElementById('totalSalesGrowthBadge');
+    const salesGrowthIconEl = document.getElementById('totalSalesGrowthIcon');
+    const salesGrowthValueEl = document.getElementById('totalSalesGrowthValue');
+    const salesPrevValueEl = document.getElementById('totalSalesPrevValue');
     const totalOrdersEl = document.getElementById('totalOrdersStatValue');
+    const totalOrdersGrowthBadgeEl = document.getElementById('totalOrdersGrowthBadge');
+    const totalOrdersGrowthIconEl = document.getElementById('totalOrdersGrowthIcon');
+    const totalOrdersGrowthValueEl = document.getElementById('totalOrdersGrowthValue');
+    const totalOrdersPrevValueEl = document.getElementById('totalOrdersPrevValue');
     const orders = loadDashboardOrders();
 
     if (totalOrdersEl) {
-      totalOrdersEl.textContent = String(orders.length);
+      const now = new Date();
+      const currentStart = new Date(now);
+      currentStart.setHours(0, 0, 0, 0);
+      currentStart.setDate(currentStart.getDate() - 6);
+
+      const previousStart = new Date(currentStart);
+      previousStart.setDate(previousStart.getDate() - 7);
+      const previousEnd = new Date(currentStart);
+
+      let currentOrders = 0;
+      let previousOrders = 0;
+
+      orders.forEach((order) => {
+        const orderDate = new Date(order?.createdAt ?? order?.date ?? 0);
+        if (Number.isNaN(orderDate.getTime())) return;
+
+        if (orderDate >= currentStart && orderDate <= now) {
+          currentOrders += 1;
+          return;
+        }
+
+        if (orderDate >= previousStart && orderDate < previousEnd) {
+          previousOrders += 1;
+        }
+      });
+
+      totalOrdersEl.textContent = String(currentOrders);
+
+      if (totalOrdersPrevValueEl) {
+        totalOrdersPrevValueEl.textContent = `(${previousOrders})`;
+      }
+
+      if (totalOrdersGrowthBadgeEl && totalOrdersGrowthIconEl && totalOrdersGrowthValueEl) {
+        const growthPct = previousOrders > 0
+          ? ((currentOrders - previousOrders) / previousOrders) * 100
+          : (currentOrders > 0 ? 100 : 0);
+        const isUp = growthPct >= 0;
+        const absPct = Math.abs(growthPct).toFixed(1);
+
+        totalOrdersGrowthBadgeEl.classList.toggle('up', isUp);
+        totalOrdersGrowthBadgeEl.classList.toggle('down', !isUp);
+        totalOrdersGrowthIconEl.classList.toggle('bi-arrow-up', isUp);
+        totalOrdersGrowthIconEl.classList.toggle('bi-arrow-down', !isUp);
+        totalOrdersGrowthValueEl.textContent = `${absPct}%`;
+      }
     }
 
     if (totalSalesEl) {
-      const totalSales = orders.reduce((sum, order) => {
+      const now = new Date();
+      const currentStart = new Date(now);
+      currentStart.setHours(0, 0, 0, 0);
+      currentStart.setDate(currentStart.getDate() - 6);
+
+      const previousStart = new Date(currentStart);
+      previousStart.setDate(previousStart.getDate() - 7);
+      const previousEnd = new Date(currentStart);
+
+      let currentSales = 0;
+      let previousSales = 0;
+
+      orders.forEach((order) => {
         const payment = String(order?.payment ?? '').toLowerCase();
         const status = String(order?.status ?? '').toLowerCase();
         const delivered = status === 'delivered';
         const paid = payment === 'paid';
-        if (!delivered || !paid) return sum;
+        if (!delivered || !paid) return;
 
-        const amount = Number(order?.price ?? order?.total ?? order?.totalPrice);
-        return Number.isFinite(amount) ? sum + amount : sum;
-      }, 0);
+        const amount = getSafeOrderAmount(order);
+        if (!Number.isFinite(amount) || amount <= 0) return;
 
-      totalSalesEl.textContent = `$${totalSales.toFixed(2)}`;
+        const orderDate = new Date(order?.createdAt ?? order?.date ?? 0);
+        if (Number.isNaN(orderDate.getTime())) return;
+
+        if (orderDate >= currentStart && orderDate <= now) {
+          currentSales += amount;
+          return;
+        }
+
+        if (orderDate >= previousStart && orderDate < previousEnd) {
+          previousSales += amount;
+        }
+      });
+
+      totalSalesEl.textContent = `$${currentSales.toFixed(2)}`;
+
+      if (salesPrevValueEl) {
+        salesPrevValueEl.textContent = `($${previousSales.toFixed(2)})`;
+      }
+
+      if (salesGrowthBadgeEl && salesGrowthIconEl && salesGrowthValueEl) {
+        const growthPct = previousSales > 0
+          ? ((currentSales - previousSales) / previousSales) * 100
+          : (currentSales > 0 ? 100 : 0);
+        const isUp = growthPct >= 0;
+        const absPct = Math.abs(growthPct).toFixed(1);
+
+        salesGrowthBadgeEl.classList.toggle('up', isUp);
+        salesGrowthBadgeEl.classList.toggle('down', !isUp);
+        salesGrowthIconEl.classList.toggle('bi-arrow-up', isUp);
+        salesGrowthIconEl.classList.toggle('bi-arrow-down', !isUp);
+        salesGrowthValueEl.textContent = `${absPct}%`;
+      }
     }
   }
 
@@ -467,18 +694,68 @@ $(function () {
     const pendingEl = document.getElementById('pendingOrdersStatValue');
     const canceledEl = document.getElementById('canceledOrdersStatValue');
     const pendingSubEl = document.getElementById('pendingOrdersStatSub');
+    const canceledGrowthBadgeEl = document.getElementById('canceledOrdersGrowthBadge');
+    const canceledGrowthIconEl = document.getElementById('canceledOrdersGrowthIcon');
+    const canceledGrowthValueEl = document.getElementById('canceledOrdersGrowthValue');
     if (!pendingEl || !canceledEl) return;
 
     const orders = loadDashboardOrders();
-    const pendingCount = orders.filter((o) => String(o?.status ?? '').toLowerCase() === 'pending').length;
+    const now = new Date();
+    const currentStart = new Date(now);
+    currentStart.setHours(0, 0, 0, 0);
+    currentStart.setDate(currentStart.getDate() - 6);
+
+    const previousStart = new Date(currentStart);
+    previousStart.setDate(previousStart.getDate() - 7);
+    const previousEnd = new Date(currentStart);
+
+    const pendingCount = orders.filter((o) => {
+      const orderDate = new Date(o?.createdAt ?? o?.date ?? 0);
+      if (Number.isNaN(orderDate.getTime())) return false;
+      return String(o?.status ?? '').toLowerCase() === 'pending' && orderDate >= currentStart && orderDate <= now;
+    }).length;
+
     const canceledCount = orders.filter((o) => {
+      const orderDate = new Date(o?.createdAt ?? o?.date ?? 0);
+      if (Number.isNaN(orderDate.getTime())) return false;
       const status = String(o?.status ?? '').toLowerCase();
-      return status === 'cancelled' || status === 'canceled';
+      return (status === 'cancelled' || status === 'canceled') && orderDate >= currentStart && orderDate <= now;
+    }).length;
+
+    const previousCanceledCount = orders.filter((o) => {
+      const orderDate = new Date(o?.createdAt ?? o?.date ?? 0);
+      if (Number.isNaN(orderDate.getTime())) return false;
+      const status = String(o?.status ?? '').toLowerCase();
+      return (status === 'cancelled' || status === 'canceled') && orderDate >= previousStart && orderDate < previousEnd;
     }).length;
 
     pendingEl.textContent = String(pendingCount);
     canceledEl.textContent = String(canceledCount);
     if (pendingSubEl) pendingSubEl.textContent = `orders ${pendingCount}`;
+
+    if (canceledGrowthBadgeEl && canceledGrowthIconEl && canceledGrowthValueEl) {
+      const growthPct = previousCanceledCount > 0
+        ? ((canceledCount - previousCanceledCount) / previousCanceledCount) * 100
+        : (canceledCount > 0 ? 100 : 0);
+      const isUp = growthPct >= 0;
+      const absPct = Math.abs(growthPct).toFixed(1);
+
+      canceledGrowthBadgeEl.classList.toggle('up', isUp);
+      canceledGrowthBadgeEl.classList.toggle('down', !isUp);
+      canceledGrowthIconEl.classList.toggle('bi-arrow-up', isUp);
+      canceledGrowthIconEl.classList.toggle('bi-arrow-down', !isUp);
+      canceledGrowthValueEl.textContent = `${absPct}%`;
+    }
+  }
+
+  function setPendingCanceledDrilldown(status) {
+    const normalized = status === 'Cancelled' ? 'Cancelled' : 'Pending';
+    pendingCanceledDrilldownStatus = normalized;
+
+    const pendingCol = document.getElementById('pendingOrdersCardLink');
+    const canceledCol = document.getElementById('canceledOrdersCardLink');
+    if (pendingCol) pendingCol.classList.toggle('active', normalized === 'Pending');
+    if (canceledCol) canceledCol.classList.toggle('active', normalized === 'Cancelled');
   }
 
   function cycleTransactionFilter() {
@@ -505,14 +782,28 @@ $(function () {
     closeMobileSidebar();
     renderDashboardOrderStats();
     renderPendingCanceledStats();
+    renderDashboardWeeklySalesMetric();
+    renderDashboardTotalProductsMetric();
+    renderDashboardStockProductsMetric();
+    setPendingCanceledDrilldown(pendingCanceledDrilldownStatus);
     renderTransactionTable();
     renderBestSellingTable();
     renderDashboardCategories();
-    renderDashboardQuickProducts();
   }
 
-  function showOrderManagement() {
-    $embeddedPageFrame.attr('src', 'OrderManagement.html');
+  function showOrderManagement(status, payment, recentDays) {
+    const statusValue = String(status ?? '').trim();
+    const paymentValue = String(payment ?? '').trim();
+    const recentDaysValue = Number(recentDays);
+    const params = new URLSearchParams();
+    if (statusValue) params.set('status', statusValue);
+    if (paymentValue) params.set('payment', paymentValue);
+    if (Number.isFinite(recentDaysValue) && recentDaysValue > 0) {
+      params.set('recentDays', String(Math.floor(recentDaysValue)));
+    }
+    const query = params.toString();
+
+    $embeddedPageFrame.attr('src', query ? `OrderManagement.html?${query}` : 'OrderManagement.html');
     $dashboardView.hide();
     $orderManagementView.show();
     $pageTitle.text('Order Management');
@@ -520,8 +811,12 @@ $(function () {
     closeMobileSidebar();
   }
 
-  function showProductList() {
-    $embeddedPageFrame.attr('src', 'ProductList.html');
+  function showProductList(category) {
+    const categoryValue = String(category ?? '').trim();
+    const url = categoryValue
+      ? `ProductList.html?category=${encodeURIComponent(categoryValue)}`
+      : 'ProductList.html';
+    $embeddedPageFrame.attr('src', url);
     $dashboardView.hide();
     $orderManagementView.show();
     $pageTitle.text('Product List');
@@ -563,12 +858,26 @@ $(function () {
     showOrderManagement();
   });
 
+  $('#totalSalesDetailsBtn').on('click', function () {
+    showOrderManagement('Delivered', 'Paid');
+  });
+
   $('#totalOrdersDetailsBtn').on('click', function () {
-    showOrderManagement();
+    showOrderManagement('', '', 7);
   });
 
   $('#pendingCanceledDetailsBtn').on('click', function () {
-    showOrderManagement();
+    showOrderManagement(pendingCanceledDrilldownStatus, '', 7);
+  });
+
+  $('#pendingOrdersCardLink').on('click', function () {
+    setPendingCanceledDrilldown('Pending');
+    showOrderManagement('Pending', '', 7);
+  });
+
+  $('#canceledOrdersCardLink').on('click', function () {
+    setPendingCanceledDrilldown('Cancelled');
+    showOrderManagement('Cancelled', '', 7);
   });
 
   $('#transactionFilterBtn').on('click', function () {
@@ -583,9 +892,19 @@ $(function () {
     showProductList();
   });
 
-  $('#productSeeMoreBtn').on('click', function (e) {
-    e.preventDefault();
-    showProductList();
+  $(document).on('click', '#dashboardCategoryList .category-row[data-category]', function () {
+    const encodedCategory = String($(this).attr('data-category') || '').trim();
+    if (!encodedCategory) return;
+
+    let category = encodedCategory;
+    try {
+      category = decodeURIComponent(encodedCategory);
+    } catch (_err) {
+      // use raw value if decode fails
+    }
+
+    if (!category) return;
+    showProductList(category);
   });
 
   $('#bestSellingDetailsBtn').on('click', function () {
@@ -668,11 +987,14 @@ $(function () {
   ───────────────────────────────────────── */
   let weeklyChartOffset = 0;
   function renderWeeklyReportChart(animationMode = 'none') {
-    const data = buildWeeklySalesData(weeklyChartOffset);
-    const maxValue = Math.max(...data, 0);
-    const chartMax = Math.max(100, Math.ceil(maxValue / 100) * 100);
+    const data = getReportSeriesData(weeklyChartOffset);
+    const maxValue = Math.max(...data.map((v) => (Number.isFinite(v) ? v : 0)), 0);
+    const chartMax = reportChartSource === 'products'
+      ? Math.max(5, Math.ceil(maxValue / 5) * 5)
+      : Math.max(100, Math.ceil(maxValue / 100) * 100);
 
     weeklyChart.data.datasets[0].data = data;
+    weeklyChart.data.datasets[0].label = reportChartSource === 'products' ? 'Products' : 'Sales';
     weeklyChart.options.scales.y.max = chartMax;
     weeklyChart.update(animationMode);
   }
@@ -692,6 +1014,8 @@ $(function () {
   $('.metric-item').on('click', function () {
     $('.metric-item').removeClass('active');
     $(this).addClass('active');
+    reportChartSource = String($(this).data('chart-source') || 'sales').toLowerCase();
+    renderWeeklyReportChart('active');
   });
 
   /* ─────────────────────────────────────────
@@ -705,26 +1029,11 @@ $(function () {
     });
   });
 
-  /* ─────────────────────────────────────────
-     ADD BUTTON – feedback animation
-  ───────────────────────────────────────── */
-  $(document).on('click', '.btn-add', function () {
-    const $btn = $(this);
-    const orig = $btn.html();
-    $btn.html('<i class="bi bi-check-circle-fill me-1"></i>Added!');
-    $btn.css('background', '#16a34a');
-    setTimeout(() => {
-      $btn.html(orig);
-      $btn.css('background', '');
-    }, 1500);
-  });
-
-
   /* ═══════════════════════════════════════════
      CHART.JS – WEEKLY SALES LINE CHART
   ═══════════════════════════════════════════ */
-  const weekDays   = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const salesData  = buildWeeklySalesData(0);
+  const weekDays   = buildReportWeekLabels();
+  const salesData  = [];
 
   const weeklyCtx  = document.getElementById('weeklyChart').getContext('2d');
 
@@ -767,7 +1076,11 @@ $(function () {
           padding: 10,
           callbacks: {
             title: (items) => items[0].label,
-            label: (item)  => ` $${Number(item.raw || 0).toFixed(2)}`
+            label: (item)  => {
+              const value = Number(item.raw || 0);
+              if (reportChartSource === 'products') return ` ${Math.round(value)} products`;
+              return ` $${value.toFixed(2)}`;
+            }
           }
         }
       },
@@ -786,7 +1099,10 @@ $(function () {
           ticks: {
             color: '#6b7280',
             font: { family: "'Plus Jakarta Sans'", size: 11 },
-            callback: (v) => (v >= 1000 ? (v / 1000) + 'k' : v)
+            callback: (v) => {
+              if (reportChartSource === 'products') return Math.round(v);
+              return v >= 1000 ? (v / 1000) + 'k' : v;
+            }
           }
         }
       }
@@ -894,12 +1210,18 @@ $(function () {
     $(this).find('.badge-dot').fadeOut(200).fadeIn(200);
   });
 
+  // Ensure first paint uses computed data/max immediately.
+  renderWeeklyReportChart('none');
+
   renderDashboardOrderStats();
   renderPendingCanceledStats();
+  renderDashboardWeeklySalesMetric();
+  renderDashboardTotalProductsMetric();
+  renderDashboardStockProductsMetric();
   renderTransactionTable();
   renderBestSellingTable();
   renderDashboardCategories();
-  renderDashboardQuickProducts();
   renderWeeklyReportChart();
 
 });
+
