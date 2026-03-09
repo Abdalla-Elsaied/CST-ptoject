@@ -29,12 +29,12 @@ function setSelectValue(selectElement, value) {
 }
 
 async function loadProductById(id) {
-    if (!id) return alert('Please enter a product ID');
+    // if (!id) return alert('Please enter a product ID');
     try {
         const products = await loadProductsFromFolder(); // fetch all products
         const product = products.find(p => String(p.id) === String(id));
 
-        if (!product) return alert('Product not found');
+        // if (!product) return alert('Product not found');
 
         currentProduct = product;
 
@@ -62,11 +62,11 @@ async function loadProductById(id) {
         existingImages = product.images || [];
         refreshPreview();
 
-        alert('Product loaded. You can now edit it.');
+        // alert('Product loaded. You can now edit it.');
 
     } catch (err) {
         console.error(err);
-        alert('Failed to load products from API');
+        // alert('Failed to load products from API');
     }
 }
 
@@ -124,7 +124,7 @@ form.addEventListener('submit', async (e) => {
     const imageFiles = Array.from(fileInput.files || []);
 
     if (!currentProduct) {
-        alert('No product selected for update');
+        // alert('No product selected for update');
         return;
     }
 
@@ -148,10 +148,10 @@ form.addEventListener('submit', async (e) => {
 
     try {
         await saveProductToDisk(productData, imageFiles); // automatically does PUT if id exists
-        alert('Product updated successfully!');
+        // alert('Product updated successfully!');
         window.location.href = 'ProductList.html';
     } catch (err) {
         console.error(err);
-        alert('Failed to update product');
+        // alert('Failed to update product');
     }
 });
