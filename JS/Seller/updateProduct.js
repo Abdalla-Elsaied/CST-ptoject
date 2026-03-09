@@ -6,24 +6,33 @@ const searchInput = document.getElementById('searchProductId');
 const searchButton = document.getElementById('searchButton');
 const form = document.getElementById('productForm');
 const previewContainer = document.getElementById('previewContainer');
+const categorySelect = document.getElementById('categorySelect');
+const tagSelect = document.getElementById('tagSelect');
 
 document.addEventListener('DOMContentLoaded', () => {
-    const fileInput = document.getElementById('imageUpload');
-    const previewContainer = document.getElementById('previewContainer');
-
-    // rest of your code that uses fileInput
+    const queryId = new URLSearchParams(window.location.search).get('id');
+    if (!queryId) return;
+    searchInput.value = queryId;
+    loadProductById(queryId);
 });
 
 let currentProduct = null; // stores product fetched from API
 let existingImages = [];    // store images already uploaded
 
-searchButton.addEventListener('click', async () => {
-    const id = searchInput.value.trim();
-    if (!id) return alert('Please enter a product ID');
+function setSelectValue(selectElement, value) {
+    if (!selectElement) return;
+    const normalized = String(value || '').toLowerCase();
+    const option = Array.from(selectElement.options).find(
+        opt => String(opt.value).toLowerCase() === normalized
+    );
+    selectElement.value = option ? option.value : '';
+}
 
+async function loadProductById(id) {
+    if (!id) return alert('Please enter a product ID');
     try {
         const products = await loadProductsFromFolder(); // fetch all products
-        const product = products.find(p => p.id === id);
+        const product = products.find(p => String(p.id) === String(id));
 
         if (!product) return alert('Product not found');
 
@@ -41,16 +50,13 @@ searchButton.addEventListener('click', async () => {
         form.stockQuantity.value = product.stockQuantity || 0;
         form.stockStatus.value = product.stockStatus || '';
 
-        form.category.value = (product.category || '').toLowerCase();
-        form.tag.value = (product.tag || '').toLowerCase();
-
-
-        setSelectValue(form.category, product.category);
-        setSelectValue(form.tag, product.tag);
+        setSelectValue(categorySelect, product.category);
+        setSelectValue(tagSelect, product.tag);
 
         // Colors
         const checkboxes = form.querySelectorAll('input[name="colors"]');
-        checkboxes.forEach(cb => cb.checked = product.colors.includes(cb.value));
+        const selectedColors = Array.isArray(product.colors) ? product.colors : [];
+        checkboxes.forEach(cb => cb.checked = selectedColors.includes(cb.value));
 
         // Images
         existingImages = product.images || [];
@@ -62,6 +68,11 @@ searchButton.addEventListener('click', async () => {
         console.error(err);
         alert('Failed to load products from API');
     }
+}
+
+searchButton.addEventListener('click', () => {
+    const id = searchInput.value.trim();
+    loadProductById(id);
 });
 
 function refreshPreview() {
@@ -129,8 +140,8 @@ form.addEventListener('submit', async (e) => {
         expirationEnd: formData.get('expirationEnd') || null,
         stockQuantity: Number(formData.get('stockQuantity')) || 0,
         stockStatus: formData.get('stockStatus'),
-        category: formData.get('category'),
-        tag: formData.get('tag'),
+        category: categorySelect ? categorySelect.value : null,
+        tag: tagSelect ? tagSelect.value : null,
         colors: formData.getAll('colors'),
         images: existingImages
     };
@@ -138,11 +149,7 @@ form.addEventListener('submit', async (e) => {
     try {
         await saveProductToDisk(productData, imageFiles); // automatically does PUT if id exists
         alert('Product updated successfully!');
-        form.reset();
-        previewContainer.innerHTML = '';
-        fileInput.value = '';
-        currentProduct = null;
-        existingImages = [];
+        window.location.href = 'ProductList.html';
     } catch (err) {
         console.error(err);
         alert('Failed to update product');

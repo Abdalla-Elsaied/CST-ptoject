@@ -106,7 +106,7 @@
           <!-- // Added for update product -->
 
           <li class="nav-item">
-            <a href="#" class="nav-link"
+            <a href="ProductMedia.html" id="productMediaLink" class="nav-link"
               ><i class="bi bi-image"></i><span>Product Media</span></a
             >
           </li>
@@ -214,7 +214,7 @@
                   </button>
                 </div>
                 <div class="stat-body">
-                  <span class="stat-value">$350K</span>
+                  <span class="stat-value" id="totalSalesStatValue">$0.00</span>
                   <div class="stat-badges">
                     <span class="badge-label">Sales</span>
                     <span class="badge-growth up"
@@ -242,7 +242,7 @@
                   </button>
                 </div>
                 <div class="stat-body">
-                  <span class="stat-value">10.7K</span>
+                  <span class="stat-value" id="totalOrdersStatValue">0</span>
                   <div class="stat-badges">
                     <span class="badge-label">order</span>
                     <span class="badge-growth up"
@@ -252,7 +252,7 @@
                 </div>
                 <p class="stat-prev">Previous 7days <a href="#">(7.6k)</a></p>
                 <div class="stat-footer">
-                  <button class="btn-details">Details</button>
+                  <button class="btn-details" id="totalOrdersDetailsBtn">Details</button>
                 </div>
               </div>
             </div>
@@ -272,19 +272,19 @@
                 <div class="stat-body pending-body">
                   <div class="pending-col">
                     <span class="pending-label">Pending</span>
-                    <span class="pending-val">509</span>
-                    <span class="pending-sub">user 204</span>
+                    <span class="pending-val" id="pendingOrdersStatValue">0</span>
+                    <span class="pending-sub" id="pendingOrdersStatSub">orders</span>
                   </div>
                   <div class="pending-col">
                     <span class="pending-label">Canceled</span>
-                    <span class="pending-val danger">94</span>
+                    <span class="pending-val danger" id="canceledOrdersStatValue">0</span>
                     <span class="badge-growth down"
                       ><i class="bi bi-arrow-down"></i>14.4%</span
                     >
                   </div>
                 </div>
                 <div class="stat-footer">
-                  <button class="btn-details">Details</button>
+                  <button class="btn-details" id="pendingCanceledDetailsBtn">Details</button>
                 </div>
               </div>
             </div>
@@ -447,8 +447,8 @@
               <div class="card-panel">
                 <div class="panel-header">
                   <h6 class="panel-title">Transaction</h6>
-                  <button class="btn-filter">
-                    <i class="bi bi-funnel-fill me-2"></i>Filter
+                  <button class="btn-filter" id="transactionFilterBtn">
+                    <i class="bi bi-funnel-fill me-2"></i><span id="transactionFilterLabel">Filter: All</span>
                   </button>
                 </div>
                 <div class="table-responsive">
@@ -462,47 +462,15 @@
                         <th>Amount</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="transactionTableBody">
                       <tr>
-                        <td>1.</td>
-                        <td>#6545</td>
-                        <td>01 Oct | 11:29 am</td>
-                        <td><span class="status-dot paid"></span>Paid</td>
-                        <td>$64</td>
-                      </tr>
-                      <tr>
-                        <td>2.</td>
-                        <td>#5412</td>
-                        <td>01 Oct | 11:29 am</td>
-                        <td><span class="status-dot pending"></span>Pending</td>
-                        <td>$557</td>
-                      </tr>
-                      <tr>
-                        <td>3.</td>
-                        <td>#6622</td>
-                        <td>01 Oct | 11:29 am</td>
-                        <td><span class="status-dot paid"></span>Paid</td>
-                        <td>$156</td>
-                      </tr>
-                      <tr>
-                        <td>4.</td>
-                        <td>#6462</td>
-                        <td>01 Oct | 11:29 am</td>
-                        <td><span class="status-dot paid"></span>Paid</td>
-                        <td>$265</td>
-                      </tr>
-                      <tr>
-                        <td>5.</td>
-                        <td>#6462</td>
-                        <td>01 Oct | 11:29 am</td>
-                        <td><span class="status-dot paid"></span>Paid</td>
-                        <td>$265</td>
+                        <td colspan="5">No transactions yet.</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
                 <div class="text-end mt-2">
-                  <button class="btn-details">Details</button>
+                  <button class="btn-details" id="transactionDetailsBtn">Details</button>
                 </div>
               </div>
             </div>
@@ -582,8 +550,8 @@
               <div class="card-panel">
                 <div class="panel-header">
                   <h6 class="panel-title">Best selling product</h6>
-                  <button class="btn-filter">
-                    <i class="bi bi-funnel-fill me-2"></i>Filter
+                  <button class="btn-filter" id="bestSellingFilterBtn">
+                    <i class="bi bi-funnel-fill me-2"></i><span id="bestSellingFilterLabel">Filter: All Inventory</span>
                   </button>
                 </div>
                 <div class="table-responsive">
@@ -596,84 +564,15 @@
                         <th>Price</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="bestSellingTableBody">
                       <tr>
-                        <td>
-                          <div class="d-flex align-items-center gap-2">
-                            <img
-                              src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-13-blue-select-2021?wid=40&hei=40&fmt=jpeg"
-                              class="tbl-prod-img"
-                              alt="iPhone"
-                            />
-                            Apple iPhone 13
-                          </div>
-                        </td>
-                        <td>104</td>
-                        <td>
-                          <span class="status-dot paid"></span
-                          ><span class="text-success">Stock</span>
-                        </td>
-                        <td>$999.00</td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <div class="d-flex align-items-center gap-2">
-                            <img
-                              src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=40&h=40&fit=crop"
-                              class="tbl-prod-img"
-                              alt="Jordan"
-                            />
-                            Nike Air Jordan
-                          </div>
-                        </td>
-                        <td>56</td>
-                        <td>
-                          <span class="status-dot danger-dot"></span
-                          ><span class="text-danger">Stock out</span>
-                        </td>
-                        <td>$999.00</td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <div class="d-flex align-items-center gap-2">
-                            <img
-                              src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=40&h=40&fit=crop"
-                              class="tbl-prod-img"
-                              alt="T-shirt"
-                            />
-                            T-shirt
-                          </div>
-                        </td>
-                        <td>266</td>
-                        <td>
-                          <span class="status-dot paid"></span
-                          ><span class="text-success">Stock</span>
-                        </td>
-                        <td>$999.00</td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <div class="d-flex align-items-center gap-2">
-                            <img
-                              src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=40&h=40&fit=crop"
-                              class="tbl-prod-img"
-                              alt="Bag"
-                            />
-                            Cross Bag
-                          </div>
-                        </td>
-                        <td>506</td>
-                        <td>
-                          <span class="status-dot paid"></span
-                          ><span class="text-success">Stock</span>
-                        </td>
-                        <td>$999.00</td>
+                        <td colspan="4">No order data yet.</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
                 <div class="text-end mt-2">
-                  <button class="btn-details">Details</button>
+                  <button class="btn-details" id="bestSellingDetailsBtn">Details</button>
                 </div>
               </div>
             </div>
@@ -683,76 +582,30 @@
               <div class="card-panel h-100">
                 <div class="panel-header">
                   <h6 class="panel-title">Add New Product</h6>
-                  <a href="addProductPage.html" class="link-green"
+                  <a href="addProductPage.html" class="link-green" id="addNewQuickLink"
                     ><i class="bi bi-plus-circle me-1"></i>Add New</a
                   >
                 </div>
                 <p class="cat-label">Categories</p>
-                <div class="category-list">
+                <div class="category-list" id="dashboardCategoryList">
                   <div class="category-row">
-                    <div class="cat-icon"><i class="bi bi-phone"></i></div>
-                    <span class="cat-name">Electronic</span>
-                    <i class="bi bi-chevron-right ms-auto text-muted"></i>
-                  </div>
-                  <div class="category-row">
-                    <div class="cat-icon"><i class="bi bi-bag"></i></div>
-                    <span class="cat-name">Fashion</span>
-                    <i class="bi bi-chevron-right ms-auto text-muted"></i>
-                  </div>
-                  <div class="category-row">
-                    <div class="cat-icon"><i class="bi bi-house"></i></div>
-                    <span class="cat-name">Home</span>
+                    <div class="cat-icon"><i class="bi bi-grid"></i></div>
+                    <span class="cat-name">No categories yet</span>
                     <i class="bi bi-chevron-right ms-auto text-muted"></i>
                   </div>
                 </div>
-                <button class="btn-see-more">See more</button>
+                <button class="btn-see-more" id="categoriesSeeMoreBtn">See more</button>
 
                 <p class="cat-label mt-3">Product</p>
-                <div class="quick-add-list">
+                <div class="quick-add-list" id="dashboardQuickAddList">
                   <div class="quick-add-row">
-                    <img
-                      src="https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?w=40&h=40&fit=crop"
-                      class="qa-img"
-                      alt="Fitness Tracker"
-                    />
                     <div class="qa-meta">
-                      <span class="qa-name">Smart Fitness Tracker</span>
-                      <span class="qa-price text-success">$39.99</span>
+                      <span class="qa-name">No products yet</span>
+                      <span class="qa-price text-success">$0.00</span>
                     </div>
-                    <button class="btn-add">
-                      <i class="bi bi-plus-circle-fill me-1"></i>Add
-                    </button>
-                  </div>
-                  <div class="quick-add-row">
-                    <img
-                      src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=40&h=40&fit=crop"
-                      class="qa-img"
-                      alt="Wallet"
-                    />
-                    <div class="qa-meta">
-                      <span class="qa-name">Leather Wallet</span>
-                      <span class="qa-price text-success">$19.99</span>
-                    </div>
-                    <button class="btn-add">
-                      <i class="bi bi-plus-circle-fill me-1"></i>Add
-                    </button>
-                  </div>
-                  <div class="quick-add-row">
-                    <img
-                      src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=40&h=40&fit=crop"
-                      class="qa-img"
-                      alt="Trimmer"
-                    />
-                    <div class="qa-meta">
-                      <span class="qa-name">Electric Hair Trimmer</span>
-                      <span class="qa-price text-success">$34.99</span>
-                    </div>
-                    <button class="btn-add">
-                      <i class="bi bi-plus-circle-fill me-1"></i>Add
-                    </button>
                   </div>
                 </div>
-                <a href="ProductList.html" class="btn-see-more mt-2"
+                <a href="ProductList.html" class="btn-see-more mt-2" id="productSeeMoreBtn"
                   >See more</a
                 >
               </div>

@@ -46,10 +46,10 @@
 <div class="filters">
 
 <div class="tabs">
-<div class="tab active" onclick="filterStatus('all')">All</div>
-<div class="tab" onclick="filterStatus('Delivered')">Completed</div>
-<div class="tab" onclick="filterStatus('Pending')">Pending</div>
-<div class="tab" onclick="filterStatus('Cancelled')">Canceled</div>
+<div class="tab active" onclick="filterStatus('all', this)">All</div>
+<div class="tab" onclick="filterStatus('Delivered', this)">Completed</div>
+<div class="tab" onclick="filterStatus('Pending', this)">Pending</div>
+<div class="tab" onclick="filterStatus('Cancelled', this)">Canceled</div>
 </div>
 
 <input class="search" placeholder="Search order..." onkeyup="searchOrder(this.value)">
@@ -63,7 +63,7 @@
 <tr>
 <th>No</th>
 <th>Order Id</th>
-<th>Product</th>
+<th>Products</th>
 <th>Date</th>
 <th>Price</th>
 <th>Payment</th>
@@ -86,9 +86,10 @@
 
 <h3>Add Order</h3>
 
-<input id="product" placeholder="Product name">
+<div class="picker-label">Select Products</div>
+<div id="productPicker" class="product-picker"></div>
 
-<input id="price" type="number" placeholder="Price">
+<input id="price" type="number" placeholder="Total Price" readonly>
 
 <select id="payment">
 <option>Paid</option>
@@ -110,7 +111,17 @@
 </div>
 </div>
 
-<script src="/JS/Seller/OrderManagement.js"></script>
+<div class="modal" id="productsModal">
+<div class="modal-content">
+<h3 id="productsModalTitle">Order Products</h3>
+<ul class="products-list" id="productsList"></ul>
+<div class="modal-actions">
+<button class="btn btn-secondary" onclick="closeProductsModal()">Close</button>
+</div>
+</div>
+</div>
+
+<script type="module" src="/JS/Seller/OrderManagement.js"></script>
 
 </div>
 
