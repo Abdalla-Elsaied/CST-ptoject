@@ -307,16 +307,16 @@
                     <span class="metric-val" id="dashboardTotalProductsMetricValue">0</span>
                     <span class="metric-lbl">Total Products</span>
                   </div>
-                  <div class="metric-item">
+                  <div class="metric-item" data-chart-source="stock">
                     <span class="metric-val" id="dashboardStockProductsMetricValue">0</span>
                     <span class="metric-lbl">Stock Products</span>
                   </div>
-                  <div class="metric-item">
-                    <span class="metric-val">0.5k</span>
+                  <div class="metric-item" data-chart-source="out-of-stock">
+                    <span class="metric-val" id="dashboardOutOfStockMetricValue">0</span>
                     <span class="metric-lbl">Out of Stock</span>
                   </div>
-                  <div class="metric-item">
-                    <span class="metric-val">250k</span>
+                  <div class="metric-item" data-chart-source="canceled-revenue">
+                    <span class="metric-val" id="dashboardCanceledRevenueMetricValue">$0</span>
                     <span class="metric-lbl">Revenue</span>
                   </div>
                 </div>
@@ -332,101 +332,19 @@
               <div class="card-panel h-100">
                 <div class="panel-header">
                   <div>
-                    <span class="panel-sub">Users in last 30 minutes</span>
-                    <h3 class="panel-big-val">21.5K</h3>
+                    <span class="panel-sub">Orders in last 30 days</span>
+                    <h3 class="panel-big-val" id="orders30DaysValue">0</h3>
                   </div>
                   <button class="btn-dots">
                     <i class="bi bi-three-dots"></i>
                   </button>
                 </div>
 
-                <p class="chart-sub-label">Users per minute</p>
+                <p class="chart-sub-label">Orders by status</p>
                 <div class="bar-chart-wrap">
                   <canvas id="usersBarChart"></canvas>
                 </div>
 
-                <!-- Sales by Country -->
-                <div class="country-section">
-                  <div class="country-header">
-                    <span class="country-title">Sales by Country</span>
-                    <span class="country-title">Sales</span>
-                  </div>
-                  <div class="country-list">
-                    <div class="country-row">
-                      <div class="country-flag">
-                        <img src="https://flagcdn.com/w40/us.png" alt="USA" />
-                      </div>
-                      <div class="country-info">
-                        <div class="d-flex justify-content-between mb-1">
-                          <span class="country-name"
-                            >30k <small class="text-muted">US</small></span
-                          >
-                          <span class="country-pct up"
-                            ><i class="bi bi-arrow-up"></i>25.8%</span
-                          >
-                        </div>
-                        <div class="progress country-progress">
-                          <div
-                            class="progress-bar bg-primary"
-                            style="width: 75%"
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="country-row">
-                      <div class="country-flag">
-                        <img
-                          src="https://flagcdn.com/w40/br.png"
-                          alt="Brazil"
-                        />
-                      </div>
-                      <div class="country-info">
-                        <div class="d-flex justify-content-between mb-1">
-                          <span class="country-name"
-                            >30k <small class="text-muted">Brazil</small></span
-                          >
-                          <span class="country-pct down"
-                            ><i class="bi bi-arrow-down"></i>15.8%</span
-                          >
-                        </div>
-                        <div class="progress country-progress">
-                          <div
-                            class="progress-bar bg-primary"
-                            style="width: 55%"
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="country-row">
-                      <div class="country-flag">
-                        <img
-                          src="https://flagcdn.com/w40/au.png"
-                          alt="Australia"
-                        />
-                      </div>
-                      <div class="country-info">
-                        <div class="d-flex justify-content-between mb-1">
-                          <span class="country-name"
-                            >25k
-                            <small class="text-muted">Australia</small></span
-                          >
-                          <span class="country-pct up"
-                            ><i class="bi bi-arrow-up"></i>35.8%</span
-                          >
-                        </div>
-                        <div class="progress country-progress">
-                          <div
-                            class="progress-bar bg-primary"
-                            style="width: 65%"
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <button class="btn-view-insight">View Insight</button>
-                </div>
               </div>
             </div>
           </div>
@@ -473,61 +391,13 @@
                   <h6 class="panel-title">Top Products</h6>
                   <a href="ProductList.html" class="link-green">All product</a>
                 </div>
-                <div class="product-search mb-3">
-                  <i class="bi bi-search"></i>
-                  <input type="text" placeholder="Search" />
-                </div>
-                <div class="product-list">
+                <div class="product-list" id="dashboardTopProductsList">
                   <div class="product-row">
-                    <img
-                      src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-13-blue-select-2021?wid=60&hei=60&fmt=jpeg"
-                      alt="iPhone 13"
-                      class="product-thumb"
-                    />
                     <div class="product-meta">
-                      <span class="product-name">Apple iPhone 13</span>
-                      <span class="product-code">Item: #FXZ-4567</span>
+                      <span class="product-name">No product data yet.</span>
+                      <span class="product-code">Item: -</span>
                     </div>
-                    <span class="product-price">$999.00</span>
-                  </div>
-
-                  <div class="product-row">
-                    <img
-                      src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=60&h=60&fit=crop"
-                      alt="Nike Air Jordan"
-                      class="product-thumb"
-                    />
-                    <div class="product-meta">
-                      <span class="product-name">Nike Air Jordan</span>
-                      <span class="product-code">Item: #FXZ-4567</span>
-                    </div>
-                    <span class="product-price">$72.40</span>
-                  </div>
-
-                  <div class="product-row">
-                    <img
-                      src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=60&h=60&fit=crop"
-                      alt="T-shirt"
-                      class="product-thumb"
-                    />
-                    <div class="product-meta">
-                      <span class="product-name">T-shirt</span>
-                      <span class="product-code">Item: #FXZ-4567</span>
-                    </div>
-                    <span class="product-price">$35.40</span>
-                  </div>
-
-                  <div class="product-row">
-                    <img
-                      src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=60&h=60&fit=crop"
-                      alt="Cross Bag"
-                      class="product-thumb"
-                    />
-                    <div class="product-meta">
-                      <span class="product-name">Assorted Cross Bag</span>
-                      <span class="product-code">Item: #FXZ-4567</span>
-                    </div>
-                    <span class="product-price">$80.00</span>
+                    <span class="product-price">$0.00</span>
                   </div>
                 </div>
               </div>
@@ -618,6 +488,6 @@
     <!-- jQuery (optional) -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-    <script src="../../JS/Seller/home.js"></script>
+    <script type="module" src="../../JS/Seller/home.js"></script>
   </body>
 </html>
