@@ -64,6 +64,12 @@ $(function () {
       return;
     }
 
+    if (fileName === 'productmedia.html') {
+      setActiveNavLink('#productMediaLink');
+      $pageTitle.text('Product Media');
+      return;
+    }
+
     if (fileName === 'ordermanagement.html') {
       setActiveNavLink('#orderManagementLink');
       $pageTitle.text('Order Management');
@@ -102,6 +108,15 @@ $(function () {
     closeMobileSidebar();
   }
 
+  function showProductMedia() {
+    $embeddedPageFrame.attr('src', 'ProductMedia.html');
+    $dashboardView.hide();
+    $orderManagementView.show();
+    $pageTitle.text('Product Media');
+    setActiveNavLink('#productMediaLink');
+    closeMobileSidebar();
+  }
+
   $embeddedPageFrame.on('load', function () {
     syncEmbeddedTheme();
     syncNavFromEmbeddedPage();
@@ -125,6 +140,10 @@ $(function () {
 
   $('#productListLink').on('click', function () {
     showProductList();
+  });
+
+  $('#productMediaLink').on('click', function () {
+    showProductMedia();
   });
 
 

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Media</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="/CSS/Seller/ProductMedia.css">
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div>
+      <h1>Product Media</h1>
+      <p>Manage images and videos attached to your products.</p>
+    </div>
+    <button class="btn" onclick="seedMediaForDemo()">Seed Demo Media</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <h4>Total Assets</h4>
+      <div class="value" id="totalAssets">0</div>
+    </div>
+    <div class="stat-card">
+      <h4>Images</h4>
+      <div class="value green" id="totalImages">0</div>
+    </div>
+    <div class="stat-card">
+      <h4>Videos</h4>
+      <div class="value blue" id="totalVideos">0</div>
+    </div>
+    <div class="stat-card">
+      <h4>No Media</h4>
+      <div class="value red" id="emptyMedia">0</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input id="searchInput" class="search" placeholder="Search product..." oninput="searchProducts(this.value)">
+    <div class="tabs">
+      <button class="tab active" onclick="setFilter('all', this)">All</button>
+      <button class="tab" onclick="setFilter('with-media', this)">With Media</button>
+      <button class="tab" onclick="setFilter('no-media', this)">No Media</button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Product</th>
+          <th>Images</th>
+          <th>Videos</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="empty" id="emptyState" style="display:none;">
+    No products found.
+  </div>
+
+  <div class="modal" id="mediaModal" onclick="closeMediaModal(event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Media Preview</h3>
+        <button class="icon-btn" onclick="closeMediaModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="modalGallery" class="gallery"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/JS/Seller/ProductMedia.js"></script>
+</body>
+</html>
