@@ -110,7 +110,7 @@ $(function () {
   function loadDashboardOrders() {
     try {
       const parsed = JSON.parse(localStorage.getItem('ls_orders'));
-      if (!Array.isArray(parsed)) return [];
+      if (!Array.isArray(parsed) || parsed.length === 0) return [];
       const normalized = normalizeDashboardOrders(parsed);
       localStorage.setItem('ls_orders', JSON.stringify(normalized));
       return normalized;
@@ -191,6 +191,7 @@ $(function () {
     if (rawAmount > 100_000) return rawAmount / 100;
     return rawAmount;
   }
+
 
   function startOfWeek(dateValue) {
     const d = new Date(dateValue || Date.now());
@@ -540,6 +541,16 @@ $(function () {
     usersBarChart.data.datasets[0].data = data;
     usersBarChart.data.datasets[0].backgroundColor = ['#16a34a', '#22c55e', '#f59e0b', '#ef4444'];
     usersBarChart.update('none');
+  }
+
+  function deferOrdersStatusRefresh() {
+    setTimeout(() => renderOrdersStatusPanel(), 0);
+  }
+
+  function refreshDashboardOrderWidgets() {
+    renderDashboardOrderStats();
+    renderPendingCanceledStats();
+    deferOrdersStatusRefresh();
   }
 
   function normalizeDashboardProduct(raw, idx) {
@@ -1081,7 +1092,7 @@ $(function () {
     renderDashboardTotalProductsMetric();
     renderDashboardStockProductsMetric();
     renderDashboardOutOfStockMetric();
-    renderOrdersStatusPanel();
+    deferOrdersStatusRefresh();
     setPendingCanceledDrilldown(pendingCanceledDrilldownStatus);
     renderTransactionTable();
     renderBestSellingTable();
@@ -1134,7 +1145,18 @@ $(function () {
 
   $embeddedPageFrame.on('load', function () {
     syncEmbeddedTheme();
-    syncNavFromEmbeddedPage();
+    if ($orderManagementView.is(':visible')) {
+      syncNavFromEmbeddedPage();
+    }
+    try {
+      const path = $embeddedPageFrame.get(0)?.contentWindow?.location?.pathname || '';
+      const fileName = path.split('/').pop().toLowerCase();
+      if (fileName === 'ordermanagement.html') {
+        refreshDashboardOrderWidgets();
+      }
+    } catch (_err) {
+      // ignore access errors
+    }
   });
 
   /* ─────────────────────────────────────────
@@ -1460,7 +1482,13 @@ $(function () {
     }
   });
 
-  renderOrdersStatusPanel();
+  deferOrdersStatusRefresh();
+
+  window.addEventListener('storage', function (event) {
+    if (event.key === 'ls_orders') {
+      refreshDashboardOrderWidgets();
+    }
+  });
 
   /* ─────────────────────────────────────────
      Helper: update chart colors on theme toggle
