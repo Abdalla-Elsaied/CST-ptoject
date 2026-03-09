@@ -4,4 +4,6 @@ export const KEY_ORDERS        = 'ls_orders';
 export const KEY_CURRENT_USER  = 'ls_currentUser';
 export const KEY_CART          = 'ls_cart';
 export const KEY_SEEDED        = 'ls_seeded';
-export const KEY_APPROVAL      = "LS_Pre_Sellers"
+export const KEY_APPROVAL      = 'LS_Pre_Sellers';
+export const KEY_WISHLIST      = 'ls_wishlist';
+export const KEY_LOCATION      = 'ls_location';
