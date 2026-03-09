@@ -53,6 +53,15 @@ font-size:.88rem;
 font-weight:600;
 cursor:pointer;
 }
+button.btn.btn-danger {
+    background: red;
+}
+
+.btn-danger {
+    padding: 6px 12px;
+    font-size: .8rem;
+}
+
 .btn:hover{ background:var(--green-dark); }
 .btn-update{
 padding:6px 12px;
