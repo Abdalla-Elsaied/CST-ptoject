@@ -622,8 +622,8 @@ img { max-width: 100%; }
 }
 
 .bar-chart-wrap {
-  height: 70px;
-  margin-bottom: 16px;
+  height: 260px;
+  margin-bottom: 0;
 }
 
 .chart-sub-label {

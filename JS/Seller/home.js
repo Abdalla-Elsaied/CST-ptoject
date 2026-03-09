@@ -2,6 +2,8 @@
    DEALPORT – SELLER DASHBOARD  |  script.js
 ═══════════════════════════════════════════════ */
 
+import { loadProductsFromFolder } from '../Core/FileStorage.js';
+
 $(function () {
 
   /* ─────────────────────────────────────────
@@ -33,6 +35,8 @@ $(function () {
   let pendingCanceledDrilldownStatus = 'Pending';
   let reportChartSource = 'sales';
   let darkMode = $('body').hasClass('dark');
+  let dashboardProductsCache = null;
+  let dashboardProductsLoaded = false;
   const REPORT_WEEK_START_DAY = 4; // 0=Sun ... 4=Thu
 
   function closeMobileSidebar() {
@@ -240,6 +244,38 @@ $(function () {
     return totals.map((v) => Number(v.toFixed(2)));
   }
 
+  function buildWeeklyCanceledRevenueData(weekOffset = 0) {
+    const start = startOfWeek(new Date());
+    start.setDate(start.getDate() - (weekOffset * 7));
+    const end = new Date(start);
+    end.setDate(end.getDate() + 7);
+
+    const totals = [0, 0, 0, 0, 0, 0, 0];
+    const orders = loadDashboardOrders();
+
+    orders.forEach((order) => {
+      const dt = new Date(order?.createdAt || order?.date || 0);
+      if (Number.isNaN(dt.getTime())) return;
+      if (dt < start || dt >= end) return;
+
+      const status = String(order?.status ?? '').toLowerCase();
+      if (status !== 'cancelled' && status !== 'canceled') return;
+
+      const amount = getSafeOrderAmount(order);
+      if (!Number.isFinite(amount) || amount <= 0) return;
+
+      const dayIndex = mapDayToReportIndex(dt.getDay());
+      totals[dayIndex] += amount;
+    });
+
+    if (weekOffset === 0) {
+      const today = mapDayToReportIndex(new Date().getDay());
+      return totals.map((v, idx) => (idx > today ? null : Number(v.toFixed(2))));
+    }
+
+    return totals.map((v) => Number(v.toFixed(2)));
+  }
+
   function buildWeeklyProductsData(weekOffset = 0) {
     const start = startOfWeek(new Date());
     start.setDate(start.getDate() - (weekOffset * 7));
@@ -266,12 +302,74 @@ $(function () {
     return totals;
   }
 
+  function buildWeeklyStockProductsData(weekOffset = 0) {
+    const start = startOfWeek(new Date());
+    start.setDate(start.getDate() - (weekOffset * 7));
+    const end = new Date(start);
+    end.setDate(end.getDate() + 7);
+
+    const totals = [0, 0, 0, 0, 0, 0, 0];
+    const products = loadDashboardProducts().map((p, idx) => normalizeDashboardProduct(p, idx));
+
+    products.forEach((product) => {
+      const dt = new Date(product?.createdAt ?? 0);
+      if (Number.isNaN(dt.getTime())) return;
+      if (dt < start || dt >= end) return;
+
+      const stock = Number(product?.stock);
+      if (!Number.isFinite(stock) || stock <= 0) return;
+
+      const dayIndex = mapDayToReportIndex(dt.getDay());
+      totals[dayIndex] += 1;
+    });
+
+    if (weekOffset === 0) {
+      const today = mapDayToReportIndex(new Date().getDay());
+      return totals.map((v, idx) => (idx > today ? null : v));
+    }
+
+    return totals;
+  }
+
+  function buildWeeklyOutOfStockProductsData(weekOffset = 0) {
+    const start = startOfWeek(new Date());
+    start.setDate(start.getDate() - (weekOffset * 7));
+    const end = new Date(start);
+    end.setDate(end.getDate() + 7);
+
+    const totals = [0, 0, 0, 0, 0, 0, 0];
+    const products = loadDashboardProducts().map((p, idx) => normalizeDashboardProduct(p, idx));
+
+    products.forEach((product) => {
+      const dt = new Date(product?.createdAt ?? 0);
+      if (Number.isNaN(dt.getTime())) return;
+      if (dt < start || dt >= end) return;
+
+      const stock = Number(product?.stock);
+      if (!Number.isFinite(stock) || stock > 0) return;
+
+      const dayIndex = mapDayToReportIndex(dt.getDay());
+      totals[dayIndex] += 1;
+    });
+
+    if (weekOffset === 0) {
+      const today = mapDayToReportIndex(new Date().getDay());
+      return totals.map((v, idx) => (idx > today ? null : v));
+    }
+
+    return totals;
+  }
+
   function getReportSeriesData(weekOffset = 0) {
+    if (reportChartSource === 'stock') return buildWeeklyStockProductsData(weekOffset);
+    if (reportChartSource === 'out-of-stock') return buildWeeklyOutOfStockProductsData(weekOffset);
     if (reportChartSource === 'products') return buildWeeklyProductsData(weekOffset);
+    if (reportChartSource === 'canceled-revenue') return buildWeeklyCanceledRevenueData(weekOffset);
     return buildWeeklySalesData(weekOffset);
   }
 
   function loadDashboardProducts() {
+    if (Array.isArray(dashboardProductsCache)) return dashboardProductsCache;
     const keys = ['ls_products', 'products', 'sellerProducts'];
     for (const key of keys) {
       try {
@@ -282,6 +380,39 @@ $(function () {
       }
     }
     return [];
+  }
+
+  async function loadDashboardProductsRemote() {
+    try {
+      const products = await loadProductsFromFolder();
+      if (!Array.isArray(products)) return null;
+      dashboardProductsCache = products;
+      localStorage.setItem('sellerProducts', JSON.stringify(products));
+      return products;
+    } catch (err) {
+      console.warn('Dashboard: failed to load remote products', err);
+      return null;
+    }
+  }
+
+  async function syncDashboardProducts() {
+    if (dashboardProductsLoaded) return;
+    dashboardProductsLoaded = true;
+    await loadDashboardProductsRemote();
+  }
+
+  async function refreshDashboardProductsUI() {
+    await syncDashboardProducts();
+    renderDashboardTotalProductsMetric();
+    renderDashboardStockProductsMetric();
+    renderDashboardOutOfStockMetric();
+    renderBestSellingTable();
+    renderTopProductsList();
+    renderDashboardCategories();
+
+    if (reportChartSource === 'products' || reportChartSource === 'stock' || reportChartSource === 'out-of-stock') {
+      renderWeeklyReportChart('active');
+    }
   }
 
   function formatCompactNumber(value) {
@@ -303,6 +434,12 @@ $(function () {
     return `$${formatCompactNumber(n)}`;
   }
 
+  function formatPrice(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return '$0.00';
+    return `$${n.toFixed(2)}`;
+  }
+
   function renderDashboardWeeklySalesMetric() {
     const metricEl = document.getElementById('dashboardWeeklySalesMetricValue');
     if (!metricEl) return;
@@ -316,6 +453,20 @@ $(function () {
     metricEl.textContent = formatCompactCurrency(weeklyTotal);
   }
 
+  function renderDashboardCanceledRevenueMetric() {
+    const metricEl = document.getElementById('dashboardCanceledRevenueMetricValue');
+    if (!metricEl) return;
+
+    const orders = loadDashboardOrders();
+    const canceledTotal = orders.reduce((sum, order) => {
+      const status = String(order?.status ?? '').toLowerCase();
+      if (status !== 'cancelled' && status !== 'canceled') return sum;
+      const amount = getSafeOrderAmount(order);
+      return Number.isFinite(amount) ? sum + amount : sum;
+    }, 0);
+
+    metricEl.textContent = formatCompactCurrency(canceledTotal);
+  }
   function renderDashboardTotalProductsMetric() {
     const metricEl = document.getElementById('dashboardTotalProductsMetricValue');
     if (!metricEl) return;
@@ -331,6 +482,62 @@ $(function () {
     const products = loadDashboardProducts().map((p, idx) => normalizeDashboardProduct(p, idx));
     const inStockCount = products.filter((p) => Number(p.stock) > 0).length;
     metricEl.textContent = formatCompactNumber(inStockCount);
+  }
+
+  function renderDashboardOutOfStockMetric() {
+    const metricEl = document.getElementById('dashboardOutOfStockMetricValue');
+    if (!metricEl) return;
+
+    const products = loadDashboardProducts().map((p, idx) => normalizeDashboardProduct(p, idx));
+    const outOfStockCount = products.filter((p) => {
+      const stock = Number(p.stock);
+      return Number.isFinite(stock) && stock <= 0;
+    }).length;
+
+    metricEl.textContent = formatCompactNumber(outOfStockCount);
+  }
+
+  function getRecentOrders(days) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    return loadDashboardOrders().filter((order) => {
+      const dt = new Date(order?.createdAt || order?.date || 0);
+      if (Number.isNaN(dt.getTime())) return false;
+      return dt >= cutoff;
+    });
+  }
+
+  function renderOrdersStatusPanel() {
+    const totalEl = document.getElementById('orders30DaysValue');
+    const recentOrders = getRecentOrders(30);
+    if (totalEl) totalEl.textContent = formatCompactNumber(recentOrders.length);
+
+    const counts = {
+      Delivered: 0,
+      Shipped: 0,
+      Pending: 0,
+      Cancelled: 0
+    };
+
+    recentOrders.forEach((order) => {
+      const status = String(order?.status ?? '').trim();
+      if (status === 'Delivered') counts.Delivered += 1;
+      else if (status === 'Shipped') counts.Shipped += 1;
+      else if (status === 'Cancelled') counts.Cancelled += 1;
+      else counts.Pending += 1;
+    });
+
+    const data = [
+      counts.Delivered,
+      counts.Shipped,
+      counts.Pending,
+      counts.Cancelled
+    ];
+
+    usersBarChart.data.labels = ['Delivered', 'Shipped', 'Pending', 'Cancelled'];
+    usersBarChart.data.datasets[0].data = data;
+    usersBarChart.data.datasets[0].backgroundColor = ['#16a34a', '#22c55e', '#f59e0b', '#ef4444'];
+    usersBarChart.update('none');
   }
 
   function normalizeDashboardProduct(raw, idx) {
@@ -509,6 +716,91 @@ $(function () {
         </tr>
       `;
     }).join('');
+  }
+
+  function renderTopProductsList() {
+    const listEl = document.getElementById('dashboardTopProductsList');
+    if (!listEl) return;
+
+    const rawOrders = loadDashboardOrders();
+    const products = loadDashboardProducts().map((p, idx) => normalizeDashboardProduct(p, idx));
+    const productById = new Map(products.map((p) => [String(p.id), p]));
+    const productByName = new Map(products.map((p) => [p.name.toLowerCase(), p]));
+
+    const sold = new Map();
+
+    rawOrders.forEach((order) => {
+      const status = String(order?.status ?? '').toLowerCase();
+      if (status === 'cancelled' || status === 'canceled') return;
+
+      extractOrderItems(order).forEach((item) => {
+        const itemId = String(item?.id ?? item?.productId ?? item?.product_id ?? '').trim();
+        const itemName = String(item?.name ?? item?.productName ?? item?.product ?? item?.title ?? '').trim();
+        const qtyRaw = Number(item?.qty ?? item?.quantity ?? 1);
+        const qty = Number.isFinite(qtyRaw) && qtyRaw > 0 ? Math.floor(qtyRaw) : 1;
+        const unitPriceRaw = Number(item?.unitPrice ?? item?.price ?? 0);
+
+        const matched = itemId ? productById.get(itemId) : (productByName.get(itemName.toLowerCase()) ?? null);
+        const key = itemId || itemName.toLowerCase();
+        if (!key) return;
+
+        if (!sold.has(key)) {
+          sold.set(key, {
+            id: matched?.id ?? itemId ?? key,
+            name: matched?.name ?? itemName ?? 'Unknown Product',
+            image: matched?.image ?? `https://placehold.co/80x80/ecfdf5/166534?text=${encodeURIComponent(itemName || 'P')}`,
+            price: Number.isFinite(matched?.price) ? matched.price : (Number.isFinite(unitPriceRaw) ? unitPriceRaw : 0),
+            totalQty: 0
+          });
+        }
+
+        sold.get(key).totalQty += qty;
+      });
+    });
+
+    let top = Array.from(sold.values())
+      .sort((a, b) => {
+        if (b.totalQty !== a.totalQty) return b.totalQty - a.totalQty;
+        return b.price - a.price;
+      });
+
+    if (!top.length && products.length) {
+      top = products
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          image: p.image,
+          price: Number.isFinite(p.price) ? p.price : 0,
+          totalQty: 0
+        }))
+        .sort((a, b) => b.price - a.price);
+    }
+
+    top = top.slice(0, 4);
+
+    if (!top.length) {
+      listEl.innerHTML = `
+        <div class="product-row">
+          <div class="product-meta">
+            <span class="product-name">No product data yet.</span>
+            <span class="product-code">Item: -</span>
+          </div>
+          <span class="product-price">$0.00</span>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = top.map((item) => `
+      <div class="product-row">
+        <img src="${item.image}" alt="${item.name}" class="product-thumb" />
+        <div class="product-meta">
+          <span class="product-name">${item.name}</span>
+          <span class="product-code">Item: #${item.id}</span>
+        </div>
+        <span class="product-price">${formatPrice(item.price)}</span>
+      </div>
+    `).join('');
   }
 
   function cycleBestSellingFilter() {
@@ -783,12 +1075,17 @@ $(function () {
     renderDashboardOrderStats();
     renderPendingCanceledStats();
     renderDashboardWeeklySalesMetric();
+    renderDashboardCanceledRevenueMetric();
     renderDashboardTotalProductsMetric();
     renderDashboardStockProductsMetric();
+    renderDashboardOutOfStockMetric();
+    renderOrdersStatusPanel();
     setPendingCanceledDrilldown(pendingCanceledDrilldownStatus);
     renderTransactionTable();
     renderBestSellingTable();
+    renderTopProductsList();
     renderDashboardCategories();
+    refreshDashboardProductsUI();
   }
 
   function showOrderManagement(status, payment, recentDays) {
@@ -915,6 +1212,10 @@ $(function () {
     cycleBestSellingFilter();
   });
 
+  $(document).on('click', '#dashboardTopProductsList .product-row', function () {
+    showProductList();
+  });
+
   $('#productMediaLink').on('click', function () {
     showProductMedia();
   });
@@ -989,12 +1290,18 @@ $(function () {
   function renderWeeklyReportChart(animationMode = 'none') {
     const data = getReportSeriesData(weeklyChartOffset);
     const maxValue = Math.max(...data.map((v) => (Number.isFinite(v) ? v : 0)), 0);
-    const chartMax = reportChartSource === 'products'
+    const chartMax = reportChartSource === 'products' || reportChartSource === 'stock' || reportChartSource === 'out-of-stock'
       ? Math.max(5, Math.ceil(maxValue / 5) * 5)
       : Math.max(100, Math.ceil(maxValue / 100) * 100);
 
     weeklyChart.data.datasets[0].data = data;
-    weeklyChart.data.datasets[0].label = reportChartSource === 'products' ? 'Products' : 'Sales';
+    weeklyChart.data.datasets[0].label = reportChartSource === 'products'
+      ? 'Products'
+      : (reportChartSource === 'stock'
+        ? 'Stock Products'
+        : (reportChartSource === 'out-of-stock'
+          ? 'Out of Stock'
+          : (reportChartSource === 'canceled-revenue' ? 'Canceled Revenue' : 'Sales')));
     weeklyChart.options.scales.y.max = chartMax;
     weeklyChart.update(animationMode);
   }
@@ -1016,17 +1323,6 @@ $(function () {
     $(this).addClass('active');
     reportChartSource = String($(this).data('chart-source') || 'sales').toLowerCase();
     renderWeeklyReportChart('active');
-  });
-
-  /* ─────────────────────────────────────────
-     PRODUCT SEARCH FILTER
-  ───────────────────────────────────────── */
-  $('.product-search input').on('input', function () {
-    const q = $(this).val().toLowerCase();
-    $('.product-row').each(function () {
-      const name = $(this).find('.product-name').text().toLowerCase();
-      $(this).toggle(name.includes(q));
-    });
   });
 
   /* ═══════════════════════════════════════════
@@ -1079,6 +1375,8 @@ $(function () {
             label: (item)  => {
               const value = Number(item.raw || 0);
               if (reportChartSource === 'products') return ` ${Math.round(value)} products`;
+              if (reportChartSource === 'stock') return ` ${Math.round(value)} in stock`;
+              if (reportChartSource === 'out-of-stock') return ` ${Math.round(value)} out of stock`;
               return ` $${value.toFixed(2)}`;
             }
           }
@@ -1100,7 +1398,7 @@ $(function () {
             color: '#6b7280',
             font: { family: "'Plus Jakarta Sans'", size: 11 },
             callback: (v) => {
-              if (reportChartSource === 'products') return Math.round(v);
+              if (reportChartSource === 'products' || reportChartSource === 'stock' || reportChartSource === 'out-of-stock') return Math.round(v);
               return v >= 1000 ? (v / 1000) + 'k' : v;
             }
           }
@@ -1114,27 +1412,14 @@ $(function () {
   ═══════════════════════════════════════════ */
   const barCtx = document.getElementById('usersBarChart').getContext('2d');
 
-  // Generate random bar heights
-  function randomBars(n) {
-    return Array.from({ length: n }, () => Math.floor(Math.random() * 90 + 20));
-  }
-
-  const barLabels = Array.from({ length: 24 }, (_, i) => i + '');
-  const barData   = randomBars(24);
-
-  // Color bars: last few are darker green
-  const barColors = barData.map((_, i) =>
-    i >= 20 ? '#16a34a' : '#86efac'
-  );
-
   const usersBarChart = new Chart(barCtx, {
     type: 'bar',
     data: {
-      labels: barLabels,
+      labels: ['Delivered', 'Shipped', 'Pending', 'Cancelled'],
       datasets: [{
-        label: 'Users',
-        data: barData,
-        backgroundColor: barColors,
+        label: 'Orders',
+        data: [0, 0, 0, 0],
+        backgroundColor: ['#16a34a', '#22c55e', '#f59e0b', '#ef4444'],
         borderRadius: 3,
         borderSkipped: false,
       }]
@@ -1154,24 +1439,24 @@ $(function () {
       },
       scales: {
         x: {
-          display: false,
-          grid: { display: false }
+          grid: { display: false },
+          ticks: {
+            color: '#6b7280',
+            font: { family: "'Plus Jakarta Sans'", size: 11 }
+          }
         },
         y: {
-          display: false,
-          grid: { display: false }
+          beginAtZero: true,
+          grid: { color: 'rgba(0,0,0,0.04)' },
+          ticks: {
+            color: '#6b7280',
+            precision: 0,
+            font: { family: "'Plus Jakarta Sans'", size: 11 }
+          }
         }
       }
     }
   });
-
-  /* ─────────────────────────────────────────
-     Live-ish bar animation: update every 2s
-  ───────────────────────────────────────── */
-  setInterval(() => {
-    usersBarChart.data.datasets[0].data = randomBars(24);
-    usersBarChart.update('none');
-  }, 2500);
 
   /* ─────────────────────────────────────────
      Helper: update chart colors on theme toggle
@@ -1216,12 +1501,17 @@ $(function () {
   renderDashboardOrderStats();
   renderPendingCanceledStats();
   renderDashboardWeeklySalesMetric();
+  renderDashboardCanceledRevenueMetric();
   renderDashboardTotalProductsMetric();
   renderDashboardStockProductsMetric();
+  renderDashboardOutOfStockMetric();
+  renderOrdersStatusPanel();
   renderTransactionTable();
   renderBestSellingTable();
+  renderTopProductsList();
   renderDashboardCategories();
   renderWeeklyReportChart();
+  refreshDashboardProductsUI();
 
 });
 
