@@ -51,6 +51,9 @@
             <a href="#" class="nav-link" data-section="requests">
                 <span class="nav-icon"><i class="bi bi-person-check"></i></span> Seller Requests
             </a>
+            <a href="#" class="nav-link" data-section="categories">
+                <span class="nav-icon"><i class="bi bi-tags"></i></span> Suggestion Categories
+            </a>
             <a href="#" class="nav-link" data-section="customers">
                 <span class="nav-icon"><i class="bi bi-people"></i></span> Users
             </a>
@@ -224,6 +227,33 @@
                             </tr>
                         </thead>
                         <tbody id="requestsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── CATEGORY REQUESTS SECTION ──────────────────────── -->
+        <section id="categoriesSection" class="admin-section" style="display:none">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Category Suggestions</h2>
+                    <p class="section-subtitle" id="categoryRequestsCount">Loading...</p>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="data-card">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Category Name</th>
+                                <th>Description</th>
+                                <th>Date Suggested</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoryRequestsTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -625,6 +655,7 @@
     <script src="../../JS/Admin/admin-dashboard.js" type="module"></script>
     <script src="../../JS/Admin/admin-sellers.js" type="module"></script>
     <script src="../../JS/Admin/admin-requests.js" type="module"></script>
+    <script src="../../JS/Admin/admin-categories.js" type="module"></script>
     <script src="../../JS/Admin/admin-customers.js" type="module"></script>
     <script src="../../JS/Admin/admin-products.js" type="module"></script>
     <script src="../../JS/Admin/admin-orders.js" type="module"></script>
