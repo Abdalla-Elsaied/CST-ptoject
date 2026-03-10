@@ -1,4 +1,5 @@
 import { loadProductsFromFolder, saveProductToDisk } from '../Core/FileStorage.js';
+import { KEY_CATEGORIES } from '../Core/Constants.js';
 
 const fileInput = document.getElementById('imageUpload');
 
@@ -10,6 +11,7 @@ const categorySelect = document.getElementById('categorySelect');
 const tagSelect = document.getElementById('tagSelect');
 
 document.addEventListener('DOMContentLoaded', () => {
+    loadCategories();
     const queryId = new URLSearchParams(window.location.search).get('id');
     if (!queryId) return;
     searchInput.value = queryId;
@@ -26,6 +28,34 @@ function setSelectValue(selectElement, value) {
         opt => String(opt.value).toLowerCase() === normalized
     );
     selectElement.value = option ? option.value : '';
+}
+
+function loadCategories() {
+    if (!categorySelect) return;
+
+    let categories = [];
+    try {
+        const parsed = JSON.parse(localStorage.getItem(KEY_CATEGORIES));
+        if (Array.isArray(parsed)) categories = parsed;
+    } catch (_err) {
+        categories = [];
+    }
+
+    const activeCategories = categories.filter(cat => cat.visibility === 'active');
+    const source = activeCategories.length ? activeCategories : categories;
+
+    categorySelect.innerHTML = '';
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Select category';
+    categorySelect.appendChild(placeholder);
+
+    source.forEach((cat) => {
+        const option = document.createElement('option');
+        option.value = cat.name;
+        option.textContent = cat.name;
+        categorySelect.appendChild(option);
+    });
 }
 
 async function loadProductById(id) {

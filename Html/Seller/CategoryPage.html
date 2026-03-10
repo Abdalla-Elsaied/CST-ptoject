@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dealport - Categories</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="/CSS/Seller/home.css" />
+    <link rel="stylesheet" href="/CSS/Seller/CategoryPage.css" />
+  </head>
+  <body>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <span class="logo-text">DEALP<span class="logo-dot">O</span>RT</span>
+        <button
+          class="sidebar-toggle-btn d-none d-lg-flex"
+          id="sidebarCollapseBtn"
+        >
+          <i class="bi bi-layout-sidebar-reverse"></i>
+        </button>
+      </div>
+
+      <div class="sidebar-nav">
+        <p class="nav-section-label">Main menu</p>
+        <ul class="nav flex-column">
+          <li class="nav-item">
+            <a href="SellerHomePage.html" class="nav-link"
+              ><i class="bi bi-house-door-fill"></i><span>Dashboard</span></a
+            >
+          </li>
+          <li class="nav-item">
+            <a href="SellerHomePage.html?page=ordermanagement" class="nav-link"
+              ><i class="bi bi-cart3"></i><span>Order Management</span></a
+            >
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link"
+              ><i class="bi bi-people"></i><span>Customers</span></a
+            >
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link"
+              ><i class="bi bi-ticket-perforated"></i><span>Coupon Code</span></a
+            >
+          </li>
+          <li class="nav-item">
+            <a href="CategoryPage.html" class="nav-link active"
+              ><i class="bi bi-grid"></i><span>Categories</span></a
+            >
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link"
+              ><i class="bi bi-credit-card"></i><span>Transaction</span></a
+            >
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link"
+              ><i class="bi bi-star"></i><span>Brand</span></a
+            >
+          </li>
+        </ul>
+
+        <p class="nav-section-label mt-3">Product</p>
+        <ul class="nav flex-column">
+          <li class="nav-item">
+            <a href="SellerHomePage.html?page=addproduct" class="nav-link"
+              ><i class="bi bi-plus-circle"></i><span>Add Products</span></a
+            >
+          </li>
+          <li class="nav-item">
+            <a href="SellerHomePage.html?page=productmedia" class="nav-link"
+              ><i class="bi bi-image"></i><span>Product Media</span></a
+            >
+          </li>
+          <li class="nav-item">
+            <a href="SellerHomePage.html?page=productlist" class="nav-link"
+              ><i class="bi bi-list-ul"></i><span>Product List</span></a
+            >
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link"
+              ><i class="bi bi-chat-square-text"></i
+              ><span>Product Reviews</span></a
+            >
+          </li>
+        </ul>
+
+        <p class="nav-section-label mt-3">Admin</p>
+        <ul class="nav flex-column">
+          <li class="nav-item">
+            <a href="#" class="nav-link"
+              ><i class="bi bi-shield-check"></i><span>Admin Role</span></a
+            >
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link"
+              ><i class="bi bi-sliders"></i><span>Control Authority</span></a
+            >
+          </li>
+        </ul>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <img
+            src="https://i.pravatar.cc/40?img=12"
+            alt="avatar"
+            class="user-avatar"
+          />
+          <div class="user-info">
+            <span class="user-name">Dealport</span>
+            <span class="user-email">Mark@thedesigner...</span>
+          </div>
+          <button class="btn-icon"><i class="bi bi-box-arrow-right"></i></button>
+        </div>
+        <a href="#" class="btn-shop"
+          ><i class="bi bi-shop"></i><span>Your Shop</span
+          ><i class="bi bi-arrow-up-right-square ms-auto"></i
+        ></a>
+      </div>
+    </aside>
+
+    <div class="main-wrapper" id="mainWrapper">
+      <header class="topnav">
+        <div class="topnav-left">
+          <button class="btn-icon sidebar-mobile-toggle" id="mobileSidebarBtn">
+            <i class="bi bi-list fs-5"></i>
+          </button>
+          <h1 class="page-title">Categories</h1>
+        </div>
+        <div class="topnav-center">
+          <div class="search-bar">
+            <i class="bi bi-search search-icon"></i>
+            <input
+              type="text"
+              placeholder="Search categories"
+              class="search-input"
+              id="topSearchInput"
+            />
+          </div>
+        </div>
+        <div class="topnav-right">
+          <button class="btn-icon notif-btn">
+            <i class="bi bi-bell"></i>
+            <span class="badge-dot"></span>
+          </button>
+          <button class="btn-icon theme-btn" id="themeToggle">
+            <i class="bi bi-sun"></i>
+          </button>
+          <img
+            src="https://i.pravatar.cc/36?img=12"
+            alt="avatar"
+            class="topnav-avatar"
+          />
+        </div>
+      </header>
+
+      <main class="dashboard-content">
+        <div class="category-header">
+          <div>
+            <p class="category-eyebrow">Seller Dashboard</p>
+            <h2>Manage Categories</h2>
+            <p class="category-sub">
+              Keep your storefront organized with clear visibility and quick actions.
+            </p>
+          </div>
+          <div class="category-actions">
+            <button class="btn-filter-light" id="exportBtn">Export</button>
+            <button class="btn-filter" id="addCategoryBtn">+ Add Category</button>
+          </div>
+        </div>
+
+        <section class="category-stats">
+          <div class="stat-card">
+            <p>Total Categories</p>
+            <h3 id="statTotal">0</h3>
+            <span>Active + draft</span>
+          </div>
+          <div class="stat-card">
+            <p>Active Categories</p>
+            <h3 id="statActive">0</h3>
+            <span>Visible on storefront</span>
+          </div>
+          <div class="stat-card">
+            <p>Hidden Categories</p>
+            <h3 id="statHidden">0</h3>
+            <span>Not listed</span>
+          </div>
+          <div class="stat-card">
+            <p>Total Products</p>
+            <h3 id="statProducts">0</h3>
+            <span>Across all categories</span>
+          </div>
+        </section>
+
+        <section class="card-panel category-panel">
+          <div class="panel-header category-panel-head">
+            <div class="category-filters">
+              <button class="chip active" data-filter="all">All</button>
+              <button class="chip" data-filter="active">Active</button>
+              <button class="chip" data-filter="hidden">Hidden</button>
+              <button class="chip" data-filter="draft">Draft</button>
+            </div>
+            <div class="category-search">
+              <input type="text" id="searchInput" placeholder="Search categories..." />
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table dash-table category-table">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Products</th>
+                  <th>Revenue</th>
+                  <th>Visibility</th>
+                  <th>Last Update</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="categoryTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="modal" id="categoryModal">
+      <div class="modal-card">
+        <h3 id="modalTitle">Add Category</h3>
+        <div class="form">
+          <label>
+            Name
+            <input type="text" id="categoryNameInput" placeholder="e.g. Women Fashion" />
+          </label>
+          <label>
+            Visibility
+            <select id="categoryVisibilityInput">
+              <option value="active">Active</option>
+              <option value="hidden">Hidden</option>
+              <option value="draft">Draft</option>
+            </select>
+          </label>
+          <label>
+            Description
+            <textarea id="categoryDescInput" rows="3" placeholder="Short description"></textarea>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-details" id="cancelModalBtn">Cancel</button>
+          <button class="btn-filter" id="saveCategoryBtn">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="/JS/Seller/CategoryPage.js"></script>
+  </body>
+</html>

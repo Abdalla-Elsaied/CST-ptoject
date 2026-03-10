@@ -1143,6 +1143,30 @@ $(function () {
     closeMobileSidebar();
   }
 
+  function routeFromQuery() {
+    const params = new URLSearchParams(window.location.search);
+    const page = String(params.get('page') || '').toLowerCase();
+    if (!page) return false;
+
+    if (page === 'ordermanagement') {
+      showOrderManagement();
+      return true;
+    }
+    if (page === 'productlist') {
+      showProductList();
+      return true;
+    }
+    if (page === 'productmedia') {
+      showProductMedia();
+      return true;
+    }
+    if (page === 'addproduct') {
+      showaddProductPage();
+      return true;
+    }
+    return false;
+  }
+
   $embeddedPageFrame.on('load', function () {
     syncEmbeddedTheme();
     if ($orderManagementView.is(':visible')) {
@@ -1163,6 +1187,13 @@ $(function () {
      NAV LINK: active state switch
   ───────────────────────────────────────── */
   $('.nav-link').on('click', function (e) {
+    const href = String($(this).attr('href') || '').trim();
+    const isEmbedLink = $(this).attr('data-embed') === 'true';
+
+    if (!isEmbedLink && href && href !== '#' && !href.startsWith('javascript')) {
+      return;
+    }
+
     e.preventDefault();
     setActiveNavLink(this);
   });
@@ -1210,7 +1241,7 @@ $(function () {
   });
 
   $('#categoriesSeeMoreBtn').on('click', function () {
-    showProductList();
+    window.location.href = 'CategoryPage.html';
   });
 
   $(document).on('click', '#dashboardCategoryList .category-row[data-category]', function () {
@@ -1532,7 +1563,9 @@ $(function () {
 
   renderDashboardOrderStats();
   renderPendingCanceledStats();
-  showDashboard();
+  if (!routeFromQuery()) {
+    showDashboard();
+  }
   renderWeeklyReportChart();
 
 });
