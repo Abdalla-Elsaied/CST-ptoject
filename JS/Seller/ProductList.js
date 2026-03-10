@@ -1,10 +1,7 @@
 // import PRODUCTS_ENDPOINT from '../Core/FileStorage.js'
 
-
 const API_BASE = 'https://69abf0bc9ca639a5217dcac2.mockapi.io/api';
 const PRODUCTS_ENDPOINT = `${API_BASE}/Products`;
-
-
 
 const STORAGE_KEY = 'products';
 const LEGACY_STORAGE_KEY = 'sellerProducts';
@@ -186,67 +183,20 @@ function updateCards() {
   document.getElementById('outStock').innerText = normalized.filter(p => getStatus(p.stock) === 'Out of Stock').length;
 }
 
-
-
-//------------------------------------------------------------------delete product shady
-async function deleteProduct(event, productId) {
-
-  // event.preventDefault();
-
-  event.stopPropagation();   // ⭐ prevents row click
-  event.preventDefault();
-
-  const confirmDelete = confirm("Are you sure you want to delete this product?");
-  if (!confirmDelete) return;
-
-  try {
-
-    const response = await fetch(`${PRODUCTS_ENDPOINT}/${productId}`, {
-      method: "DELETE"
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to delete product");
-    }
-
-    alert("Product deleted successfully");
-
-    // ⭐ Reload products from API
-    await loadProducts();
-
-    // ⭐ Re-render table
-    render();
-
-    // remove row from table
-    event.target.closest("tr").remove();
-
-  } catch (error) {
-    console.error("Delete error:", error);
-    alert("Error deleting product");
-  }
-};
-
-
-
 function render() {
   let data = products.map((p, idx) => normalizeProduct(p, idx));
-<<<<<<< HEAD
-  if(categoryFilter){
+  if (categoryFilter) {
     const wantedCategory = categoryFilter.toLowerCase();
     data = data.filter((p) => {
       const productCategory = String(p.category || '').trim().toLowerCase();
-      if(wantedCategory === 'other'){
+      if (wantedCategory === 'other') {
         return !productCategory || productCategory === '-' || productCategory === 'n/a' || productCategory === 'none';
       }
       return productCategory === wantedCategory;
     });
   }
-  if(filter !== 'all') data = data.filter(p => getStatus(p.stock) === filter);
-  if(search) data = data.filter(p => p.name.toLowerCase().includes(search));
-=======
   if (filter !== 'all') data = data.filter(p => getStatus(p.stock) === filter);
   if (search) data = data.filter(p => p.name.toLowerCase().includes(search));
->>>>>>> 564ad6b062d5378a7e057f5759cf775b53cde0bd
 
   const start = (page - 1) * pageSize;
   const paginated = data.slice(start, start + pageSize);
@@ -265,27 +215,11 @@ function render() {
         <td class="price">$${p.price.toFixed(2)}</td>
         <td>${p.stock}</td>
         <td><span class="stock ${statusClass(status)}"><span class="dot"></span>${status}</span></td>
-<<<<<<< HEAD
-        <td>
-          <button class="btn btn-update" onclick="goToUpdateProductPage(event, '${safeId}')">Update</button>
-          <button class="btn btn-delete" onclick="deleteProduct(event, '${safeId}')">Delete</button>
-        </td>
-=======
-
         <td><button class="btn btn-update" onclick="goToUpdateProductPage(event, '${safeId}')">Update</button></td>
-
-        <td><button class="btn btn-danger" onclick="deleteProduct(event, '${safeId}')">Delete</button></td>
-
->>>>>>> 564ad6b062d5378a7e057f5759cf775b53cde0bd
+        <td><button class="btn btn-delete" onclick="deleteProduct(event, '${safeId}')">Delete</button></td>
       </tr>
     `;
   });
-
-
-
-  
-
-
 
   document.getElementById('tableBody').innerHTML = html;
   renderPagination(data.length);
@@ -300,8 +234,6 @@ function renderPagination(total) {
   }
   document.getElementById('pagination').innerHTML = html;
 }
-
-
 
 function goto(p) {
   page = p;
@@ -331,20 +263,19 @@ function goToUpdateProductPage(event, productId) {
   window.location.href = `./updateProductPage.html?id=${encodeURIComponent(productId)}`;
 }
 
-<<<<<<< HEAD
-async function deleteProduct(event, productId){
-  if(event) event.stopPropagation();
+async function deleteProduct(event, productId) {
+  if (event) event.stopPropagation();
   const idx = products.findIndex((item, i) => String(normalizeProduct(item, i).id) === String(productId));
-  if(idx === -1) return;
+  if (idx === -1) return;
 
   const name = normalizeProduct(products[idx], idx).name || 'this product';
-  if(!window.confirm(`Delete "${name}"?`)) return;
+  if (!window.confirm(`Delete "${name}"?`)) return;
 
-  if(loadedFromApi){
-    try{
+  if (loadedFromApi) {
+    try {
       const storage = await import('../Core/FileStorage.js');
       await storage.deleteProductFromDisk(productId);
-    }catch(err){
+    } catch (err) {
       const message = err?.message ? String(err.message) : 'Failed to delete product from server.';
       alert(`Could not delete product from server.\n\n${message}`);
       return;
@@ -356,10 +287,7 @@ async function deleteProduct(event, productId){
   render();
 }
 
-function openProductDetails(productId){
-=======
 function openProductDetails(productId) {
->>>>>>> 564ad6b062d5378a7e057f5759cf775b53cde0bd
   const idx = products.findIndex((item, i) => String(normalizeProduct(item, i).id) === String(productId));
   if (idx === -1) return;
 
@@ -380,30 +308,28 @@ function openProductDetails(productId) {
   document.getElementById('productDetailsModal').style.display = 'flex';
 }
 
-
-
 function closeProductDetails(event) {
   if (event && event.target && event.target.id !== 'productDetailsModal') return;
   document.getElementById('productDetailsModal').style.display = 'none';
   render();
 }
 
-function readCategoryFilterFromUrl(){
-  try{
+function readCategoryFilterFromUrl() {
+  try {
     const params = new URLSearchParams(window.location.search || '');
     categoryFilter = String(params.get('category') || '').trim().toLowerCase();
-  }catch(_err){
+  } catch (_err) {
     categoryFilter = '';
   }
 }
 
-function readSearchFromUrl(){
-  try{
+function readSearchFromUrl() {
+  try {
     const params = new URLSearchParams(window.location.search || '');
     search = String(params.get('search') || '').trim().toLowerCase();
     const input = document.querySelector('.search');
-    if(input) input.value = search ? params.get('search') : '';
-  }catch(_err){
+    if (input) input.value = search ? params.get('search') : '';
+  } catch (_err) {
     // ignore malformed URLs
   }
 }

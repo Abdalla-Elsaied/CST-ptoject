@@ -296,3 +296,89 @@ select option {
     font-weight: bold;
     text-shadow: 1px 1px 2px black;
 }
+
+.page-message {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    max-width: 360px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 1001;
+}
+
+.page-message.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.page-message.success {
+    border-color: var(--primary-green);
+}
+
+.page-message.error {
+    border-color: var(--danger);
+}
+
+.page-loading {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 1000;
+}
+
+body.dark .page-loading {
+    background: rgba(2, 6, 23, 0.55);
+}
+
+.page-loading.show {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.page-loading__card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 22px;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 18px 35px rgba(0, 0, 0, 0.2);
+}
+
+.page-loading__spinner {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--primary-green);
+    animation: pageSpin 0.9s linear infinite;
+}
+
+.page-loading__text {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+@keyframes pageSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+

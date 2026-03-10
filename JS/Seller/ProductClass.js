@@ -24,8 +24,46 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('imageUpload');
     const previewContainer = document.getElementById('previewContainer');
     const categorySelect = document.getElementById('categorySelect');
+    const expirationStartInput = form?.querySelector('input[name="expirationStart"]');
+    const messageEl = document.getElementById('pageMessage');
+    const loadingEl = document.getElementById('pageLoading');
+    const loadingTextEl = document.getElementById('pageLoadingText');
 
     const colorBoxes = document.querySelectorAll('.color');
+    let messageTimer = null;
+
+    const showLoading = (isLoading, text) => {
+        if (!loadingEl) return;
+        if (text && loadingTextEl) loadingTextEl.textContent = text;
+        loadingEl.classList.toggle('show', isLoading);
+        loadingEl.setAttribute('aria-hidden', isLoading ? 'false' : 'true');
+    };
+
+    const showMessage = (message, type = 'success', timeout = 2500) => {
+        if (!messageEl) return;
+        if (messageTimer) clearTimeout(messageTimer);
+        messageEl.textContent = message;
+        messageEl.classList.remove('success', 'error');
+        messageEl.classList.add(type);
+        messageEl.classList.add('show');
+        messageTimer = setTimeout(() => {
+            messageEl.classList.remove('show');
+        }, timeout);
+    };
+
+    if (expirationStartInput) {
+        const today = new Date().toISOString().split('T')[0];
+        expirationStartInput.value = today;
+    }
+
+    if (colorBoxes.length > 0) {
+        const firstBox = colorBoxes[0];
+        const input = firstBox.querySelector('input[type="checkbox"]');
+        if (input) {
+            input.checked = true;
+            firstBox.classList.add('selected');
+        }
+    }
 
     colorBoxes.forEach(box => {
         box.addEventListener('click', (e) => {
@@ -123,10 +161,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const imageFiles = Array.from(fileInput.files || []);
 
         try {
+            showLoading(true, 'Saving product...');
 
             await saveProductToDisk(product, imageFiles);
 
-            alert('Product saved successfully!');
+            showLoading(false);
+            showMessage('Product saved successfully!', 'success');
 
             form.reset();
             previewContainer.innerHTML = '';
@@ -135,7 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
 
             console.error(err);
-            alert('Save failed. Check console (F12).');
+            showLoading(false);
+            showMessage('Save failed. Check console (F12).', 'error');
 
         }
 

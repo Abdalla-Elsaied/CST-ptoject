@@ -23,10 +23,38 @@ const form = document.getElementById('productForm');
 const previewContainer = document.getElementById('previewContainer');
 const categorySelect = document.getElementById('categorySelect');
 const tagSelect = document.getElementById('tagSelect');
+const expirationStartInput = form?.querySelector('input[name="expirationStart"]');
+const messageEl = document.getElementById('pageMessage');
+const loadingEl = document.getElementById('pageLoading');
+const loadingTextEl = document.getElementById('pageLoadingText');
+let messageTimer = null;
+
+const showLoading = (isLoading, text) => {
+    if (!loadingEl) return;
+    if (text && loadingTextEl) loadingTextEl.textContent = text;
+    loadingEl.classList.toggle('show', isLoading);
+    loadingEl.setAttribute('aria-hidden', isLoading ? 'false' : 'true');
+};
+
+const showMessage = (message, type = 'success', timeout = 2500) => {
+    if (!messageEl) return;
+    if (messageTimer) clearTimeout(messageTimer);
+    messageEl.textContent = message;
+    messageEl.classList.remove('success', 'error');
+    messageEl.classList.add(type);
+    messageEl.classList.add('show');
+    messageTimer = setTimeout(() => {
+        messageEl.classList.remove('show');
+    }, timeout);
+};
 
 document.addEventListener('DOMContentLoaded', () => {
     applyStoredTheme();
     loadCategories();
+    if (expirationStartInput) {
+        const today = new Date().toISOString().split('T')[0];
+        expirationStartInput.value = today;
+    }
     const queryId = new URLSearchParams(window.location.search).get('id');
     if (!queryId) return;
     searchInput.value = queryId;
@@ -76,10 +104,16 @@ function loadCategories() {
 async function loadProductById(id) {
     // if (!id) return alert('Please enter a product ID');
     try {
+        showLoading(true, 'Loading product...');
         const products = await loadProductsFromFolder(); // fetch all products
         const product = products.find(p => String(p.id) === String(id));
 
         // if (!product) return alert('Product not found');
+        if (!product) {
+            showLoading(false);
+            showMessage('Product not found.', 'error');
+            return;
+        }
 
         currentProduct = product;
 
@@ -90,7 +124,7 @@ async function loadProductById(id) {
         form.price.value = product.price;
         form.discountPrice.value = product.discountPrice || '';
         form.taxIncluded.value = product.taxIncluded ? 'yes' : 'no';
-        form.expirationStart.value = product.expirationStart || '';
+        form.expirationStart.value = product.expirationStart || new Date().toISOString().split('T')[0];
         form.expirationEnd.value = product.expirationEnd || '';
         form.stockQuantity.value = product.stockQuantity || 0;
         form.stockStatus.value = product.stockStatus || '';
@@ -108,10 +142,13 @@ async function loadProductById(id) {
         refreshPreview();
 
         // alert('Product loaded. You can now edit it.');
+        showLoading(false);
 
     } catch (err) {
         console.error(err);
         // alert('Failed to load products from API');
+        showLoading(false);
+        showMessage('Failed to load product.', 'error');
     }
 }
 
@@ -170,6 +207,7 @@ form.addEventListener('submit', async (e) => {
 
     if (!currentProduct) {
         // alert('No product selected for update');
+        showMessage('No product selected for update.', 'error');
         return;
     }
 
@@ -192,11 +230,18 @@ form.addEventListener('submit', async (e) => {
     };
 
     try {
+        showLoading(true, 'Updating product...');
         await saveProductToDisk(productData, imageFiles); // automatically does PUT if id exists
         // alert('Product updated successfully!');
-        window.location.href = 'ProductList.html';
+        showLoading(false);
+        showMessage('Product updated successfully!', 'success');
+        setTimeout(() => {
+            window.location.href = 'ProductList.html';
+        }, 900);
     } catch (err) {
         console.error(err);
         // alert('Failed to update product');
+        showLoading(false);
+        showMessage('Failed to update product.', 'error');
     }
 });
