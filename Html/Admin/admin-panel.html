@@ -48,6 +48,9 @@
             <a href="#" class="nav-link" data-section="sellers">
                 <span class="nav-icon"><i class="bi bi-shop"></i></span> Sellers
             </a>
+            <a href="#" class="nav-link" data-section="requests">
+                <span class="nav-icon"><i class="bi bi-person-check"></i></span> Seller Requests
+            </a>
             <a href="#" class="nav-link" data-section="customers">
                 <span class="nav-icon"><i class="bi bi-people"></i></span> Users
             </a>
@@ -183,6 +186,44 @@
                             </tr>
                         </thead>
                         <tbody id="sellersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── SELLER REQUESTS SECTION ──────────────────────── -->
+        <section id="requestsSection" class="admin-section" style="display:none">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Seller Applications</h2>
+                    <p class="section-subtitle" id="requestsCount">Loading...</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button id="bulkApproveBtn" class="btn-primary-green">
+                        <i class="bi bi-check-all"></i> Bulk Approve
+                    </button>
+                    <button id="bulkRejectBtn" class="btn-delete">
+                        <i class="bi bi-trash"></i> Bulk Reject
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="data-card">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"><input type="checkbox" id="selectAllRequests"></th>
+                                <th>Store Name</th>
+                                <th>City</th>
+                                <th>Category</th>
+                                <th>Phone</th>
+                                <th>Payment Method</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requestsTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -583,6 +624,7 @@
     <!-- 5. Section files — order between these doesn't matter -->
     <script src="../../JS/Admin/admin-dashboard.js" type="module"></script>
     <script src="../../JS/Admin/admin-sellers.js" type="module"></script>
+    <script src="../../JS/Admin/admin-requests.js" type="module"></script>
     <script src="../../JS/Admin/admin-customers.js" type="module"></script>
     <script src="../../JS/Admin/admin-products.js" type="module"></script>
     <script src="../../JS/Admin/admin-orders.js" type="module"></script>

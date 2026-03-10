@@ -8,6 +8,7 @@
 import { getCurrentUser } from './admin-helpers.js';
 import { renderDashboard } from './admin-dashboard.js';
 import { renderSellers } from './admin-sellers.js';
+import { renderRequests } from './admin-requests.js';
 import { renderCustomers } from './admin-customers.js';
 import { renderProducts } from './admin-products.js';
 import { renderOrders } from './admin-orders.js';
@@ -89,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
 const sectionRenderers = {
     dashboard: renderDashboard,   // admin-dashboard.js
     sellers: renderSellers,       // admin-sellers.js
+    requests: renderRequests,     // admin-requests.js
     customers: renderCustomers,   // admin-customers.js
     products: renderProducts,     // admin-products.js
     orders: renderOrders,         // admin-orders.js
