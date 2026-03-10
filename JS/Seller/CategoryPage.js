@@ -50,6 +50,30 @@ let currentFilter = "all";
 let currentQuery = "";
 let editingId = null;
 let viewOnly = false;
+const THEME_STORAGE_KEY = "seller_theme";
+
+const applyStoredTheme = () => {
+  try {
+    if (localStorage.getItem(THEME_STORAGE_KEY) === "dark") {
+      document.body.classList.add("dark");
+    } else {
+      document.body.classList.remove("dark");
+    }
+  } catch (_err) {
+    // ignore storage failures
+  }
+};
+
+const persistTheme = () => {
+  try {
+    localStorage.setItem(
+      THEME_STORAGE_KEY,
+      document.body.classList.contains("dark") ? "dark" : "light"
+    );
+  } catch (_err) {
+    // ignore storage failures
+  }
+};
 
 const formatRevenue = (value) => {
   return `$${value.toLocaleString()}`;
@@ -210,9 +234,11 @@ const syncThemeIcon = () => {
 const toggleTheme = () => {
   document.body.classList.toggle("dark");
   syncThemeIcon();
+  persistTheme();
 };
 
 if (themeToggleBtn) {
+  applyStoredTheme();
   themeToggleBtn.addEventListener("click", toggleTheme);
   syncThemeIcon();
 }

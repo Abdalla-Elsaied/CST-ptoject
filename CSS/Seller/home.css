@@ -22,7 +22,8 @@
 }
 
 /* DARK THEME */
-body.dark {
+body.dark,
+html.dark body {
   --text-primary:#f1f5f9;
   --text-sec:    #94a3b8;
   --card-bg:     #1e293b;

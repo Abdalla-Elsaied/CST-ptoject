@@ -3,7 +3,22 @@
 import { saveProductToDisk } from '../Core/FileStorage.js';
 import { KEY_CATEGORIES } from '../Core/Constants.js';
 
+const THEME_STORAGE_KEY = 'seller_theme';
+
+function applyStoredTheme() {
+    try {
+        if (localStorage.getItem(THEME_STORAGE_KEY) === 'dark') {
+            document.body.classList.add('dark');
+        } else {
+            document.body.classList.remove('dark');
+        }
+    } catch (_err) {
+        // ignore storage failures
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    applyStoredTheme();
 
     const form = document.getElementById('productForm');
     const fileInput = document.getElementById('imageUpload');

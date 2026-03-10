@@ -1,6 +1,20 @@
 import { loadProductsFromFolder, saveProductToDisk } from '../Core/FileStorage.js';
 import { KEY_CATEGORIES } from '../Core/Constants.js';
 
+const THEME_STORAGE_KEY = 'seller_theme';
+
+function applyStoredTheme() {
+    try {
+        if (localStorage.getItem(THEME_STORAGE_KEY) === 'dark') {
+            document.body.classList.add('dark');
+        } else {
+            document.body.classList.remove('dark');
+        }
+    } catch (_err) {
+        // ignore storage failures
+    }
+}
+
 const fileInput = document.getElementById('imageUpload');
 
 const searchInput = document.getElementById('searchProductId');
@@ -11,6 +25,7 @@ const categorySelect = document.getElementById('categorySelect');
 const tagSelect = document.getElementById('tagSelect');
 
 document.addEventListener('DOMContentLoaded', () => {
+    applyStoredTheme();
     loadCategories();
     const queryId = new URLSearchParams(window.location.search).get('id');
     if (!queryId) return;

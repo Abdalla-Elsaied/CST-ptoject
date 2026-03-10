@@ -34,6 +34,7 @@ $(function () {
   let bestSellingInventoryFilter = 'all';
   let pendingCanceledDrilldownStatus = 'Pending';
   let reportChartSource = 'sales';
+  const THEME_STORAGE_KEY = 'seller_theme';
   let darkMode = $('body').hasClass('dark');
   let dashboardProductsCache = null;
   let dashboardProductsLoaded = false;
@@ -90,6 +91,44 @@ $(function () {
     const iframe = $embeddedPageFrame.get(0);
     if (!iframe || !iframe.contentWindow || !iframe.contentWindow.document) return;
     iframe.contentWindow.document.body.classList.toggle('dark', darkMode);
+  }
+
+  function syncThemeIcon() {
+    const icon = $('#themeToggle').find('i');
+    if (!icon.length) return;
+    icon
+      .toggleClass('bi-sun', !darkMode)
+      .toggleClass('bi-moon', darkMode);
+  }
+
+  function readStoredTheme() {
+    try {
+      return localStorage.getItem(THEME_STORAGE_KEY);
+    } catch (_err) {
+      return null;
+    }
+  }
+
+  function persistTheme() {
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, darkMode ? 'dark' : 'light');
+    } catch (_err) {
+      // ignore storage failures
+    }
+  }
+
+  function applyInitialTheme() {
+    const stored = readStoredTheme();
+    if (stored === 'dark') {
+      darkMode = true;
+      $('body').addClass('dark');
+    } else if (stored === 'light') {
+      darkMode = false;
+      $('body').removeClass('dark');
+    } else {
+      darkMode = $('body').hasClass('dark');
+    }
+    syncThemeIcon();
   }
 
   function formatTxnDate(rawDate) {
@@ -1326,12 +1365,13 @@ $(function () {
   /* ─────────────────────────────────────────
      THEME TOGGLE (light ↔ dark)
   ───────────────────────────────────────── */
+  applyInitialTheme();
+
   $('#themeToggle').on('click', function () {
     darkMode = !darkMode;
     $('body').toggleClass('dark', darkMode);
-    $(this).find('i')
-      .toggleClass('bi-sun',  !darkMode)
-      .toggleClass('bi-moon', darkMode);
+    syncThemeIcon();
+    persistTheme();
 
     // Update charts for dark mode
     updateChartColors();
