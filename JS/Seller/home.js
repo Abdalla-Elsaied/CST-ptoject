@@ -81,6 +81,12 @@ $(function () {
       return;
     }
 
+    if (fileName === 'categorypage.html') {
+      setActiveNavLink('#categoriesLink');
+      $pageTitle.text('Categories');
+      return;
+    }
+
     if (fileName === 'ordermanagement.html') {
       setActiveNavLink('#orderManagementLink');
       $pageTitle.text('Order Management');
@@ -90,7 +96,18 @@ $(function () {
   function syncEmbeddedTheme() {
     const iframe = $embeddedPageFrame.get(0);
     if (!iframe || !iframe.contentWindow || !iframe.contentWindow.document) return;
-    iframe.contentWindow.document.body.classList.toggle('dark', darkMode);
+    const doc = iframe.contentWindow.document;
+    if (doc.documentElement) {
+      doc.documentElement.classList.toggle('dark', darkMode);
+    }
+    if (doc.body) {
+      doc.body.classList.toggle('dark', darkMode);
+    }
+    try {
+      iframe.contentWindow.localStorage.setItem(THEME_STORAGE_KEY, darkMode ? 'dark' : 'light');
+    } catch (_err) {
+      // ignore storage failures
+    }
   }
 
   function syncThemeIcon() {
@@ -1182,6 +1199,15 @@ $(function () {
     closeMobileSidebar();
   }
 
+  function showCategories() {
+    $embeddedPageFrame.attr('src', 'CategoryPage.html');
+    $dashboardView.hide();
+    $orderManagementView.show();
+    $pageTitle.text('Categories');
+    setActiveNavLink('#categoriesLink');
+    closeMobileSidebar();
+  }
+
   function routeFromQuery() {
     const params = new URLSearchParams(window.location.search);
     const page = String(params.get('page') || '').toLowerCase();
@@ -1201,6 +1227,10 @@ $(function () {
     }
     if (page === 'addproduct') {
       showaddProductPage();
+      return true;
+    }
+    if (page === 'categories') {
+      showCategories();
       return true;
     }
     return false;
@@ -1279,8 +1309,12 @@ $(function () {
     showProductList();
   });
 
+  $('#categoriesLink').on('click', function () {
+    showCategories();
+  });
+
   $('#categoriesSeeMoreBtn').on('click', function () {
-    window.location.href = 'CategoryPage.html';
+    showCategories();
   });
 
   $(document).on('click', '#dashboardCategoryList .category-row[data-category]', function () {
