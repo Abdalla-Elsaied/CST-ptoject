@@ -10,10 +10,26 @@
     --card-bg: #ffffff;
     --page-bg: #f8fafc;
     --border-color: #e5e7eb;
+    --input-bg: #ffffff;
+    --input-text: #1f2937;
+    --input-placeholder: #9ca3af;
+    --upload-bg: #ffffff;
 
     --danger: #ef4444;
     --warning: #f59e0b;
 
+}
+
+body.dark {
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --card-bg: #1e293b;
+    --page-bg: #0f172a;
+    --border-color: #334155;
+    --input-bg: #0b1220;
+    --input-text: #e2e8f0;
+    --input-placeholder: #64748b;
+    --upload-bg: #0b1220;
 }
 
 body {
@@ -84,6 +100,26 @@ select {
     margin-top: 5px;
     border: 1px solid var(--border-color);
     border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--input-text);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--input-placeholder);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+}
+
+select option {
+    background: var(--card-bg);
+    color: var(--text-primary);
 }
 
 .row {
@@ -121,7 +157,7 @@ select {
 }
 
 .draft {
-    background: white;
+    background: var(--card-bg);
     border: 1px solid var(--border-color);
 }
 
@@ -136,6 +172,7 @@ select {
     padding: 20px;
     text-align: center;
     margin-top: 10px;
+    background: var(--upload-bg);
 }
 
 .upload-box img {
@@ -206,6 +243,7 @@ select {
     object-fit: cover;
     border-radius: 6px;
     border: 1px solid var(--border-color);
+    background: var(--card-bg);
 }
 
 .preview-img.active {
