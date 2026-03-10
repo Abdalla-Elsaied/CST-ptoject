@@ -18,8 +18,8 @@ import {
 
 const ROLES = {
   CUSTOMER: 'customer',
-  SELLER:   'seller',
-  ADMIN:    'admin',
+  SELLER: 'seller',
+  ADMIN: 'admin',
 };
 
 const ALLOWED_SELF_REGISTER_ROLES = [
@@ -253,7 +253,7 @@ export function getCurrentUser() {
   return getLS(KEY_CURRENT_USER) || null;
 }
 
-export function AddCustomerToSeller(userId, storeData) {
+export function addCustomerToSeller(userId, storeData) {
 
   const requests = getLS(KEY_APPROVAL) || [];
 
@@ -264,8 +264,17 @@ export function AddCustomerToSeller(userId, storeData) {
     return { success: false, error: "You already submitted a request" };
   }
 
+  // check store name uniqueness
+  const users = getLS(KEY_USERS) || [];
+  const nameExists = users.some(u => u.storeName?.toLowerCase() === storeData.storeName.toLowerCase()) ||
+    requests.some(r => r.storeName?.toLowerCase() === storeData.storeName.toLowerCase());
+
+  if (nameExists) {
+    return { success: false, error: "Store name is already taken. Please choose another." };
+  }
+
   const newRequest = {
-    id: "req-" + Date.now().toString().slice(2,9),
+    id: "req-" + Date.now().toString().slice(2, 9),
     userId,
     ...storeData,
     status: "pending",
@@ -277,11 +286,11 @@ export function AddCustomerToSeller(userId, storeData) {
   return { success: true, request: newRequest };
 }
 
-export function GetAllCustomerToApproved() {
+export function getAllCustomerToApproved() {
   return getLS(KEY_APPROVAL) || [];
 }
 
-export function AcceptCustomerSellerRequest(requestId) {
+export function acceptCustomerSellerRequest(requestId) {
 
   const requests = getLS(KEY_APPROVAL) || [];
 
@@ -304,7 +313,7 @@ export function AcceptCustomerSellerRequest(requestId) {
   if (userIndex === -1) {
     console.log("User not found")
     return { success: false, error: "User not found" };
-    
+
   }
 
   console.log(users[userIndex])
@@ -329,6 +338,17 @@ export function AcceptCustomerSellerRequest(requestId) {
   requests.splice(requestIndex, 1);
   setLS(KEY_APPROVAL, requests);
 
+  return { success: true };
+}
+
+export function rejectCustomerSellerRequest(requestId) {
+  const requests = getLS(KEY_APPROVAL) || [];
+  const index = requests.findIndex(r => r.id === requestId);
+
+  if (index === -1) return { success: false, error: "Request not found" };
+
+  requests.splice(index, 1);
+  setLS(KEY_APPROVAL, requests);
   return { success: true };
 }
 

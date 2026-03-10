@@ -1,4 +1,19 @@
 import { loadProductsFromFolder, saveProductToDisk } from '../Core/FileStorage.js';
+import { KEY_CATEGORIES } from '../Core/Constants.js';
+
+const THEME_STORAGE_KEY = 'seller_theme';
+
+function applyStoredTheme() {
+    try {
+        if (localStorage.getItem(THEME_STORAGE_KEY) === 'dark') {
+            document.body.classList.add('dark');
+        } else {
+            document.body.classList.remove('dark');
+        }
+    } catch (_err) {
+        // ignore storage failures
+    }
+}
 
 const fileInput = document.getElementById('imageUpload');
 
@@ -6,26 +21,65 @@ const searchInput = document.getElementById('searchProductId');
 const searchButton = document.getElementById('searchButton');
 const form = document.getElementById('productForm');
 const previewContainer = document.getElementById('previewContainer');
+const categorySelect = document.getElementById('categorySelect');
+const tagSelect = document.getElementById('tagSelect');
 
 document.addEventListener('DOMContentLoaded', () => {
-    const fileInput = document.getElementById('imageUpload');
-    const previewContainer = document.getElementById('previewContainer');
-
-    // rest of your code that uses fileInput
+    applyStoredTheme();
+    loadCategories();
+    const queryId = new URLSearchParams(window.location.search).get('id');
+    if (!queryId) return;
+    searchInput.value = queryId;
+    loadProductById(queryId);
 });
 
 let currentProduct = null; // stores product fetched from API
 let existingImages = [];    // store images already uploaded
 
-searchButton.addEventListener('click', async () => {
-    const id = searchInput.value.trim();
-    if (!id) return alert('Please enter a product ID');
+function setSelectValue(selectElement, value) {
+    if (!selectElement) return;
+    const normalized = String(value || '').toLowerCase();
+    const option = Array.from(selectElement.options).find(
+        opt => String(opt.value).toLowerCase() === normalized
+    );
+    selectElement.value = option ? option.value : '';
+}
 
+function loadCategories() {
+    if (!categorySelect) return;
+
+    let categories = [];
+    try {
+        const parsed = JSON.parse(localStorage.getItem(KEY_CATEGORIES));
+        if (Array.isArray(parsed)) categories = parsed;
+    } catch (_err) {
+        categories = [];
+    }
+
+    const activeCategories = categories.filter(cat => cat.visibility === 'active');
+    const source = activeCategories.length ? activeCategories : categories;
+
+    categorySelect.innerHTML = '';
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Select category';
+    categorySelect.appendChild(placeholder);
+
+    source.forEach((cat) => {
+        const option = document.createElement('option');
+        option.value = cat.name;
+        option.textContent = cat.name;
+        categorySelect.appendChild(option);
+    });
+}
+
+async function loadProductById(id) {
+    // if (!id) return alert('Please enter a product ID');
     try {
         const products = await loadProductsFromFolder(); // fetch all products
-        const product = products.find(p => p.id === id);
+        const product = products.find(p => String(p.id) === String(id));
 
-        if (!product) return alert('Product not found');
+        // if (!product) return alert('Product not found');
 
         currentProduct = product;
 
@@ -41,27 +95,29 @@ searchButton.addEventListener('click', async () => {
         form.stockQuantity.value = product.stockQuantity || 0;
         form.stockStatus.value = product.stockStatus || '';
 
-        form.category.value = (product.category || '').toLowerCase();
-        form.tag.value = (product.tag || '').toLowerCase();
-
-
-        setSelectValue(form.category, product.category);
-        setSelectValue(form.tag, product.tag);
+        setSelectValue(categorySelect, product.category);
+        setSelectValue(tagSelect, product.tag);
 
         // Colors
         const checkboxes = form.querySelectorAll('input[name="colors"]');
-        checkboxes.forEach(cb => cb.checked = product.colors.includes(cb.value));
+        const selectedColors = Array.isArray(product.colors) ? product.colors : [];
+        checkboxes.forEach(cb => cb.checked = selectedColors.includes(cb.value));
 
         // Images
         existingImages = product.images || [];
         refreshPreview();
 
-        alert('Product loaded. You can now edit it.');
+        // alert('Product loaded. You can now edit it.');
 
     } catch (err) {
         console.error(err);
-        alert('Failed to load products from API');
+        // alert('Failed to load products from API');
     }
+}
+
+searchButton.addEventListener('click', () => {
+    const id = searchInput.value.trim();
+    loadProductById(id);
 });
 
 function refreshPreview() {
@@ -113,7 +169,7 @@ form.addEventListener('submit', async (e) => {
     const imageFiles = Array.from(fileInput.files || []);
 
     if (!currentProduct) {
-        alert('No product selected for update');
+        // alert('No product selected for update');
         return;
     }
 
@@ -129,22 +185,18 @@ form.addEventListener('submit', async (e) => {
         expirationEnd: formData.get('expirationEnd') || null,
         stockQuantity: Number(formData.get('stockQuantity')) || 0,
         stockStatus: formData.get('stockStatus'),
-        category: formData.get('category'),
-        tag: formData.get('tag'),
+        category: categorySelect ? categorySelect.value : null,
+        tag: tagSelect ? tagSelect.value : null,
         colors: formData.getAll('colors'),
         images: existingImages
     };
 
     try {
         await saveProductToDisk(productData, imageFiles); // automatically does PUT if id exists
-        alert('Product updated successfully!');
-        form.reset();
-        previewContainer.innerHTML = '';
-        fileInput.value = '';
-        currentProduct = null;
-        existingImages = [];
+        // alert('Product updated successfully!');
+        window.location.href = 'ProductList.html';
     } catch (err) {
         console.error(err);
-        alert('Failed to update product');
+        // alert('Failed to update product');
     }
 });

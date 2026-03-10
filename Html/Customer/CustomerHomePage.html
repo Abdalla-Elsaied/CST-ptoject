@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <link rel="stylesheet" href="../../CSS/Customer/CustomerHomePage.css"/>
 </head>
 <body>
@@ -20,28 +21,25 @@
     <div class="d-flex align-items-center gap-3 gap-lg-4 py-2">
 
       <!-- Logo -->
-      <a href="#" class="logo-brand text-decoration-none flex-shrink-0">
+      <a href="CustomerHomePage.html" class="logo-brand text-decoration-none flex-shrink-0">
         <span class="logo-deal">DEAL</span><span class="logo-port"><i class="bi bi-shop"></i>RT</span>
       </a>
 
       <!-- Location -->
-      <div class="location-selector d-none d-md-flex align-items-center gap-1 flex-shrink-0">
+      <button class="location-selector d-none d-md-flex align-items-center gap-1 flex-shrink-0 border-0 bg-transparent"
+              id="locationBtn" title="Set delivery location">
         <i class="bi bi-geo-alt-fill text-success fs-5"></i>
-        <div>
+        <div class="text-start">
           <div class="loc-label">Deliver to</div>
-          <div class="loc-addr">Your address <i class="bi bi-chevron-down small"></i></div>
+          <div class="loc-addr" id="locAddrText">Set location <i class="bi bi-chevron-down small"></i></div>
         </div>
-      </div>
+      </button>
 
       <!-- Search Bar -->
       <div class="search-wrapper flex-grow-1">
         <div class="input-group search-group">
           <select class="form-select search-cat d-none d-lg-block">
             <option>All</option>
-            <option>Electronics</option>
-            <option>Fashion</option>
-            <option>Grocery</option>
-            <option>Beauty</option>
           </select>
           <input type="text" class="form-control search-input" placeholder="What you're looking for..."/>
           <button class="btn btn-search" type="button"><i class="bi bi-search"></i> <span class="d-none d-sm-inline">Search</span></button>
@@ -50,19 +48,34 @@
 
       <!-- Right Icons -->
       <div class="nav-icons d-flex align-items-center gap-2 gap-lg-3 flex-shrink-0">
-        <a href="#" class="nav-icon-btn d-none d-md-flex flex-column align-items-center">
+
+        <!-- Wishlist -->
+        <button class="nav-icon-btn d-none d-md-flex flex-column align-items-center border-0 bg-transparent position-relative"
+                id="wishlistNavBtn" title="Wishlist">
           <i class="bi bi-heart"></i>
+          <span class="wishlist-nav-badge d-none">0</span>
           <span>Wishlist</span>
-        </a>
-        <a href="#" class="nav-icon-btn d-none d-md-flex flex-column align-items-center">
-          <i class="bi bi-person"></i>
-          <span>Account</span>
-        </a>
-        <a href="#" class="nav-icon-btn d-flex flex-column align-items-center position-relative">
+        </button>
+
+        <!-- Account dropdown -->
+        <div class="dropdown">
+          <button class="nav-icon-btn d-none d-md-flex flex-column align-items-center border-0 bg-transparent"
+                  id="accountNavBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Account">
+            <i class="bi bi-person"></i>
+            <span id="accountNavLabel">Account</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end account-dropdown" id="accountDropdownMenu">
+            <!-- Populated by JS -->
+          </ul>
+        </div>
+
+        <!-- Cart -->
+        <a href="#" class="nav-icon-btn d-flex flex-column align-items-center position-relative text-decoration-none">
           <i class="bi bi-cart3"></i>
-          <span class="cart-badge">3</span>
+          <span class="cart-badge" id="cartBadge">0</span>
           <span>Cart</span>
         </a>
+
         <button class="btn btn-sm d-md-none border-0" id="mobileMenuBtn">
           <i class="bi bi-list fs-4"></i>
         </button>
@@ -70,6 +83,65 @@
     </div>
   </div>
 </header>
+
+<!-- ===== LOCATION POPUP ===== -->
+<div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content location-modal-content">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-800" id="locationModalLabel">
+          <i class="bi bi-geo-alt-fill text-success me-2"></i>Set Delivery Location
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-2">
+        <p class="text-muted small mb-3">We'll use your location to show relevant products and delivery options.</p>
+
+        <!-- Map placeholder -->
+        <div id="locationMap" class="location-map-wrap">
+          <div class="map-placeholder" id="mapPlaceholder">
+            <i class="bi bi-map fs-1 text-success"></i>
+            <p class="mt-2 text-muted small">Click the button below to detect your location</p>
+          </div>
+          <div id="leafletMap" style="display:none; height:260px; border-radius:12px; overflow:hidden;"></div>
+        </div>
+
+        <!-- Detected address display -->
+        <div id="detectedAddress" class="detected-address-box d-none mt-3">
+          <i class="bi bi-pin-map-fill text-success me-2"></i>
+          <span id="detectedAddressText">–</span>
+        </div>
+
+        <!-- Manual input -->
+        <div class="mt-3">
+          <label class="form-label fw-600 small">Or type your address manually</label>
+          <input type="text" class="form-control" id="manualAddressInput" placeholder="e.g. 123 Main St, Cairo"/>
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+          <button class="btn btn-outline-success flex-grow-1" id="detectLocationBtn">
+            <i class="bi bi-crosshair me-1"></i> Detect My Location
+          </button>
+          <button class="btn btn-success flex-grow-1" id="saveLocationBtn">
+            <i class="bi bi-check-lg me-1"></i> Save Location
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== WISHLIST DRAWER ===== -->
+<div class="wishlist-drawer" id="wishlistDrawer">
+  <div class="wishlist-drawer-header">
+    <h5 class="mb-0 fw-800"><i class="bi bi-heart-fill text-danger me-2"></i>My Wishlist</h5>
+    <button class="btn-close-drawer" id="closeWishlistDrawer"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="wishlist-drawer-body" id="wishlistDrawerBody">
+    <!-- populated by JS -->
+  </div>
+</div>
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
 
 <!-- ===== CATEGORY MENU BAR ===== -->
 <nav class="category-nav">
@@ -242,8 +314,19 @@
   </div>
 </section>
 
-<!-- ===== TRENDING PRODUCTS ===== -->
-<section class="section-pad bg-page">
+<!-- ===== DYNAMIC PRODUCT CATEGORIES (API) ===== -->
+<!-- No-results message -->
+<div id="no-results-msg" class="container-fluid px-3 px-lg-4 py-5 text-center" style="display:none">
+  <i class="bi bi-search fs-1 text-muted"></i>
+  <h5 class="mt-3 text-muted">No products found matching your search.</h5>
+  <p class="text-muted small">Try a different keyword or browse all categories.</p>
+</div>
+
+<!-- Each category section is injected here by ProductRenderer.js -->
+<div id="dynamic-categories"></div>
+
+<!-- ===== TRENDING PRODUCTS (kept as design anchor – hidden, replaced by API) ===== -->
+<section class="section-pad bg-page" style="display:none">
   <div class="container-fluid px-3 px-lg-4">
     <div class="section-header">
       <div>
@@ -346,8 +429,9 @@
     </div>
   </div>
 </section>
+<!-- /end hidden trending -->
 
-<!-- ===== START EXPLORING NOW ===== -->
+<!-- ===== START EXPLORING NOW (static icons kept for design; category nav is populated from API) ===== -->
 <section class="section-pad">
   <div class="container-fluid px-3 px-lg-4">
     <div class="section-header">
@@ -480,8 +564,10 @@
   </div>
 </section>
 
-<!-- ===== LIMITED TIME DEALS ===== -->
-<section class="section-pad">
+<!-- ===== LIMITED-TIME DEALS ===== -->
+<!-- Deals are now rendered by the API-driven #dynamic-categories section above -->
+<!-- Keeping the deals swiper section hidden as fallback UI -->
+<section class="section-pad" style="display:none">
   <div class="container-fluid px-3 px-lg-4">
     <div class="section-header">
       <div>
@@ -636,100 +722,62 @@
   </div>
 </section>
 
-<!-- ===== TESTIMONIALS ===== -->
-<section class="section-pad bg-light-green">
+<!-- ===== TESTIMONIALS (DYNAMIC) ===== -->
+<section class="section-pad bg-light-green" id="testimonialsSection">
   <div class="container-fluid px-3 px-lg-4">
-    <div class="text-center mb-5">
+
+    <div class="text-center mb-4">
       <h2 class="section-title">Our Happy Customers</h2>
-      <p class="section-sub">"Don't just take our word for it — here are some reviews."</p>
+      <p class="section-sub">"Don't just take our word for it — here's what our community says."</p>
     </div>
 
-    <div class="row g-3">
+    <!-- Live testimonials grid -->
+    <div class="row g-3" id="testimonialsGrid">
+      <!-- Populated by JS from localStorage -->
+    </div>
 
-      <div class="col-md-6 col-lg-4">
-        <div class="testimonial-card featured-testimonial">
-          <div class="d-flex align-items-center gap-3 mb-3">
-            <img src="https://i.pravatar.cc/60?img=1" alt="Emily" class="testi-avatar"/>
-            <div>
-              <h6 class="mb-0">Emily R.</h6>
-              <div class="testi-stars">⭐⭐⭐⭐⭐</div>
+    <!-- Add Testimonial Form (shown only to logged-in users) -->
+    <div class="testi-form-wrap mt-5" id="testiFormWrap">
+      <!-- Logged-in: form -->
+      <div id="testiFormLoggedIn" class="d-none">
+        <div class="testi-form-card">
+          <h5 class="mb-1 fw-800"><i class="bi bi-chat-quote-fill text-success me-2"></i>Share Your Experience</h5>
+          <p class="text-muted small mb-4">Your review helps thousands of shoppers make better decisions.</p>
+
+          <!-- Star rating picker -->
+          <div class="mb-3">
+            <label class="profile-label mb-2">Your Rating</label>
+            <div class="star-picker" id="starPicker">
+              <i class="bi bi-star star-pick" data-val="1"></i>
+              <i class="bi bi-star star-pick" data-val="2"></i>
+              <i class="bi bi-star star-pick" data-val="3"></i>
+              <i class="bi bi-star star-pick" data-val="4"></i>
+              <i class="bi bi-star star-pick" data-val="5"></i>
             </div>
-            <i class="bi bi-quote ms-auto testi-quote"></i>
+            <input type="hidden" id="testiRating" value="0"/>
           </div>
-          <p class="testi-text">"Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!"</p>
-          <span class="testi-badge">Verified Purchase</span>
+
+          <div class="mb-3">
+            <label class="profile-label">Your Comment</label>
+            <textarea class="form-control profile-input" id="testiComment" rows="3"
+                      placeholder="What did you love about shopping at Dealport?"></textarea>
+          </div>
+
+          <div id="testiError" class="alert alert-danger d-none py-2 small mb-3"></div>
+
+          <button class="btn btn-save" id="submitTestiBtn">
+            <i class="bi bi-send me-1"></i> Post Review
+          </button>
         </div>
       </div>
 
-      <div class="col-md-6 col-lg-4">
-        <div class="testimonial-card featured-testimonial">
-          <div class="d-flex align-items-center gap-3 mb-3">
-            <img src="https://i.pravatar.cc/60?img=12" alt="John" class="testi-avatar"/>
-            <div>
-              <h6 class="mb-0">John D.</h6>
-              <div class="testi-stars">⭐⭐⭐⭐⭐</div>
-            </div>
-            <i class="bi bi-quote ms-auto testi-quote"></i>
-          </div>
-          <p class="testi-text">"Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!"</p>
-          <span class="testi-badge">Verified Purchase</span>
-        </div>
+      <!-- Guest: login prompt -->
+      <div id="testiFormGuest" class="testi-login-prompt">
+        <i class="bi bi-lock-fill text-muted fs-2 mb-2 d-block"></i>
+        <p class="mb-2"><strong>Want to leave a review?</strong></p>
+        <p class="text-muted small mb-3">Sign in to share your experience with the Dealport community.</p>
+        <a href="login.html" class="btn btn-save px-4">Sign In to Review</a>
       </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="testimonial-card featured-testimonial">
-          <div class="d-flex align-items-center gap-3 mb-3">
-            <img src="https://i.pravatar.cc/60?img=7" alt="Ahmed" class="testi-avatar"/>
-            <div>
-              <h6 class="mb-0">Ahmed M.</h6>
-              <div class="testi-stars">⭐⭐⭐⭐⭐</div>
-            </div>
-            <i class="bi bi-quote ms-auto testi-quote"></i>
-          </div>
-          <p class="testi-text">"Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!"</p>
-          <span class="testi-badge">Verified Purchase</span>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="testimonial-card">
-          <div class="d-flex align-items-center gap-3 mb-3">
-            <img src="https://i.pravatar.cc/60?img=33" alt="Alex" class="testi-avatar"/>
-            <div>
-              <h6 class="mb-0">Alex T.</h6>
-              <div class="testi-stars">⭐⭐⭐⭐⭐</div>
-            </div>
-          </div>
-          <p class="testi-text">"Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!"</p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="testimonial-card">
-          <div class="d-flex align-items-center gap-3 mb-3">
-            <img src="https://i.pravatar.cc/60?img=45" alt="Priya" class="testi-avatar"/>
-            <div>
-              <h6 class="mb-0">Priya R.</h6>
-              <div class="testi-stars">⭐⭐⭐⭐⭐</div>
-            </div>
-          </div>
-          <p class="testi-text">"Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!"</p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="testimonial-card">
-          <div class="d-flex align-items-center gap-3 mb-3">
-            <img src="https://i.pravatar.cc/60?img=22" alt="David" class="testi-avatar"/>
-            <div>
-              <h6 class="mb-0">David H.</h6>
-              <div class="testi-stars">⭐⭐⭐⭐⭐</div>
-            </div>
-          </div>
-          <p class="testi-text">"Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!"</p>
-        </div>
-      </div>
-
     </div>
 
     <div class="text-center mt-4">
@@ -758,7 +806,8 @@
       <div class="col-md-6 col-lg-2">
         <h6 class="footer-heading">Customer Support</h6>
         <ul class="footer-links">
-          <li><a href="#">Contact Us</a></li>
+          <li><a href="ContactUS.html">Contact Us</a></li>
+          
           <li><a href="#">Help Center (FAQs)</a></li>
           <li><a href="#">Track My Order</a></li>
           <li><a href="#">Return & Refund Policy</a></li>
@@ -823,6 +872,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-<script src="../../JS/Customer/CustomerHomePage.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module" src="../../JS/Customer/CustomerHomePage.js"></script>
 </body>
 </html>

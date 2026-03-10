@@ -1,12 +1,73 @@
 // Your add product script
 
 import { saveProductToDisk } from '../Core/FileStorage.js';
+import { KEY_CATEGORIES } from '../Core/Constants.js';
+
+const THEME_STORAGE_KEY = 'seller_theme';
+
+function applyStoredTheme() {
+    try {
+        if (localStorage.getItem(THEME_STORAGE_KEY) === 'dark') {
+            document.body.classList.add('dark');
+        } else {
+            document.body.classList.remove('dark');
+        }
+    } catch (_err) {
+        // ignore storage failures
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
+    applyStoredTheme();
 
     const form = document.getElementById('productForm');
     const fileInput = document.getElementById('imageUpload');
     const previewContainer = document.getElementById('previewContainer');
+    const categorySelect = document.getElementById('categorySelect');
+
+    const colorBoxes = document.querySelectorAll('.color');
+
+    colorBoxes.forEach(box => {
+        box.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            const input = box.querySelector('input[type="checkbox"]');
+            if (!input) return;
+
+            box.classList.toggle('selected');
+            input.checked = box.classList.contains('selected');
+        });
+    });
+
+    const loadCategories = () => {
+        if (!categorySelect) return;
+
+        let categories = [];
+        try {
+            const parsed = JSON.parse(localStorage.getItem(KEY_CATEGORIES));
+            if (Array.isArray(parsed)) categories = parsed;
+        } catch (_err) {
+            categories = [];
+        }
+
+        const activeCategories = categories.filter(cat => cat.visibility === 'active');
+        const source = activeCategories.length ? activeCategories : categories;
+
+        categorySelect.innerHTML = '';
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'Select category';
+        categorySelect.appendChild(placeholder);
+
+        source.forEach((cat) => {
+            const option = document.createElement('option');
+            option.value = cat.name;
+            option.textContent = cat.name;
+            categorySelect.appendChild(option);
+        });
+    };
+
+    loadCategories();
 
     fileInput.addEventListener('change', () => {
 
@@ -40,23 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // const selectedColors = formData.getAll('colors');
 
 
-        const colorBoxes = document.querySelectorAll('.color');
-
-        colorBoxes.forEach(box => {
-            box.addEventListener('click', (e) => {
-                e.preventDefault(); // prevent default just in case
-
-                const input = box.querySelector('input[type="checkbox"]');
-                if (!input) return;
-
-                // toggle the selected class
-                box.classList.toggle('selected');
-
-                // toggle checkbox checked status to match selected class
-                input.checked = box.classList.contains('selected');
-            });
-        });
-
         const product = {
             name: formData.get('productName')?.trim() || '(no name)',
             description: formData.get('description')?.trim() || '',
@@ -68,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
             stockQuantity: Number(formData.get('stockQuantity')) || 0,
             stockStatus: formData.get('stockStatus'),
             // category: formData.get('category') || '',
-            category: document.getElementById("categorySelect").value || "",
+            category: categorySelect?.value || "",
             // tag: formData.get('tag') || '',
             tag: document.getElementById("tagSelect").value || "",
             colors: colorBoxes,

@@ -191,17 +191,3 @@ export function getCustomerName(customerId) {
     return escapeHTML(user ? (user.name || user.fullName || 'Unknown') : 'Unknown Customer');
 }
 
-/**
- * Escapes common HTML special characters to prevent XSS.
- * @param {string} str 
- * @returns {string}
- */
-export function escapeHTML(str) {
-    if (str === null || str === undefined) return '—';
-    const stringValue = String(str);
-    if (!stringValue.trim()) return '—';
-
-    const div = document.createElement('div');
-    div.textContent = stringValue;
-    return div.innerHTML;
-}

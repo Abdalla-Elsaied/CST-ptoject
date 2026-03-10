@@ -26,10 +26,10 @@
 
 <div class="filters">
   <div class="tabs">
-    <div class="tab active" onclick="filterBy('all')">All</div>
-    <div class="tab" onclick="filterBy('In Stock')">In Stock</div>
-    <div class="tab" onclick="filterBy('Low Stock')">Low Stock</div>
-    <div class="tab" onclick="filterBy('Out of Stock')">Out of Stock</div>
+    <div class="tab active" onclick="filterBy('all', this)">All</div>
+    <div class="tab" onclick="filterBy('In Stock', this)">In Stock</div>
+    <div class="tab" onclick="filterBy('Low Stock', this)">Low Stock</div>
+    <div class="tab" onclick="filterBy('Out of Stock', this)">Out of Stock</div>
   </div>
   <input class="search" placeholder="Search product..." onkeyup="searchProduct(this.value)">
 </div>
@@ -45,6 +45,7 @@
         <th>Price</th>
         <th>Stock</th>
         <th>Status</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody id="tableBody"></tbody>
@@ -52,6 +53,18 @@
 </div>
 
 <div class="pagination" id="pagination"></div>
+
+<div class="modal" id="productDetailsModal" onclick="closeProductDetails(event)">
+  <div class="modal-content product-details" onclick="event.stopPropagation()">
+    <h3 id="detailName">Product Details</h3>
+    <img id="detailImage" class="detail-image" alt="Product image">
+    <p><strong>Date:</strong> <span id="detailDate">-</span></p>
+    <p><strong>Views:</strong> <span id="detailViews">0</span></p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeProductDetails()">Close</button>
+    </div>
+  </div>
+</div>
 
 <script src="/JS/Seller/ProductList.js"></script>
 </body>
