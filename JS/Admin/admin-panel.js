@@ -9,6 +9,7 @@ import { getCurrentUser } from './admin-helpers.js';
 import { renderDashboard } from './admin-dashboard.js';
 import { renderSellers } from './admin-sellers.js';
 import { renderRequests } from './admin-requests.js';
+import { renderCategories } from './admin-categories.js';
 import { renderCustomers } from './admin-customers.js';
 import { renderProducts } from './admin-products.js';
 import { renderOrders } from './admin-orders.js';
@@ -91,6 +92,7 @@ const sectionRenderers = {
     dashboard: renderDashboard,   // admin-dashboard.js
     sellers: renderSellers,       // admin-sellers.js
     requests: renderRequests,     // admin-requests.js
+    categories: renderCategories, // admin-categories.js
     customers: renderCustomers,   // admin-customers.js
     products: renderProducts,     // admin-products.js
     orders: renderOrders,         // admin-orders.js
