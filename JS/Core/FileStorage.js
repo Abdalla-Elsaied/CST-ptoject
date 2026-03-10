@@ -121,6 +121,26 @@ export async function loadProductsFromFolder() {
   }
 }
 
+/**
+ * Delete product from MockAPI
+ */
+export async function deleteProductFromDisk(productId) {
+  if (!productId) {
+    throw new Error("Missing product id.");
+  }
+
+  const response = await fetch(`${PRODUCTS_ENDPOINT}/${productId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`API delete error ${response.status}: ${errText}`);
+  }
+
+  return true;
+}
+
 export function getLS(key) {
   try {
     const val = localStorage.getItem(key);
