@@ -7,6 +7,7 @@ let filter = 'all';
 let search = '';
 let categoryFilter = '';
 let products = [];
+let loadedFromApi = false;
 
 function defaultImage(name){
   const safeName = encodeURIComponent(name || 'Product');
@@ -146,6 +147,7 @@ async function loadProducts(){
           category: p.category
         };
       });
+      loadedFromApi = true;
       save();
       return;
     }
@@ -153,6 +155,7 @@ async function loadProducts(){
     // keep local fallback when API/network is unavailable
   }
 
+  loadedFromApi = false;
   products = loadLocalProducts();
 }
 
@@ -258,13 +261,24 @@ function goToUpdateProductPage(event, productId){
   window.location.href = `./updateProductPage.html?id=${encodeURIComponent(productId)}`;
 }
 
-function deleteProduct(event, productId){
+async function deleteProduct(event, productId){
   if(event) event.stopPropagation();
   const idx = products.findIndex((item, i) => String(normalizeProduct(item, i).id) === String(productId));
   if(idx === -1) return;
 
   const name = normalizeProduct(products[idx], idx).name || 'this product';
   if(!window.confirm(`Delete "${name}"?`)) return;
+
+  if(loadedFromApi){
+    try{
+      const storage = await import('../Core/FileStorage.js');
+      await storage.deleteProductFromDisk(productId);
+    }catch(err){
+      const message = err?.message ? String(err.message) : 'Failed to delete product from server.';
+      alert(`Could not delete product from server.\n\n${message}`);
+      return;
+    }
+  }
 
   products.splice(idx, 1);
   save();
