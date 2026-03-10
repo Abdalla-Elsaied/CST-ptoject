@@ -722,100 +722,62 @@
   </div>
 </section>
 
-<!-- ===== TESTIMONIALS ===== -->
-<section class="section-pad bg-light-green">
+<!-- ===== TESTIMONIALS (DYNAMIC) ===== -->
+<section class="section-pad bg-light-green" id="testimonialsSection">
   <div class="container-fluid px-3 px-lg-4">
-    <div class="text-center mb-5">
+
+    <div class="text-center mb-4">
       <h2 class="section-title">Our Happy Customers</h2>
-      <p class="section-sub">"Don't just take our word for it — here are some reviews."</p>
+      <p class="section-sub">"Don't just take our word for it — here's what our community says."</p>
     </div>
 
-    <div class="row g-3">
+    <!-- Live testimonials grid -->
+    <div class="row g-3" id="testimonialsGrid">
+      <!-- Populated by JS from localStorage -->
+    </div>
 
-      <div class="col-md-6 col-lg-4">
-        <div class="testimonial-card featured-testimonial">
-          <div class="d-flex align-items-center gap-3 mb-3">
-            <img src="https://i.pravatar.cc/60?img=1" alt="Emily" class="testi-avatar"/>
-            <div>
-              <h6 class="mb-0">Emily R.</h6>
-              <div class="testi-stars">⭐⭐⭐⭐⭐</div>
+    <!-- Add Testimonial Form (shown only to logged-in users) -->
+    <div class="testi-form-wrap mt-5" id="testiFormWrap">
+      <!-- Logged-in: form -->
+      <div id="testiFormLoggedIn" class="d-none">
+        <div class="testi-form-card">
+          <h5 class="mb-1 fw-800"><i class="bi bi-chat-quote-fill text-success me-2"></i>Share Your Experience</h5>
+          <p class="text-muted small mb-4">Your review helps thousands of shoppers make better decisions.</p>
+
+          <!-- Star rating picker -->
+          <div class="mb-3">
+            <label class="profile-label mb-2">Your Rating</label>
+            <div class="star-picker" id="starPicker">
+              <i class="bi bi-star star-pick" data-val="1"></i>
+              <i class="bi bi-star star-pick" data-val="2"></i>
+              <i class="bi bi-star star-pick" data-val="3"></i>
+              <i class="bi bi-star star-pick" data-val="4"></i>
+              <i class="bi bi-star star-pick" data-val="5"></i>
             </div>
-            <i class="bi bi-quote ms-auto testi-quote"></i>
+            <input type="hidden" id="testiRating" value="0"/>
           </div>
-          <p class="testi-text">"Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!"</p>
-          <span class="testi-badge">Verified Purchase</span>
+
+          <div class="mb-3">
+            <label class="profile-label">Your Comment</label>
+            <textarea class="form-control profile-input" id="testiComment" rows="3"
+                      placeholder="What did you love about shopping at Dealport?"></textarea>
+          </div>
+
+          <div id="testiError" class="alert alert-danger d-none py-2 small mb-3"></div>
+
+          <button class="btn btn-save" id="submitTestiBtn">
+            <i class="bi bi-send me-1"></i> Post Review
+          </button>
         </div>
       </div>
 
-      <div class="col-md-6 col-lg-4">
-        <div class="testimonial-card featured-testimonial">
-          <div class="d-flex align-items-center gap-3 mb-3">
-            <img src="https://i.pravatar.cc/60?img=12" alt="John" class="testi-avatar"/>
-            <div>
-              <h6 class="mb-0">John D.</h6>
-              <div class="testi-stars">⭐⭐⭐⭐⭐</div>
-            </div>
-            <i class="bi bi-quote ms-auto testi-quote"></i>
-          </div>
-          <p class="testi-text">"Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!"</p>
-          <span class="testi-badge">Verified Purchase</span>
-        </div>
+      <!-- Guest: login prompt -->
+      <div id="testiFormGuest" class="testi-login-prompt">
+        <i class="bi bi-lock-fill text-muted fs-2 mb-2 d-block"></i>
+        <p class="mb-2"><strong>Want to leave a review?</strong></p>
+        <p class="text-muted small mb-3">Sign in to share your experience with the Dealport community.</p>
+        <a href="login.html" class="btn btn-save px-4">Sign In to Review</a>
       </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="testimonial-card featured-testimonial">
-          <div class="d-flex align-items-center gap-3 mb-3">
-            <img src="https://i.pravatar.cc/60?img=7" alt="Ahmed" class="testi-avatar"/>
-            <div>
-              <h6 class="mb-0">Ahmed M.</h6>
-              <div class="testi-stars">⭐⭐⭐⭐⭐</div>
-            </div>
-            <i class="bi bi-quote ms-auto testi-quote"></i>
-          </div>
-          <p class="testi-text">"Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!"</p>
-          <span class="testi-badge">Verified Purchase</span>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="testimonial-card">
-          <div class="d-flex align-items-center gap-3 mb-3">
-            <img src="https://i.pravatar.cc/60?img=33" alt="Alex" class="testi-avatar"/>
-            <div>
-              <h6 class="mb-0">Alex T.</h6>
-              <div class="testi-stars">⭐⭐⭐⭐⭐</div>
-            </div>
-          </div>
-          <p class="testi-text">"Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!"</p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="testimonial-card">
-          <div class="d-flex align-items-center gap-3 mb-3">
-            <img src="https://i.pravatar.cc/60?img=45" alt="Priya" class="testi-avatar"/>
-            <div>
-              <h6 class="mb-0">Priya R.</h6>
-              <div class="testi-stars">⭐⭐⭐⭐⭐</div>
-            </div>
-          </div>
-          <p class="testi-text">"Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!"</p>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="testimonial-card">
-          <div class="d-flex align-items-center gap-3 mb-3">
-            <img src="https://i.pravatar.cc/60?img=22" alt="David" class="testi-avatar"/>
-            <div>
-              <h6 class="mb-0">David H.</h6>
-              <div class="testi-stars">⭐⭐⭐⭐⭐</div>
-            </div>
-          </div>
-          <p class="testi-text">"Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!"</p>
-        </div>
-      </div>
-
     </div>
 
     <div class="text-center mt-4">
@@ -844,7 +806,8 @@
       <div class="col-md-6 col-lg-2">
         <h6 class="footer-heading">Customer Support</h6>
         <ul class="footer-links">
-          <li><a href="#">Contact Us</a></li>
+          <li><a href="ContactUS.html">Contact Us</a></li>
+          
           <li><a href="#">Help Center (FAQs)</a></li>
           <li><a href="#">Track My Order</a></li>
           <li><a href="#">Return & Refund Policy</a></li>

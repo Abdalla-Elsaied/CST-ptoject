@@ -127,7 +127,7 @@ function productCardHTML(p) {
               <i class="bi bi-cart-plus me-1"></i>
               ${outOfStock ? 'Out of Stock' : 'Add to Cart'}
             </button>
-            <a href="#" class="btn-view">View Details</a>
+            <a href="product-details.html?id=${p.id}" class="btn-view">View Details</a>
           </div>
         </div>
       </div>
