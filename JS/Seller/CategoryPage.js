@@ -243,6 +243,13 @@ if (themeToggleBtn) {
   syncThemeIcon();
 }
 
+window.addEventListener("storage", (event) => {
+  if (event.key === THEME_STORAGE_KEY) {
+    applyStoredTheme();
+    syncThemeIcon();
+  }
+});
+
 if (sidebarCollapseBtn && sidebar) {
   sidebarCollapseBtn.addEventListener("click", () => {
     sidebar.classList.toggle("collapsed");
