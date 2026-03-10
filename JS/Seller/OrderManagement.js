@@ -344,6 +344,7 @@ function applyFiltersFromUrl(){
     const statusParam = String(params.get('status') || '').trim();
     const paymentParam = String(params.get('payment') || '').trim().toLowerCase();
     const recentDaysParam = Number(params.get('recentDays'));
+    const searchParam = String(params.get('search') || '').trim();
 
     if(statusParam && (statusParam === 'Delivered' || statusParam === 'Pending' || statusParam === 'Cancelled' || statusParam === 'Shipped')){
       filter = statusParam;
@@ -355,6 +356,13 @@ function applyFiltersFromUrl(){
 
     if(Number.isFinite(recentDaysParam) && recentDaysParam > 0){
       recentDaysFilter = Math.floor(recentDaysParam);
+    }
+
+    if(searchParam){
+      search = searchParam.toLowerCase();
+      const searchInput = document.querySelector('.search');
+      if(searchInput) searchInput.value = searchParam;
+      page = 1;
     }
 
     const tabs = document.querySelectorAll('.tab');

@@ -3,6 +3,7 @@
 ═══════════════════════════════════════════════ */
 
 import { loadProductsFromFolder } from '../Core/FileStorage.js';
+import { KEY_CATEGORIES, KEY_ORDERS, KEY_PRODUCTS } from '../Core/Constants.js';
 
 $(function () {
 
@@ -40,6 +41,7 @@ $(function () {
   let dashboardProductsLoaded = false;
   let usersBarChart = null;
   const REPORT_WEEK_START_DAY = 4; // 0=Sun ... 4=Thu
+  const GLOBAL_SEARCH_KEYS = [KEY_PRODUCTS, 'products', 'sellerProducts'];
 
   function closeMobileSidebar() {
     $('#sidebar').removeClass('mobile-open');
@@ -428,7 +430,7 @@ $(function () {
 
   function loadDashboardProducts() {
     if (Array.isArray(dashboardProductsCache)) return dashboardProductsCache;
-    const keys = ['ls_products', 'products', 'sellerProducts'];
+    const keys = GLOBAL_SEARCH_KEYS;
     for (const key of keys) {
       try {
         const parsed = JSON.parse(localStorage.getItem(key));
@@ -1157,15 +1159,19 @@ $(function () {
     refreshDashboardProductsUI();
   }
 
-  function showOrderManagement(status, payment, recentDays) {
+  function showOrderManagement(status, payment, recentDays, searchText) {
     const statusValue = String(status ?? '').trim();
     const paymentValue = String(payment ?? '').trim();
     const recentDaysValue = Number(recentDays);
+    const searchValue = String(searchText ?? '').trim();
     const params = new URLSearchParams();
     if (statusValue) params.set('status', statusValue);
     if (paymentValue) params.set('payment', paymentValue);
     if (Number.isFinite(recentDaysValue) && recentDaysValue > 0) {
       params.set('recentDays', String(Math.floor(recentDaysValue)));
+    }
+    if (searchValue) {
+      params.set('search', searchValue);
     }
     const query = params.toString();
 
@@ -1177,11 +1183,14 @@ $(function () {
     closeMobileSidebar();
   }
 
-  function showProductList(category) {
+  function showProductList(category, searchText) {
     const categoryValue = String(category ?? '').trim();
-    const url = categoryValue
-      ? `ProductList.html?category=${encodeURIComponent(categoryValue)}`
-      : 'ProductList.html';
+    const searchValue = String(searchText ?? '').trim();
+    const params = new URLSearchParams();
+    if (categoryValue) params.set('category', categoryValue);
+    if (searchValue) params.set('search', searchValue);
+    const query = params.toString();
+    const url = query ? `ProductList.html?${query}` : 'ProductList.html';
     $embeddedPageFrame.attr('src', url);
     $dashboardView.hide();
     $orderManagementView.show();
@@ -1199,13 +1208,92 @@ $(function () {
     closeMobileSidebar();
   }
 
-  function showCategories() {
-    $embeddedPageFrame.attr('src', 'CategoryPage.html');
+  function showCategories(searchText) {
+    const searchValue = String(searchText ?? '').trim();
+    const url = searchValue ? `CategoryPage.html?search=${encodeURIComponent(searchValue)}` : 'CategoryPage.html';
+    $embeddedPageFrame.attr('src', url);
     $dashboardView.hide();
     $orderManagementView.show();
     $pageTitle.text('Categories');
     setActiveNavLink('#categoriesLink');
     closeMobileSidebar();
+  }
+
+  function safeLower(value) {
+    return String(value ?? '').trim().toLowerCase();
+  }
+
+  function loadGlobalSearchCategories() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(KEY_CATEGORIES));
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_err) {
+      return [];
+    }
+  }
+
+  function loadGlobalSearchProducts() {
+    for (const key of GLOBAL_SEARCH_KEYS) {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(key));
+        if (Array.isArray(parsed)) return parsed;
+      } catch (_err) {
+        // try next key
+      }
+    }
+    return [];
+  }
+
+  function loadGlobalSearchOrders() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(KEY_ORDERS));
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_err) {
+      return [];
+    }
+  }
+
+  function matchInCategories(query) {
+    const categories = loadGlobalSearchCategories();
+    return categories.some((cat) => safeLower(cat?.name).includes(query));
+  }
+
+  function matchInProducts(query) {
+    const products = loadGlobalSearchProducts();
+    return products.some((p) => safeLower(p?.productName ?? p?.name).includes(query));
+  }
+
+  function matchInOrders(query) {
+    const orders = loadGlobalSearchOrders();
+    return orders.some((order) => {
+      const idMatch = safeLower(order?.id ?? order?.orderId).includes(query);
+      if (idMatch) return true;
+      const items = Array.isArray(order?.products) ? order.products
+        : (Array.isArray(order?.items) ? order.items : []);
+      return items.some((item) => safeLower(item?.name ?? item?.productName ?? item?.product).includes(query));
+    });
+  }
+
+  function runGlobalSearch(query) {
+    const value = safeLower(query);
+    if (!value) return;
+
+    if (matchInCategories(value)) {
+      showCategories(query);
+      return;
+    }
+
+    if (matchInProducts(value)) {
+      showProductList('', query);
+      return;
+    }
+
+    if (matchInOrders(value)) {
+      showOrderManagement('', '', '', query);
+      return;
+    }
+
+    showProductList('', query);
   }
 
   function routeFromQuery() {
@@ -1346,6 +1434,25 @@ $(function () {
 
   $('#productMediaLink').on('click', function () {
     showProductMedia();
+  });
+
+  const $globalSearchInput = $('.topnav .search-input');
+  const $globalSearchIcon = $('.topnav .search-icon');
+
+  function submitGlobalSearch() {
+    if (!$globalSearchInput.length) return;
+    runGlobalSearch($globalSearchInput.val());
+  }
+
+  $globalSearchInput.on('keypress', function (event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      submitGlobalSearch();
+    }
+  });
+
+  $globalSearchIcon.on('click', function () {
+    submitGlobalSearch();
   });
 
 

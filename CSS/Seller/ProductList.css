@@ -58,6 +58,18 @@ cursor:pointer;
 padding:6px 12px;
 font-size:.8rem;
 }
+.btn-delete{
+background:transparent;
+color:var(--danger);
+border:1.5px solid var(--danger);
+padding:6px 12px;
+font-size:.8rem;
+margin-left:6px;
+}
+.btn-delete:hover{
+background:var(--danger);
+color:#fff;
+}
 .stats{
 display:grid;
 grid-template-columns:repeat(4,1fr);
