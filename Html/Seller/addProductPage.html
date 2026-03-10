@@ -49,7 +49,7 @@
 
                     <div>
                         <label>Discounted Price</label>
-                        <input type="number" name="discountPrice" placeholder="$">
+                        <input type="number" name="discountPrice" value = "0" placeholder="$" required>
                     </div>
 
                     <div>
@@ -67,12 +67,12 @@
 
                     <div>
                         <label>Start</label>
-                        <input type="date" name="expirationStart">
+                        <input type="date" name="expirationStart" >
                     </div>
 
                     <div>
                         <label>End</label>
-                        <input type="date" name="expirationEnd">
+                        <input type="date" name="expirationEnd"required>
                     </div>
 
                 </div>
@@ -84,7 +84,7 @@
 
                     <div>
                         <label>Stock Quantity</label>
-                        <input type="number" name="stockQuantity">
+                        <input type="number" name="stockQuantity" required>
                     </div>
 
                     <div>
@@ -113,7 +113,7 @@
 
                     <div class="upload-box">
 
-                        <input type="file" name="productImages" form="productForm" id="imageUpload" multiple>
+                        <input type="file" name="productImages" form="productForm" id="imageUpload" multiple required>
 
                         <div id="previewContainer"></div>
 
@@ -121,7 +121,7 @@
 
 
                     <label>Product Categories</label>
-                    <select id="categorySelect" name="category">
+                    <select id="categorySelect" name="category" >
                         <option value="">Select category</option>
                         <option value="electronics">Electronics</option>
                         <option value="clothing">Clothing</option>
@@ -129,7 +129,7 @@
                     </select>
 
                     <label>Product Tag</label>
-                    <select id="tagSelect" name="tag">
+                    <select id="tagSelect" name="tag" >
                         <option value="">Select tag</option>
                         <option value="new">New</option>
                         <option value="sale">Sale</option>
