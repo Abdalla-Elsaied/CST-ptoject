@@ -18,8 +18,8 @@ import {
 
 const ROLES = {
   CUSTOMER: 'customer',
-  SELLER:   'seller',
-  ADMIN:    'admin',
+  SELLER: 'seller',
+  ADMIN: 'admin',
 };
 
 const ALLOWED_SELF_REGISTER_ROLES = [
@@ -265,7 +265,7 @@ export function AddCustomerToSeller(userId, storeData) {
   }
 
   const newRequest = {
-    id: "req-" + Date.now().toString().slice(2,9),
+    id: "req-" + Date.now().toString().slice(2, 9),
     userId,
     ...storeData,
     status: "pending",
@@ -304,7 +304,7 @@ export function AcceptCustomerSellerRequest(requestId) {
   if (userIndex === -1) {
     console.log("User not found")
     return { success: false, error: "User not found" };
-    
+
   }
 
   console.log(users[userIndex])
