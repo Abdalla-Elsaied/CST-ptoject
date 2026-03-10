@@ -282,6 +282,18 @@ searchInput.addEventListener("input", (event) => {
   renderTable();
 });
 
+const applySearchFromUrl = () => {
+  try {
+    const params = new URLSearchParams(window.location.search || "");
+    const searchParam = String(params.get("search") || "").trim();
+    if (!searchParam) return;
+    currentQuery = searchParam.toLowerCase();
+    if (searchInput) searchInput.value = searchParam;
+  } catch (_err) {
+    // ignore malformed URLs
+  }
+};
+
 addCategoryBtn.addEventListener("click", () => openModal({ mode: "add" }));
 cancelModalBtn.addEventListener("click", closeModal);
 modal.addEventListener("click", (event) => {
@@ -312,4 +324,5 @@ if (exportBtn) {
 }
 
 renderStats();
+applySearchFromUrl();
 renderTable();

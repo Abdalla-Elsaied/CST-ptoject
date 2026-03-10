@@ -208,7 +208,10 @@ function render(){
         <td class="price">$${p.price.toFixed(2)}</td>
         <td>${p.stock}</td>
         <td><span class="stock ${statusClass(status)}"><span class="dot"></span>${status}</span></td>
-        <td><button class="btn btn-update" onclick="goToUpdateProductPage(event, '${safeId}')">Update</button></td>
+        <td>
+          <button class="btn btn-update" onclick="goToUpdateProductPage(event, '${safeId}')">Update</button>
+          <button class="btn btn-delete" onclick="deleteProduct(event, '${safeId}')">Delete</button>
+        </td>
       </tr>
     `;
   });
@@ -255,6 +258,19 @@ function goToUpdateProductPage(event, productId){
   window.location.href = `./updateProductPage.html?id=${encodeURIComponent(productId)}`;
 }
 
+function deleteProduct(event, productId){
+  if(event) event.stopPropagation();
+  const idx = products.findIndex((item, i) => String(normalizeProduct(item, i).id) === String(productId));
+  if(idx === -1) return;
+
+  const name = normalizeProduct(products[idx], idx).name || 'this product';
+  if(!window.confirm(`Delete "${name}"?`)) return;
+
+  products.splice(idx, 1);
+  save();
+  render();
+}
+
 function openProductDetails(productId){
   const idx = products.findIndex((item, i) => String(normalizeProduct(item, i).id) === String(productId));
   if(idx === -1) return;
@@ -291,5 +307,17 @@ function readCategoryFilterFromUrl(){
   }
 }
 
+function readSearchFromUrl(){
+  try{
+    const params = new URLSearchParams(window.location.search || '');
+    search = String(params.get('search') || '').trim().toLowerCase();
+    const input = document.querySelector('.search');
+    if(input) input.value = search ? params.get('search') : '';
+  }catch(_err){
+    // ignore malformed URLs
+  }
+}
+
 readCategoryFilterFromUrl();
+readSearchFromUrl();
 loadProducts().then(render);
