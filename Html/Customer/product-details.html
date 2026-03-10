@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Product Details – DEALPORT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+  <link rel="stylesheet" href="../../CSS/Customer/CustomerHomePage.css"/>
+  <link rel="stylesheet" href="../../CSS/Customer/product-details.css"/>
+</head>
+<body>
+
+<!-- ===== MINI NAVBAR ===== -->
+<header class="navbar-top sticky-top">
+  <div class="container-fluid px-3 px-lg-4">
+    <div class="d-flex align-items-center gap-3 gap-lg-4 py-2">
+      <a href="CustomerHomePage.html" class="logo-brand text-decoration-none flex-shrink-0">
+        <span class="logo-deal">DEAL</span><span class="logo-port"><i class="bi bi-shop"></i>RT</span>
+      </a>
+      <div class="flex-grow-1">
+        <!-- breadcrumb -->
+        <nav aria-label="breadcrumb" class="d-none d-md-block">
+          <ol class="breadcrumb mb-0 small">
+            <li class="breadcrumb-item"><a href="CustomerHomePage.html" class="text-success text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item" id="bcCategory">–</li>
+            <li class="breadcrumb-item active" id="bcProduct">Loading...</li>
+          </ol>
+        </nav>
+      </div>
+      <a href="CustomerHomePage.html" class="nav-icon-btn d-flex align-items-center gap-1 text-decoration-none">
+        <i class="bi bi-arrow-left"></i><span class="d-none d-sm-inline">Back</span>
+      </a>
+
+       <!-- Cart -->
+        <a href="#" class="nav-icon-btn d-flex flex-column align-items-center position-relative text-decoration-none">
+          <i class="bi bi-cart3"></i>
+          <span class="cart-badge" id="cartBadge">0</span>
+          <span>Cart</span>
+        </a>
+
+       <!-- Account dropdown -->
+        <div class="dropdown">
+          <button class="nav-icon-btn d-none d-md-flex flex-column align-items-center border-0 bg-transparent"
+                  id="accountNavBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Account">
+            <i class="bi bi-person"></i>
+            <span id="accountNavLabel">Account</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end account-dropdown" id="accountDropdownMenu">
+            <!-- Populated by JS -->
+          </ul>
+        </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== LOADING STATE ===== -->
+<div id="pdLoading" class="pd-loading-wrap">
+  <div class="spinner-border text-success" role="status"></div>
+  <p class="mt-3 text-muted">Loading product...</p>
+</div>
+
+<!-- ===== ERROR STATE ===== -->
+<div id="pdError" class="pd-error-wrap d-none">
+  <i class="bi bi-exclamation-triangle-fill text-warning fs-1 d-block mb-3"></i>
+  <h4>Product not found</h4>
+  <p class="text-muted">The product you're looking for doesn't exist or has been removed.</p>
+  <a href="CustomerHomePage.html" class="btn btn-add-cart mt-2 px-4">Back to Store</a>
+</div>
+
+<!-- ===== PRODUCT CONTENT (hidden until loaded) ===== -->
+<main id="pdContent" class="d-none">
+
+  <!-- ── Product Hero ── -->
+  <section class="pd-hero">
+    <div class="container-fluid px-3 px-lg-5 py-4 py-lg-5">
+      <div class="row g-4 g-lg-5 align-items-start">
+
+        <!-- Images -->
+        <div class="col-lg-5">
+          <div class="pd-img-main-wrap">
+            <img id="pdMainImage" src="" alt="" class="pd-main-img"
+                 onerror="this.src='https://placehold.co/600x500/ecfdf5/16a34a?text=No+Image'"/>
+            <span id="pdDiscountBadge" class="badge-discount pd-discount d-none"></span>
+            <button class="pd-wishlist-btn" id="pdWishlistBtn" title="Add to wishlist">
+              <i class="bi bi-heart" id="pdWishlistIcon"></i>
+            </button>
+          </div>
+          <!-- Thumbnail strip -->
+          <div class="pd-thumbnails" id="pdThumbnails"></div>
+        </div>
+
+        <!-- Info -->
+        <div class="col-lg-7">
+          <div class="pd-info">
+            <span class="pd-category-tag" id="pdCategory">–</span>
+            <h1 class="pd-title" id="pdTitle">Loading...</h1>
+
+            <!-- Rating summary -->
+            <div class="pd-rating-row" id="pdRatingRow">
+              <div class="pd-stars" id="pdStars"></div>
+              <span class="pd-review-count" id="pdReviewCount"></span>
+              <span class="pd-stock-badge" id="pdStockBadge"></span>
+            </div>
+
+            <!-- Price -->
+            <div class="pd-price-row">
+              <span class="pd-price-now" id="pdPriceNow">–</span>
+              <span class="pd-price-old d-none" id="pdPriceOld"></span>
+              <span class="pd-save-badge d-none" id="pdSaveBadge"></span>
+            </div>
+
+            <!-- Description -->
+            <div class="pd-description" id="pdDescription"></div>
+
+            <!-- Colors -->
+            <div class="pd-colors-wrap d-none" id="pdColorsWrap">
+              <label class="pd-field-label">Color: <strong id="pdSelectedColor">–</strong></label>
+              <div class="pd-colors" id="pdColors"></div>
+            </div>
+
+            <!-- Tags -->
+            <div class="pd-tags-wrap d-none" id="pdTagsWrap">
+              <label class="pd-field-label">Tags</label>
+              <div id="pdTags" class="d-flex flex-wrap gap-2"></div>
+            </div>
+
+            <!-- Qty + Actions -->
+            <div class="pd-actions-row">
+              <div class="pd-qty-wrap">
+                <button class="pd-qty-btn" id="pdQtyMinus">−</button>
+                <input type="number" class="pd-qty-input" id="pdQty" value="1" min="1" max="99"/>
+                <button class="pd-qty-btn" id="pdQtyPlus">+</button>
+              </div>
+              <button class="btn pd-btn-cart" id="pdAddCart">
+                <i class="bi bi-cart-plus me-2"></i> Add to Cart
+              </button>
+              <button class="btn pd-btn-wish" id="pdAddWish">
+                <i class="bi bi-heart me-1"></i> Wishlist
+              </button>
+            </div>
+
+            <!-- Meta details -->
+            <div class="pd-meta-grid" id="pdMetaGrid"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Tabs: Description / Specs / Reviews ── -->
+  <section class="pd-tabs-section">
+    <div class="container-fluid px-3 px-lg-5">
+
+      <!-- Tab Nav -->
+      <div class="pd-tab-nav">
+        <button class="pd-tab-btn active" data-tab="description">Description</button>
+        <button class="pd-tab-btn" data-tab="specs">Specifications</button>
+        <button class="pd-tab-btn" data-tab="reviews">
+          Reviews <span class="pd-tab-badge" id="reviewTabBadge">0</span>
+        </button>
+      </div>
+
+      <!-- Description tab -->
+      <div class="pd-tab-panel active" id="tab-description">
+        <div class="pd-long-desc" id="pdLongDesc">
+          <p class="text-muted">No detailed description available.</p>
+        </div>
+      </div>
+
+      <!-- Specs tab -->
+      <div class="pd-tab-panel" id="tab-specs">
+        <div class="pd-specs-grid" id="pdSpecsGrid">
+          <p class="text-muted">No specifications listed.</p>
+        </div>
+      </div>
+
+      <!-- Reviews tab -->
+      <div class="pd-tab-panel" id="tab-reviews">
+
+        <!-- Rating summary bar -->
+        <div class="reviews-summary" id="reviewsSummary"></div>
+
+        <!-- Write review form -->
+        <div class="review-form-wrap" id="reviewFormWrap">
+          <!-- populated by JS based on auth state -->
+        </div>
+
+        <!-- Reviews list -->
+        <div id="reviewsList" class="reviews-list mt-4">
+          <!-- populated by JS -->
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── Related Products ── -->
+  <section class="section-pad bg-page">
+    <div class="container-fluid px-3 px-lg-5">
+      <div class="section-header mb-3">
+        <h2 class="section-title">You Might Also Like</h2>
+        <a href="CustomerHomePage.html" class="btn btn-view-all">View All</a>
+      </div>
+      <div class="swiper related-swiper">
+        <div class="swiper-wrapper" id="relatedProductsWrap"></div>
+        <div class="swiper-button-prev related-prev"><i class="bi bi-chevron-left"></i></div>
+        <div class="swiper-button-next related-next"><i class="bi bi-chevron-right"></i></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script type="module" src="../../JS/Customer/product-details.js"></script>
+<script type="module" src="../../JS/Customer/CustomerHomePage.js"></script>
+</body>
+</html>

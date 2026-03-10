@@ -1244,3 +1244,48 @@ body {
 @media (max-width: 575px) {
   .wishlist-drawer { width: 100vw; }
 }
+
+/* =====================================================
+   TESTIMONIALS – DYNAMIC ADDITIONS
+   ===================================================== */
+
+.testi-stars-row i { color: var(--warning); font-size: 0.78rem; }
+.testi-footer-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.testi-date { font-size: 0.7rem; color: var(--text-secondary); }
+.testi-avatar-wrap { position: relative; flex-shrink: 0; }
+.testi-avatar-fallback {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--green-primary); color: #fff;
+  font-weight: 800; font-size: 0.85rem;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--green-light);
+}
+.testi-form-card {
+  background: #fff; border: 1.5px solid var(--green-primary);
+  border-radius: var(--radius); padding: 28px;
+  max-width: 680px; margin: 0 auto;
+}
+.testi-login-prompt {
+  text-align: center; padding: 32px;
+  background: #fff; border: 1.5px dashed var(--border);
+  border-radius: var(--radius); max-width: 480px; margin: 0 auto;
+}
+.testi-already-reviewed {
+  text-align: center; padding: 32px;
+  background: var(--green-light); border: 1.5px solid var(--green-primary);
+  border-radius: var(--radius); max-width: 480px; margin: 0 auto;
+}
+.star-picker { display: flex; gap: 6px; margin-bottom: 4px; }
+.star-pick {
+  font-size: 1.5rem; color: #d1d5db;
+  cursor: pointer; transition: color 0.15s, transform 0.15s;
+}
+.star-pick:hover, .star-pick.hovered { color: var(--warning); transform: scale(1.15); }
+.star-pick.selected { color: var(--warning); }

@@ -12,6 +12,10 @@ import {
 } from './Wishlist.js';
 import { getLS, setLS }  from '../Core/FileStorage.js';
 import { KEY_LOCATION }  from '../Core/Constants.js';
+import {
+  getTestimonials, addTestimonial, hasUserTestimonial,
+  starsHTML as reviewStarsHTML, formatDate,
+} from './Reviews.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
 
@@ -152,7 +156,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="drawer-empty">
           <i class="bi bi-heart fs-1 text-muted"></i>
           <p class="mt-3 text-muted">Your wishlist is empty.<br>Click ♡ on any product to save it.</p>
-          <a href="CustomerHomePage.html" class="btn btn-add-cart mt-2" style="width:auto;padding:8px 20px" onclick="closeDrawer()">Browse Products</a>
+          <a href="#" class="btn btn-add-cart mt-2" style="width:auto;padding:8px 20px" onclick="closeDrawer()">Browse Products</a>
         </div>`;
       return;
     }
@@ -454,5 +458,122 @@ document.addEventListener('DOMContentLoaded', async () => {
       showError(dynContainer, err.message);
     }
   }
+
+  /* ══════════════════════════════════════════════════
+     13. TESTIMONIALS – dynamic render + add form
+  ══════════════════════════════════════════════════ */
+  const testiGrid      = document.getElementById('testimonialsGrid');
+  const testiLoggedIn  = document.getElementById('testiFormLoggedIn');
+  const testiGuest     = document.getElementById('testiFormGuest');
+  const starPicker     = document.getElementById('starPicker');
+  const testiRatingIn  = document.getElementById('testiRating');
+  const testiCommentIn = document.getElementById('testiComment');
+  const testiError     = document.getElementById('testiError');
+  const submitTestiBtn = document.getElementById('submitTestiBtn');
+
+  function renderTestimonials() {
+    if (!testiGrid) return;
+    const list = getTestimonials();
+    if (list.length === 0) {
+      testiGrid.innerHTML = '<div class="col-12 text-center text-muted py-4">No reviews yet. Be the first!</div>';
+      return;
+    }
+    testiGrid.innerHTML = list.map((t, i) => {
+      const isFeatured = t.featured || i < 3;
+      const stars = reviewStarsHTML(t.rating);
+      const initials = t.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+      const avatarImg = t.avatar
+        ? `<img src="${t.avatar}" alt="${t.name}" class="testi-avatar"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+           <div class="testi-avatar-fallback" style="display:none">${initials}</div>`
+        : `<div class="testi-avatar-fallback">${initials}</div>`;
+      return `
+        <div class="col-md-6 col-lg-4">
+          <div class="testimonial-card ${isFeatured ? 'featured-testimonial' : ''}">
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <div class="testi-avatar-wrap">${avatarImg}</div>
+              <div class="flex-grow-1">
+                <h6 class="mb-0">${t.name}</h6>
+                <div class="testi-stars-row">${stars}</div>
+              </div>
+              <i class="bi bi-quote testi-quote"></i>
+            </div>
+            <p class="testi-text">"${t.comment}"</p>
+            <div class="testi-footer-row">
+              ${isFeatured ? '<span class="testi-badge">Verified</span>' : ''}
+              <span class="testi-date ms-auto">${formatDate(t.createdAt)}</span>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+  renderTestimonials();
+
+  // Show form or guest prompt
+  const loggedUser = getCurrentUser();
+  if (loggedUser) {
+    testiLoggedIn?.classList.remove('d-none');
+    testiGuest?.classList.add('d-none');
+    if (hasUserTestimonial(loggedUser.id) && testiLoggedIn) {
+      testiLoggedIn.innerHTML = `
+        <div class="testi-already-reviewed">
+          <i class="bi bi-patch-check-fill text-success fs-2 mb-2 d-block"></i>
+          <p class="fw-700 mb-1">Thanks for your review!</p>
+          <p class="text-muted small">You've already shared your experience.</p>
+        </div>`;
+    }
+  } else {
+    testiLoggedIn?.classList.add('d-none');
+    testiGuest?.classList.remove('d-none');
+  }
+
+  // Star picker
+  let selectedRating = 0;
+  starPicker?.querySelectorAll('.star-pick').forEach(star => {
+    star.addEventListener('mouseenter', () => {
+      const val = +star.dataset.val;
+      starPicker.querySelectorAll('.star-pick').forEach((s, i) => {
+        s.className = i < val ? 'bi bi-star-fill star-pick hovered' : 'bi bi-star star-pick';
+      });
+    });
+    star.addEventListener('mouseleave', () => {
+      starPicker.querySelectorAll('.star-pick').forEach((s, i) => {
+        s.className = i < selectedRating ? 'bi bi-star-fill star-pick selected' : 'bi bi-star star-pick';
+      });
+    });
+    star.addEventListener('click', () => {
+      selectedRating = +star.dataset.val;
+      if (testiRatingIn) testiRatingIn.value = selectedRating;
+      starPicker.querySelectorAll('.star-pick').forEach((s, i) => {
+        s.className = i < selectedRating ? 'bi bi-star-fill star-pick selected' : 'bi bi-star star-pick';
+      });
+    });
+  });
+
+  // Submit testimonial
+  submitTestiBtn?.addEventListener('click', () => {
+    if (testiError) testiError.classList.add('d-none');
+    const rating  = parseInt(testiRatingIn?.value || 0);
+    const comment = testiCommentIn?.value.trim();
+    const user    = getCurrentUser();
+    const showErr = msg => { if (testiError) { testiError.textContent = msg; testiError.classList.remove('d-none'); } };
+
+    if (!user)           return showErr('You must be logged in.');
+    if (rating < 1)      return showErr('Please select a star rating.');
+    if (!comment || comment.length < 10) return showErr('Comment must be at least 10 characters.');
+
+    addTestimonial({ userId: user.id, name: user.name, avatar: null, rating, comment });
+    renderTestimonials();
+    if (testiCommentIn) testiCommentIn.value = '';
+    selectedRating = 0;
+    if (testiRatingIn) testiRatingIn.value = 0;
+    starPicker?.querySelectorAll('.star-pick').forEach(s => { s.className = 'bi bi-star star-pick'; });
+    if (testiLoggedIn) testiLoggedIn.innerHTML = `
+      <div class="testi-already-reviewed">
+        <i class="bi bi-patch-check-fill text-success fs-2 mb-2 d-block"></i>
+        <p class="fw-700 mb-1">Thanks for your review!</p>
+        <p class="text-muted small">Your experience has been shared with the community.</p>
+      </div>`;
+  });
 
 });
