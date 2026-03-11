@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      try {
+        if (localStorage.getItem('seller_theme') === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (_err) {
+      }
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dealport - Product Reviews</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="../../CSS/Seller/home.css" />
+    <link rel="stylesheet" href="../../CSS/Seller/ProductReviews.css" />
+  </head>
+  <body class="product-reviews-page">
+    <main class="dashboard-content">
+      <div class="reviews-header">
+        <div>
+          <p class="reviews-eyebrow">Seller Dashboard</p>
+          <h2>Product Reviews</h2>
+          <p class="reviews-sub">
+            Track customer feedback by product and rating.
+          </p>
+        </div>
+        <div class="reviews-actions">
+          <button class="btn-filter-light" id="exportReviewsBtn">Export</button>
+        </div>
+      </div>
+
+      <section class="reviews-stats">
+        <div class="stat-card">
+          <p>Total Reviews</p>
+          <h3 id="statTotalReviews">0</h3>
+          <span>All products</span>
+        </div>
+        <div class="stat-card">
+          <p>Average Rating</p>
+          <h3 id="statAvgRating">0.0</h3>
+          <span>Out of 5</span>
+        </div>
+        <div class="stat-card">
+          <p>5-Star Reviews</p>
+          <h3 id="statFiveStar">0</h3>
+          <span>Highest ratings</span>
+        </div>
+        <div class="stat-card">
+          <p>Reviewed Products</p>
+          <h3 id="statProductsReviewed">0</h3>
+          <span>Unique items</span>
+        </div>
+      </section>
+
+      <section class="card-panel reviews-panel">
+        <div class="panel-header reviews-panel-head">
+          <div class="reviews-filters">
+            <div class="filter-field">
+              <label for="reviewSearchInput">Search</label>
+              <input type="text" id="reviewSearchInput" placeholder="Search reviews, products, customers..." />
+            </div>
+            <div class="filter-field">
+              <label for="reviewProductFilter">Product</label>
+              <select id="reviewProductFilter"></select>
+            </div>
+            <div class="filter-field">
+              <label for="reviewRatingFilter">Rating</label>
+              <select id="reviewRatingFilter">
+                <option value="all">All ratings</option>
+                <option value="5">5 stars</option>
+                <option value="4">4 stars</option>
+                <option value="3">3 stars</option>
+                <option value="2">2 stars</option>
+                <option value="1">1 star</option>
+              </select>
+            </div>
+            <div class="filter-field">
+              <label for="reviewSort">Sort</label>
+              <select id="reviewSort">
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="helpful">Most helpful</option>
+                <option value="rating-high">Rating (high to low)</option>
+                <option value="rating-low">Rating (low to high)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div id="reviewsList" class="reviews-list"></div>
+        <div id="reviewsEmpty" class="reviews-empty d-none">
+          <i class="bi bi-chat-square-text"></i>
+          <h4>No reviews found</h4>
+          <p>Try changing the filters or collect more customer feedback.</p>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="../../JS/Seller/ProductReviews.js"></script>
+  </body>
+</html>

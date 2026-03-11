@@ -121,8 +121,9 @@ const renderTable = () => {
           <td>${formatRevenue(cat.revenue)}</td>
           <td><span class="badge ${cat.visibility}">${cat.visibility}</span></td>
           <td>${cat.updated}</td>
-          <td class="text-right">
-            <div class="actions">
+          <td class="text-end">
+            <div class="actions actions-end">
+              <button class="action-btn" data-action="products" data-id="${cat.id}">Products</button>
               <button class="action-btn" data-action="edit" data-id="${cat.id}">Edit</button>
               <button class="action-btn" data-action="view" data-id="${cat.id}">View</button>
             </div>
@@ -316,6 +317,13 @@ tableBody.addEventListener("click", (event) => {
 
   if (action === "view") {
     openModal({ mode: "view", category });
+  }
+
+  if (action === "products") {
+    const categoryName = category?.name?.trim();
+    if (!categoryName) return;
+    const encoded = encodeURIComponent(categoryName);
+    window.location.href = `./ProductList.html?category=${encoded}`;
   }
 });
 

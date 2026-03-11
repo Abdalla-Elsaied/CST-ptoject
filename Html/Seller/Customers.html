@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      try {
+        if (localStorage.getItem('seller_theme') === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (_err) {
+      }
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dealport - Customers</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="../../CSS/Seller/home.css" />
+    <link rel="stylesheet" href="../../CSS/Seller/Customers.css" />
+  </head>
+  <body class="customers-page">
+    <main class="dashboard-content">
+      <div class="customers-header">
+        <div>
+          <p class="customers-eyebrow">Seller Dashboard</p>
+          <h2>Customers</h2>
+          <p class="customers-sub">
+            View all registered customers and their details.
+          </p>
+        </div>
+        <div class="customers-actions">
+          <button class="btn-filter-light" id="exportCustomersBtn">Export</button>
+        </div>
+      </div>
+
+      <section class="customers-stats">
+        <div class="stat-card">
+          <p>Total Customers</p>
+          <h3 id="statTotalCustomers">0</h3>
+          <span>All time</span>
+        </div>
+        <div class="stat-card">
+          <p>New Customers</p>
+          <h3 id="statNewCustomers">0</h3>
+          <span>Last 30 days</span>
+        </div>
+        <div class="stat-card">
+          <p>Total Users</p>
+          <h3 id="statTotalUsers">0</h3>
+          <span>All roles</span>
+        </div>
+        <div class="stat-card">
+          <p>Sellers</p>
+          <h3 id="statTotalSellers">0</h3>
+          <span>Approved</span>
+        </div>
+      </section>
+
+      <section class="card-panel customers-panel">
+        <div class="panel-header customers-panel-head">
+          <div class="customers-filters">
+            <div class="filter-field">
+              <label for="customerSearchInput">Search</label>
+              <input type="text" id="customerSearchInput" placeholder="Search by name or email..." />
+            </div>
+            <div class="filter-field">
+              <label for="roleFilter">Role</label>
+              <select id="roleFilter">
+                <option value="customer">Customers only</option>
+                <option value="all">All users</option>
+                <option value="seller">Sellers</option>
+                <option value="admin">Admins</option>
+              </select>
+            </div>
+            <div class="filter-field">
+              <label for="sortFilter">Sort</label>
+              <select id="sortFilter">
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="name-az">Name (A-Z)</option>
+                <option value="name-za">Name (Z-A)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table dash-table customers-table">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Store</th>
+                <th>Joined</th>
+              </tr>
+            </thead>
+            <tbody id="customersTableBody"></tbody>
+          </table>
+        </div>
+
+        <div id="customersEmpty" class="customers-empty d-none">
+          <i class="bi bi-people"></i>
+          <h4>No customers found</h4>
+          <p>Try changing the filters or create new customer accounts.</p>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="../../JS/Seller/Customers.js"></script>
+  </body>
+</html>
