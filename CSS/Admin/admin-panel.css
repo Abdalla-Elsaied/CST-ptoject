@@ -773,6 +773,11 @@ a {
     gap: 4px;
 }
 
+.btn-action:focus {
+    outline: 2px solid var(--green-primary);
+    outline-offset: 2px;
+}
+
 .btn-success {
     background: var(--green-light-bg);
     color: var(--green-dark);
@@ -783,6 +788,10 @@ a {
     background: var(--green-primary);
     color: white;
     border-color: var(--green-primary);
+}
+
+.btn-success:focus {
+    outline-color: var(--green-primary);
 }
 
 .btn-edit {
@@ -797,6 +806,10 @@ a {
     border-color: var(--info);
 }
 
+.btn-edit:focus {
+    outline-color: var(--info);
+}
+
 .btn-delete {
     background: var(--danger-light);
     color: var(--danger);
@@ -807,6 +820,10 @@ a {
     background: var(--danger);
     color: white;
     border-color: var(--danger);
+}
+
+.btn-delete:focus {
+    outline-color: var(--danger);
 }
 
 .btn-info,
@@ -823,6 +840,11 @@ a {
     border-color: var(--info);
 }
 
+.btn-info:focus,
+.btn-view:focus {
+    outline-color: var(--info);
+}
+
 .btn-warn {
     background: var(--warning-light);
     color: #b45309;
@@ -833,6 +855,10 @@ a {
     background: var(--warning);
     color: white;
     border-color: var(--warning);
+}
+
+.btn-warn:focus {
+    outline-color: var(--warning);
 }
 
 
@@ -867,6 +893,17 @@ a {
     transform: translateY(0);
 }
 
+.btn-primary-green:focus {
+    outline: 2px solid var(--green-primary);
+    outline-offset: 2px;
+}
+
+.btn-primary-green:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
 /* Outline variant */
 .btn-outline-green {
     background: transparent;
@@ -888,6 +925,11 @@ a {
 
 .btn-outline-green:hover {
     background: var(--green-light-bg);
+}
+
+.btn-outline-green:focus {
+    outline: 2px solid var(--green-primary);
+    outline-offset: 2px;
 }
 
 
