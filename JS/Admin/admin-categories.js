@@ -12,6 +12,7 @@ import { showToast, showConfirm, escapeHTML } from './admin-helpers.js';
  */
 export function renderCategories() {
     renderCategoryRequestsTable();
+    renderAllCategoriesTable();
     bindCategoryEvents();
 }
 
@@ -34,6 +35,63 @@ function saveCategories(cats) {
 }
 
 /**
+ * Renders the table of all categories (active, hidden, draft)
+ */
+function renderAllCategoriesTable() {
+    const categories = getCategories();
+    const tbody = document.getElementById('allCategoriesTableBody');
+    if (!tbody) return;
+
+    if (!categories.length) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="empty-state">
+                    <i class="bi bi-collection fs-1 text-muted d-block mb-2"></i>
+                    No categories found. Sellers can suggest new ones from their dashboard.
+                </td>
+            </tr>`;
+        return;
+    }
+
+    const visibilityBadge = (vis) => {
+        if (vis === 'active') return '<span class="badge bg-success">Active</span>';
+        if (vis === 'hidden') return '<span class="badge bg-secondary">Hidden</span>';
+        return '<span class="badge bg-warning text-dark">Draft</span>';
+    };
+
+    tbody.innerHTML = categories.map(cat => `
+        <tr>
+            <td><strong>${escapeHTML(cat.name || '')}</strong></td>
+            <td>${typeof cat.products === 'number' ? cat.products : 0}</td>
+            <td>${visibilityBadge(cat.visibility)}</td>
+            <td>${escapeHTML(cat.updated || '—')}</td>
+            <td class="text-center">
+                <div class="d-flex gap-2 justify-content-center flex-wrap">
+                    <button class="btn-action btn-edit" data-id="${cat.id}" data-action="edit-cat" title="Edit name & description">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                    ${cat.visibility !== 'active' ? `
+                    <button class="btn-action btn-success" data-id="${cat.id}" data-action="set-active" title="Set Active">
+                        <i class="bi bi-eye"></i> Activate
+                    </button>` : ''}
+                    ${cat.visibility !== 'hidden' ? `
+                    <button class="btn-action btn-warn" data-id="${cat.id}" data-action="set-hidden" title="Hide from storefront">
+                        <i class="bi bi-eye-slash"></i> Hide
+                    </button>` : ''}
+                    ${cat.visibility !== 'draft' ? `
+                    <button class="btn-action btn-view" data-id="${cat.id}" data-action="set-draft" title="Mark as draft">
+                        <i class="bi bi-file-earmark-text"></i> Draft
+                    </button>` : ''}
+                    <button class="btn-action btn-delete" data-id="${cat.id}" data-action="delete-cat" title="Delete category">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+/**
  * Renders the table of pending category suggestions
  */
 export function renderCategoryRequestsTable() {
@@ -52,7 +110,7 @@ export function renderCategoryRequestsTable() {
     if (!tbody) return;
 
     if (pendingCats.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No category suggestions pending.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="empty-state"><i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>No category suggestions pending. Sellers can suggest new categories from their dashboard.</td></tr>`;
         return;
     }
 
@@ -76,6 +134,48 @@ export function renderCategoryRequestsTable() {
             </td>
         </tr>
     `).join('');
+}
+
+/**
+ * Opens Edit Category modal for Edit & Approve flow
+ */
+function openEditCategoryModal(cat) {
+    document.getElementById('editCategoryId').value = cat.id || '';
+    document.getElementById('editCategoryName').value = cat.name || '';
+    document.getElementById('editCategoryDesc').value = cat.description || '';
+    new bootstrap.Modal(document.getElementById('editCategoryModal')).show();
+}
+
+/**
+ * Saves edited category and approves it
+ */
+function saveEditCategoryAndApprove() {
+    const id = document.getElementById('editCategoryId').value;
+    const name = (document.getElementById('editCategoryName').value || '').trim();
+    const description = (document.getElementById('editCategoryDesc').value || '').trim();
+
+    if (!name) {
+        showToast('Please enter a category name.', 'error');
+        return;
+    }
+
+    const categories = getCategories();
+    const idx = categories.findIndex(c => c.id === id);
+    if (idx === -1) return;
+
+    const wasDraft = categories[idx].visibility === 'draft';
+
+    categories[idx].name = name;
+    categories[idx].description = description;
+    if (wasDraft) {
+        categories[idx].visibility = 'active';
+    }
+    saveCategories(categories);
+
+    bootstrap.Modal.getInstance(document.getElementById('editCategoryModal')).hide();
+    showToast(`Category "${name}" updated${wasDraft ? ' and approved' : ''}!`, 'success');
+    renderCategoryRequestsTable();
+    renderAllCategoriesTable();
 }
 
 /**
@@ -110,16 +210,88 @@ function bindCategoryEvents() {
                     renderCategoryRequestsTable();
                 });
             } else if (action === 'edit-approve-cat') {
-                // We use a simple JS prompt for quick editing
-                const newName = prompt("Edit category name before approving:", categories[catIndex].name);
-                if (newName && newName.trim()) {
-                    categories[catIndex].name = newName.trim();
-                    categories[catIndex].visibility = 'active';
-                    saveCategories(categories);
-                    showToast(`Category updated to "${newName.trim()}" and approved!`, 'success');
-                    renderCategoryRequestsTable();
-                }
+                openEditCategoryModal(categories[catIndex]);
             }
         };
     }
+
+    const allTbody = document.getElementById('allCategoriesTableBody');
+    if (allTbody) {
+        allTbody.onclick = (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+
+            const id = btn.dataset.id;
+            const action = btn.dataset.action;
+            const categories = getCategories();
+            const idx = categories.findIndex(c => c.id === id);
+            if (idx === -1) return;
+
+            const cat = categories[idx];
+
+            if (action === 'edit-cat') {
+                openEditCategoryModal(cat);
+            } else if (action === 'set-active') {
+                showConfirm(`Set category "${cat.name}" to Active?`, () => {
+                    categories[idx].visibility = 'active';
+                    saveCategories(categories);
+                    showToast('Category set to Active.', 'success');
+                    renderCategoryRequestsTable();
+                    renderAllCategoriesTable();
+                });
+            } else if (action === 'set-hidden') {
+                showConfirm(`Hide category "${cat.name}" from storefront?`, () => {
+                    categories[idx].visibility = 'hidden';
+                    saveCategories(categories);
+                    showToast('Category hidden from storefront.', 'warning');
+                    renderCategoryRequestsTable();
+                    renderAllCategoriesTable();
+                });
+            } else if (action === 'set-draft') {
+                showConfirm(`Mark category "${cat.name}" as Draft?`, () => {
+                    categories[idx].visibility = 'draft';
+                    saveCategories(categories);
+                    showToast('Category marked as Draft.', 'info');
+                    renderCategoryRequestsTable();
+                    renderAllCategoriesTable();
+                });
+            } else if (action === 'delete-cat') {
+                showConfirm(`Delete category "${cat.name}"? Products using this category will keep the old name.`, () => {
+                    categories.splice(idx, 1);
+                    saveCategories(categories);
+                    showToast('Category deleted.', 'error');
+                    renderCategoryRequestsTable();
+                    renderAllCategoriesTable();
+                });
+            }
+        };
+    }
+
+    // Tabs for Suggestions / All
+    const tabSuggestions = document.getElementById('catTabSuggestions');
+    const tabAll = document.getElementById('catTabAll');
+    const suggestionsCard = document.getElementById('categorySuggestionsCard');
+    const allCard = document.getElementById('allCategoriesCard');
+
+    if (tabSuggestions && tabAll && suggestionsCard && allCard) {
+        const activateTab = (target) => {
+            if (target === 'suggestions') {
+                suggestionsCard.style.display = 'block';
+                allCard.style.display = 'none';
+                tabSuggestions.classList.add('active');
+                tabAll.classList.remove('active');
+            } else {
+                suggestionsCard.style.display = 'none';
+                allCard.style.display = 'block';
+                tabSuggestions.classList.remove('active');
+                tabAll.classList.add('active');
+            }
+        };
+
+        tabSuggestions.onclick = () => activateTab('suggestions');
+        tabAll.onclick = () => activateTab('all');
+    }
 }
+
+// Expose for modal button
+window.saveEditCategoryAndApprove = saveEditCategoryAndApprove;

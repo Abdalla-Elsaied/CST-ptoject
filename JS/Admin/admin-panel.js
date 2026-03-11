@@ -6,6 +6,8 @@
 // ============================================================
 
 import { getCurrentUser } from './admin-helpers.js';
+import { getLS } from '../Core/Storage.js';
+import { KEY_APPROVAL, KEY_CATEGORIES, KEY_CURRENT_USER } from '../Core/Constants.js';
 import { renderDashboard } from './admin-dashboard.js';
 import { renderSellers } from './admin-sellers.js';
 import { renderRequests } from './admin-requests.js';
@@ -19,7 +21,7 @@ import { renderAnalytics } from './admin-analytics.js';
 // Must be the very first thing that runs — before any DOM code.
 const _currentUser = getCurrentUser();
 
-if (!_currentUser || _currentUser.role !== 'admin') {
+if (!_currentUser || (String(_currentUser.role || '')).toLowerCase() !== 'admin') {
     window.location.href = '../Customer/Login.html';
 }
 
@@ -50,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Logout button
     document.getElementById('logoutBtn').addEventListener('click', () => {
-        localStorage.removeItem('ls_currentUser');
+        localStorage.removeItem(KEY_CURRENT_USER);
         window.location.href = '../Customer/Login.html';
     });
 
@@ -75,6 +77,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Init sidebar navigation
     initSidebar();
+
+    // Update pending badges (Seller Requests, Category Suggestions)
+    updateSidebarBadges();
 
     // Load the last active section, or default to dashboard
     const lastSection = sessionStorage.getItem('adminActiveSection') || 'dashboard';
@@ -145,6 +150,9 @@ function activateSection(section) {
     // Call the section's render function
     const renderer = sectionRenderers[section];
     if (renderer) renderer();
+
+    // Refresh sidebar badges (e.g. after approve/reject)
+    updateSidebarBadges();
 }
 
 /**
@@ -153,4 +161,31 @@ function activateSection(section) {
  */
 function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/**
+ * Updates pending count badges in sidebar for Seller Requests and Category Suggestions.
+ */
+function updateSidebarBadges() {
+    const requests = getLS(KEY_APPROVAL) || [];
+    const pendingRequests = requests.filter(r => r.status === 'pending').length;
+
+    const categories = getLS(KEY_CATEGORIES) || [];
+    const pendingCategories = categories.filter(c => c.visibility === 'draft').length;
+
+    const reqBadge = document.querySelector('a[data-section="requests"] .nav-badge');
+    const catBadge = document.querySelector('a[data-section="categories"] .nav-badge');
+
+    const setBadge = (el, count) => {
+        if (!el) return;
+        if (count > 0) {
+            el.textContent = count > 99 ? '99+' : count;
+            el.classList.remove('d-none');
+        } else {
+            el.classList.add('d-none');
+        }
+    };
+
+    setBadge(reqBadge, pendingRequests);
+    setBadge(catBadge, pendingCategories);
 }
