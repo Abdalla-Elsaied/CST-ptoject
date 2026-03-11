@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      try {
+        if (localStorage.getItem('seller_theme') === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (_err) {}
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dealport - Suggest Category</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="../../CSS/Seller/CategorySuggest.css" />
+  </head>
+  <body class="category-suggest-page">
+    <main class="suggest-content">
+      <div class="suggest-header">
+        <div>
+          <a href="CategoryPage.html" class="back-link"><i class="bi bi-arrow-left"></i> Back to Categories</a>
+          <p class="suggest-eyebrow">Seller Dashboard</p>
+          <h2>Suggest Category</h2>
+          <p class="suggest-sub">Suggest new categories for admin approval. Categories go live only after admin approves.</p>
+        </div>
+      </div>
+
+      <section class="suggest-panel">
+        <div class="suggest-intro">
+          <p>Use the form below to suggest a new category. Admin will review and approve or reject before it appears on the storefront.</p>
+        </div>
+
+        <form id="suggestForm" class="suggest-form">
+          <label>
+            Category Name <span class="required">*</span>
+            <input type="text" id="suggestNameInput" placeholder="e.g. Women Fashion" required />
+          </label>
+          <label>
+            Description (optional)
+            <textarea id="suggestDescInput" rows="3" placeholder="Short description"></textarea>
+          </label>
+          <div class="status-display">
+            <span class="badge badge-pending">Pending Approval</span>
+            <p class="status-hint">Admin will review before this category goes live.</p>
+          </div>
+          <div class="form-actions">
+            <a href="CategoryPage.html" class="btn-cancel">Cancel</a>
+            <button type="submit" class="btn-submit"><i class="bi bi-send"></i> Submit for Approval</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="suggest-panel">
+        <h3>Your Pending Suggestions</h3>
+        <p class="panel-sub">Categories you've suggested, awaiting admin approval.</p>
+        <div id="pendingList" class="pending-list"></div>
+      </section>
+    </main>
+
+    <script type="module" src="../../JS/Seller/CategorySuggest.js"></script>
+  </body>
+</html>

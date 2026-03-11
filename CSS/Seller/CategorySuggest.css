@@ -1,0 +1,228 @@
+/**
+ * CategorySuggest.css — Isolated styles for Suggest Category page.
+ * Does NOT modify CategoryPage.css or any other existing styles.
+ */
+
+:root {
+  --cs-bg: #f8fafc;
+  --cs-card: #ffffff;
+  --cs-text: #0f172a;
+  --cs-text-sec: #64748b;
+  --cs-border: #e2e8f0;
+  --cs-green: #22c55e;
+  --cs-warning: #f59e0b;
+}
+
+body.dark {
+  --cs-bg: #0f172a;
+  --cs-card: #1e293b;
+  --cs-text: #f1f5f9;
+  --cs-text-sec: #94a3b8;
+  --cs-border: #334155;
+}
+
+.category-suggest-page {
+  min-height: 100vh;
+  background: var(--cs-bg);
+  color: var(--cs-text);
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+.suggest-content {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--cs-text-sec);
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.back-link:hover {
+  color: var(--cs-text);
+}
+
+.suggest-header {
+  margin-bottom: 24px;
+}
+
+.suggest-eyebrow {
+  margin: 0 0 6px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--cs-text-sec);
+  font-weight: 700;
+}
+
+.suggest-header h2 {
+  margin: 0 0 8px;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.suggest-sub {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--cs-text-sec);
+}
+
+.suggest-panel {
+  background: var(--cs-card);
+  border: 1px solid var(--cs-border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.suggest-panel h3 {
+  margin: 0 0 6px;
+  font-size: 1.2rem;
+}
+
+.panel-sub {
+  margin: 0 0 16px;
+  font-size: 0.88rem;
+  color: var(--cs-text-sec);
+}
+
+.suggest-intro {
+  margin-bottom: 20px;
+  padding: 12px;
+  background: rgba(34, 197, 94, 0.08);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--cs-text-sec);
+}
+
+.suggest-form label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.suggest-form label .required {
+  color: #dc2626;
+}
+
+.suggest-form input,
+.suggest-form textarea {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--cs-border);
+  border-radius: 8px;
+  background: var(--cs-bg);
+  color: var(--cs-text);
+  font-family: inherit;
+}
+
+.status-display {
+  margin: 16px 0 20px;
+  padding: 12px;
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: 8px;
+}
+
+.badge-pending {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--cs-warning);
+}
+
+.status-hint {
+  margin: 8px 0 0;
+  font-size: 0.82rem;
+  color: var(--cs-text-sec);
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.btn-cancel {
+  padding: 10px 20px;
+  border: 1px solid var(--cs-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--cs-text);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.btn-cancel:hover {
+  background: var(--cs-border);
+}
+
+.btn-submit {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: var(--cs-green);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-submit:hover {
+  opacity: 0.9;
+}
+
+.pending-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pending-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 14px;
+  background: var(--cs-bg);
+  border-radius: 8px;
+  border: 1px solid var(--cs-border);
+}
+
+.pending-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pending-desc {
+  font-size: 0.85rem;
+  color: var(--cs-text-sec);
+}
+
+.pending-date {
+  font-size: 0.78rem;
+  color: var(--cs-text-sec);
+}
+
+.empty-state {
+  margin: 0;
+  padding: 24px;
+  text-align: center;
+  color: var(--cs-text-sec);
+  font-size: 0.9rem;
+}
