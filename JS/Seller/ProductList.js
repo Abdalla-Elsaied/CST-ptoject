@@ -9,8 +9,41 @@ let page = 1;
 let filter = 'all';
 let search = '';
 let categoryFilter = '';
+const CURRENT_USER_KEY = 'ls_currentUser';
+let allProducts = [];
 let products = [];
 let loadedFromApi = false;
+
+function getCurrentSellerId() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(CURRENT_USER_KEY));
+    if (raw && raw.role === 'seller') return String(raw.id);
+    if (raw && raw.role) {
+      window.location.href = '/Html/Customer/Home.html';
+    }
+  } catch (_err) {
+  }
+  return '';
+}
+
+const SELLER_ID = getCurrentSellerId();
+if (!SELLER_ID) {
+  window.location.href = '/Html/Customer/Login.html';
+}
+
+function getProductSellerId(product) {
+  return String(
+    product?.sellerId ??
+    product?.seller_id ??
+    product?.seller?.id ??
+    ''
+  ).trim();
+}
+
+function filterProductsForSeller(list) {
+  if (!SELLER_ID) return [];
+  return list.filter((p) => getProductSellerId(p) === SELLER_ID);
+}
 
 function defaultImage(name) {
   const safeName = encodeURIComponent(name || 'Product');
@@ -79,7 +112,7 @@ function normalizeProduct(raw, idx) {
 }
 
 function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(allProducts));
 }
 
 function loadLocalProducts() {
@@ -137,7 +170,7 @@ async function loadProducts() {
     const storage = await import('../Core/FileStorage.js');
     const remote = await storage.loadProductsFromFolder();
     if (Array.isArray(remote) && remote.length) {
-      products = remote.map((item, idx) => {
+      allProducts = remote.map((item, idx) => {
         const p = normalizeProduct(item, idx);
         return {
           ...item,
@@ -152,13 +185,15 @@ async function loadProducts() {
       });
       loadedFromApi = true;
       save();
+      products = filterProductsForSeller(allProducts);
       return;
     }
   } catch (_err) {
   }
 
   loadedFromApi = false;
-  products = loadLocalProducts();
+  allProducts = loadLocalProducts();
+  products = filterProductsForSeller(allProducts);
 }
 
 function getStatus(stock) {
@@ -263,10 +298,10 @@ function goToUpdateProductPage(event, productId) {
 
 async function deleteProduct(event, productId) {
   if (event) event.stopPropagation();
-  const idx = products.findIndex((item, i) => String(normalizeProduct(item, i).id) === String(productId));
+  const idx = allProducts.findIndex((item, i) => String(normalizeProduct(item, i).id) === String(productId));
   if (idx === -1) return;
 
-  const name = normalizeProduct(products[idx], idx).name || 'this product';
+  const name = normalizeProduct(allProducts[idx], idx).name || 'this product';
   if (!window.confirm(`Delete "${name}"?`)) return;
 
   if (loadedFromApi) {
@@ -280,16 +315,17 @@ async function deleteProduct(event, productId) {
     }
   }
 
-  products.splice(idx, 1);
+  allProducts.splice(idx, 1);
+  products = filterProductsForSeller(allProducts);
   save();
   render();
 }
 
 function openProductDetails(productId) {
-  const idx = products.findIndex((item, i) => String(normalizeProduct(item, i).id) === String(productId));
+  const idx = allProducts.findIndex((item, i) => String(normalizeProduct(item, i).id) === String(productId));
   if (idx === -1) return;
 
-  const original = products[idx];
+  const original = allProducts[idx];
   original.views = Number(original.views) || 0;
   original.views += 1;
   original.createdAt = toDateValue(original.createdAt ?? original.date);

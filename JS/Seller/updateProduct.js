@@ -1,7 +1,16 @@
 import { loadProductsFromFolder, saveProductToDisk } from '../Core/FileStorage.js';
 import { KEY_CATEGORIES } from '../Core/Constants.js';
+import { getCurrentUser, requireRole, ROLES } from '../Core/Auth.js';
 
 const THEME_STORAGE_KEY = 'seller_theme';
+
+const hasAccess = requireRole([ROLES.SELLER]);
+const currentUser = getCurrentUser();
+const sellerId = currentUser?.id ? String(currentUser.id) : '';
+
+if (!hasAccess || !sellerId) {
+    throw new Error('Seller access required.');
+}
 
 function applyStoredTheme() {
     try {
@@ -112,6 +121,13 @@ async function loadProductById(id) {
             return;
         }
 
+        const productSellerId = String(product?.sellerId ?? product?.seller_id ?? product?.seller?.id ?? '').trim();
+        if (productSellerId && productSellerId !== sellerId) {
+            showLoading(false);
+            showMessage('You do not have access to this product.', 'error');
+            return;
+        }
+
         currentProduct = product;
 
         form.dataset.productId = product.id;
@@ -213,7 +229,8 @@ form.addEventListener('submit', async (e) => {
         category: categorySelect ? categorySelect.value : null,
         tag: tagSelect ? tagSelect.value : null,
         colors: formData.getAll('colors'),
-        images: existingImages
+        images: existingImages,
+        sellerId: currentProduct?.sellerId ?? sellerId
     };
 
     try {

@@ -1,4 +1,5 @@
 import { KEY_ORDERS, KEY_PRODUCTS } from '../Core/Constants.js';
+import { getCurrentUser, requireRole, ROLES } from '../Core/Auth.js';
 
 const pageSize = 8;
 let page = 1;
@@ -11,9 +12,17 @@ let editingOrderId = null;
 const STATUS_ALLOWED = new Set(['Delivered', 'Pending', 'Shipped', 'Cancelled']);
 const PRODUCT_STORAGE_KEYS = [KEY_PRODUCTS, 'products', 'sellerProducts'];
 
+const hasAccess = requireRole([ROLES.SELLER]);
+const currentUser = getCurrentUser();
+const sellerId = currentUser?.id ? String(currentUser.id) : '';
+
 let productCatalog = [];
 let productById = new Map();
 let productByName = new Map();
+
+if (!hasAccess || !sellerId) {
+  throw new Error('Seller access required.');
+}
 
 function makeOrderId(){
   return `ORD${Date.now()}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
@@ -60,6 +69,7 @@ function normalizeCatalogProduct(raw, idx){
   const name = String(raw?.productName ?? raw?.name ?? `Product ${idx + 1}`).trim();
   const id = String(raw?.id ?? idx + 1);
   const price = Number(raw?.price);
+  const productSellerId = String(raw?.sellerId ?? raw?.seller_id ?? raw?.seller?.id ?? '').trim();
 
   let image = '';
   if(typeof raw?.image === 'string' && raw.image.trim()) image = raw.image.trim();
@@ -74,13 +84,16 @@ function normalizeCatalogProduct(raw, idx){
     id,
     name,
     image: image || defaultImage(name),
-    price: Number.isFinite(price) ? price : 0
+    price: Number.isFinite(price) ? price : 0,
+    sellerId: productSellerId
   };
 }
 
 function refreshProductCatalog(){
   const rawProducts = loadRawProducts();
-  productCatalog = rawProducts.map((item, idx) => normalizeCatalogProduct(item, idx));
+  productCatalog = rawProducts
+    .map((item, idx) => normalizeCatalogProduct(item, idx))
+    .filter((product) => String(product.sellerId || '') === sellerId);
   productById = new Map();
   productByName = new Map();
 
@@ -114,13 +127,15 @@ function normalizeOrderItem(rawItem, idx){
   const matched = resolveProduct(name, id);
   const resolvedName = (matched?.name ?? name) || `Product ${idx + 1}`;
   const unitPrice = Number.isFinite(priceRaw) && priceRaw >= 0 ? priceRaw : (matched?.price ?? 0);
+  const itemSellerId = String(rawItem?.sellerId ?? matched?.sellerId ?? '').trim();
 
   return {
     id: String(id || matched?.id || resolvedName),
     name: resolvedName,
     image: imageRaw || matched?.image || defaultImage(resolvedName),
     qty,
-    unitPrice
+    unitPrice,
+    sellerId: itemSellerId
   };
 }
 
@@ -152,7 +167,8 @@ function normalizeOrder(raw, idx){
     price: Number.isFinite(parsedPrice) ? parsedPrice : calculatedTotal,
     payment: raw?.payment === 'Paid' ? 'Paid' : 'Unpaid',
     status,
-    createdAt: toIsoDate(raw?.createdAt ?? raw?.date)
+    createdAt: toIsoDate(raw?.createdAt ?? raw?.date),
+    sellerId: raw?.sellerId ?? null
   };
 }
 
@@ -185,7 +201,8 @@ function seedOrders(){
       name: p.name,
       image: p.image,
       qty,
-      unitPrice: Number(p.price) || 0
+      unitPrice: Number(p.price) || 0,
+      sellerId: p.sellerId || sellerId
     };
   });
 
@@ -199,7 +216,8 @@ function seedOrders(){
       price: total,
       payment,
       status,
-      createdAt: at(daysAgo, hour)
+      createdAt: at(daysAgo, hour),
+      sellerId
     };
   };
 
@@ -236,16 +254,37 @@ function loadOrders(){
   return normalized;
 }
 
-let orders = loadOrders();
+function orderBelongsToSeller(order, sellerProductIds){
+  if(!order || !sellerId) return false;
+  if(String(order?.sellerId ?? '') === sellerId) return true;
+  const items = Array.isArray(order?.products) ? order.products : (Array.isArray(order?.items) ? order.items : []);
+  if(items.some((item) => String(item?.sellerId ?? '') === sellerId)) return true;
+  if(sellerProductIds && sellerProductIds.size){
+    return items.some((item) => {
+      const pid = item?.id ?? item?.productId ?? item?.product_id ?? '';
+      return sellerProductIds.has(String(pid));
+    });
+  }
+  return false;
+}
 
-function save(){
-  localStorage.setItem(KEY_ORDERS, JSON.stringify(orders));
+function filterOrdersForSeller(list){
+  const sellerProductIds = new Set(productCatalog.map((p) => String(p.id)));
+  return list.filter((order) => orderBelongsToSeller(order, sellerProductIds));
+}
+
+let allOrders = loadOrders();
+let orders = filterOrdersForSeller(allOrders);
+
+function saveAllOrders(){
+  localStorage.setItem(KEY_ORDERS, JSON.stringify(allOrders));
+  orders = filterOrdersForSeller(allOrders);
 }
 
 function reseedOrders(){
   refreshProductCatalog();
-  orders = seedOrders().map((o, idx) => normalizeOrder(o, idx));
-  save();
+  allOrders = seedOrders().map((o, idx) => normalizeOrder(o, idx));
+  saveAllOrders();
   page = 1;
   filter = 'all';
   search = '';
@@ -463,7 +502,8 @@ function collectSelectedProducts(){
       name: matched?.name ?? '',
       image: matched?.image ?? '',
       unitPrice: matched?.price ?? 0,
-      qty: Number.isFinite(qty) && qty > 0 ? Math.floor(qty) : 1
+      qty: Number.isFinite(qty) && qty > 0 ? Math.floor(qty) : 1,
+      sellerId
     }, idx);
   }).filter((item) => item.name);
 }
@@ -555,31 +595,33 @@ function saveOrder(){
   const finalPrice = Number(products.reduce((sum, item) => sum + (item.unitPrice * item.qty), 0).toFixed(2));
 
   if(editingOrderId){
-    const idx = orders.findIndex((o) => String(o.id) === String(editingOrderId));
+    const idx = allOrders.findIndex((o) => String(o.id) === String(editingOrderId));
     if(idx !== -1){
-      orders[idx] = {
-        ...orders[idx],
+      allOrders[idx] = {
+        ...allOrders[idx],
         products,
         product: products[0]?.name ?? '',
         price: finalPrice,
         payment,
         status,
-        createdAt: toIsoDate(orders[idx].createdAt ?? orders[idx].date)
+        createdAt: toIsoDate(allOrders[idx].createdAt ?? allOrders[idx].date),
+        sellerId
       };
     }
   }else{
-    orders.unshift({
+    allOrders.unshift({
       id: makeOrderId(),
       products,
       product: products[0]?.name ?? '',
       price: finalPrice,
       payment,
       status,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      sellerId
     });
   }
 
-  save();
+  saveAllOrders();
   closeModal();
   render();
 }

@@ -2,8 +2,90 @@
 
 import { loadProductsFromFolder } from '../Core/FileStorage.js';
 import { KEY_CATEGORIES, KEY_ORDERS, KEY_PRODUCTS } from '../Core/Constants.js';
+import { getCurrentUser, logoutUser, requireRole, ROLES } from '../Core/Auth.js';
 
 $(function () {
+
+  if (!requireRole([ROLES.SELLER])) return;
+
+  const currentUser = getCurrentUser();
+  if (!currentUser) return;
+  const sellerId = currentUser?.id ? String(currentUser.id) : '';
+
+  if (currentUser.isSuspended) {
+    alert('Your account has been suspended. Please contact support.');
+    logoutUser();
+    return;
+  }
+
+  if (currentUser.role === ROLES.SELLER && currentUser.isApproved === false) {
+    alert('Your seller account is pending approval. Please wait for admin approval.');
+    logoutUser();
+    return;
+  }
+
+  function getProductSellerId(product) {
+    if (!product) return '';
+    return String(
+      product.sellerId ??
+      product.seller_id ??
+      product.seller?.id ??
+      ''
+    ).trim();
+  }
+
+  function filterProductsForSeller(list) {
+    if (!sellerId) return [];
+    return list.filter((p) => getProductSellerId(p) === sellerId);
+  }
+
+  function getOrderItems(order) {
+    if (Array.isArray(order?.products) && order.products.length) return order.products;
+    if (Array.isArray(order?.items) && order.items.length) return order.items;
+    return [];
+  }
+
+  function orderBelongsToSeller(order, sellerProductIds) {
+    if (!order || !sellerId) return false;
+    if (String(order?.sellerId ?? '') === sellerId) return true;
+
+    const items = getOrderItems(order);
+    if (items.some((item) => String(item?.sellerId ?? '') === sellerId)) return true;
+
+    if (sellerProductIds && sellerProductIds.size) {
+      return items.some((item) => {
+        const id = item?.id ?? item?.productId ?? item?.product_id ?? '';
+        return sellerProductIds.has(String(id));
+      });
+    }
+
+    return false;
+  }
+
+  function getSellerProductIds() {
+    const products = loadDashboardProducts();
+    return new Set(products.map((p) => String(p?.id ?? p?.productId ?? p?.product_id ?? '')));
+  }
+
+  const displayName = currentUser.storeName || currentUser.name || currentUser.fullName || currentUser.email || 'Seller';
+  const displayEmail = currentUser.email || '';
+
+  const nameEl = document.getElementById('sellerUserName');
+  const emailEl = document.getElementById('sellerUserEmail');
+  const shopLink = document.getElementById('sellerShopLink');
+  const shopText = shopLink?.querySelector('span');
+
+  if (nameEl) nameEl.textContent = displayName;
+  if (emailEl) emailEl.textContent = displayEmail;
+  if (shopText) shopText.textContent = currentUser.storeName ? `Shop: ${currentUser.storeName}` : 'Your Shop';
+
+  const logoutBtn = document.getElementById('sellerLogoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      logoutUser();
+    });
+  }
 
   
   $('#sidebarCollapseBtn').on('click', function () {
@@ -175,7 +257,8 @@ $(function () {
       if (!Array.isArray(parsed) || parsed.length === 0) return [];
       const normalized = normalizeDashboardOrders(parsed);
       localStorage.setItem('ls_orders', JSON.stringify(normalized));
-      return normalized;
+      const sellerProductIds = getSellerProductIds();
+      return normalized.filter((order) => orderBelongsToSeller(order, sellerProductIds));
     } catch (_err) {
       return [];
     }
@@ -429,12 +512,15 @@ $(function () {
   }
 
   function loadDashboardProducts() {
-    if (Array.isArray(dashboardProductsCache)) return dashboardProductsCache;
+    if (Array.isArray(dashboardProductsCache)) return filterProductsForSeller(dashboardProductsCache);
     const keys = GLOBAL_SEARCH_KEYS;
     for (const key of keys) {
       try {
         const parsed = JSON.parse(localStorage.getItem(key));
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed)) {
+          dashboardProductsCache = parsed;
+          return filterProductsForSeller(parsed);
+        }
       } catch (_err) {
       }
     }
@@ -447,7 +533,7 @@ $(function () {
       if (!Array.isArray(products)) return null;
       dashboardProductsCache = products;
       localStorage.setItem('sellerProducts', JSON.stringify(products));
-      return products;
+      return filterProductsForSeller(products);
     } catch (err) {
       console.warn('Dashboard: failed to load remote products', err);
       return null;
@@ -1253,7 +1339,7 @@ $(function () {
     for (const key of GLOBAL_SEARCH_KEYS) {
       try {
         const parsed = JSON.parse(localStorage.getItem(key));
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed)) return filterProductsForSeller(parsed);
       } catch (_err) {
       }
     }
@@ -1263,7 +1349,9 @@ $(function () {
   function loadGlobalSearchOrders() {
     try {
       const parsed = JSON.parse(localStorage.getItem(KEY_ORDERS));
-      return Array.isArray(parsed) ? parsed : [];
+      if (!Array.isArray(parsed)) return [];
+      const sellerProductIds = getSellerProductIds();
+      return parsed.filter((order) => orderBelongsToSeller(order, sellerProductIds));
     } catch (_err) {
       return [];
     }

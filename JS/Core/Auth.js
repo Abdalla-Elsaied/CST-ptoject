@@ -22,6 +22,11 @@ const ROLES = {
   ADMIN: 'admin',
 };
 
+const LOGIN_URL = '/Html/Customer/Login.html';
+const CUSTOMER_HOME_URL = '/Html/Customer/Home.html';
+const SELLER_HOME_URL = '/Html/Seller/SellerHomePage.html';
+const ADMIN_HOME_URL = '/Html/Admin/admin-panel.html';
+
 const ALLOWED_SELF_REGISTER_ROLES = [
   ROLES.CUSTOMER,           // only customers can self-register
 ];
@@ -181,7 +186,7 @@ export function loginUser(email, password) {
 export function logoutUser() {
   removeLS(KEY_CURRENT_USER);
   removeLS(KEY_CART);           // optional: clear cart on logout
-  window.location.href = 'login.html';
+  window.location.href = LOGIN_URL;
 }
 
 /**
@@ -200,13 +205,23 @@ export function requireRole(allowedRoles) {
   const user = getCurrentUser();
 
   if (!user) {
-    window.location.href = 'login.html';
+    window.location.href = LOGIN_URL;
     return false;
   }
 
   if (!allowedRoles.includes(user.role)) {
-    // You can customize redirect per role if desired
-    window.location.href = 'index.html';
+    switch (user.role) {
+      case ROLES.ADMIN:
+        window.location.href = ADMIN_HOME_URL;
+        break;
+      case ROLES.SELLER:
+        window.location.href = SELLER_HOME_URL;
+        break;
+      case ROLES.CUSTOMER:
+      default:
+        window.location.href = CUSTOMER_HOME_URL;
+        break;
+    }
     return false;
   }
 
