@@ -1,0 +1,153 @@
+/**
+ * SellerRequestNotifications.css — Isolated styles for seller status notifications.
+ * Does NOT modify CustomerHomePage.css.
+ */
+
+.seller-status-notifications {
+  width: 100%;
+  z-index: 1000;
+}
+
+.seller-notif {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: #f0fdf4;
+  border-bottom: 1px solid #bbf7d0;
+  font-size: 0.9rem;
+  position: relative;
+}
+
+.seller-notif-pending {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.seller-notif-rejected {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.seller-notif-cta {
+  background: linear-gradient(90deg, #ecfdf5 0%, #d1fae5 100%);
+  border-color: #a7f3d0;
+}
+
+.seller-notif-icon {
+  flex-shrink: 0;
+  font-size: 1.4rem;
+}
+
+.seller-notif-success .seller-notif-icon {
+  color: #059669;
+}
+
+.seller-notif-pending .seller-notif-icon {
+  color: #d97706;
+}
+
+.seller-notif-rejected .seller-notif-icon {
+  color: #dc2626;
+}
+
+.seller-notif-cta .seller-notif-icon {
+  color: #059669;
+}
+
+.seller-notif-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.seller-notif-body strong {
+  font-size: 0.95rem;
+}
+
+.seller-notif-body span {
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.seller-notif-link {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  background: #059669;
+  color: #fff !important;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.seller-notif-link:hover {
+  background: #047857;
+  color: #fff !important;
+}
+
+.seller-notif-rejected .seller-notif-link {
+  background: #dc2626;
+}
+
+.seller-notif-rejected .seller-notif-link:hover {
+  background: #b91c1c;
+}
+
+.seller-notif-badge {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  background: rgba(217, 119, 6, 0.2);
+  color: #b45309;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.seller-notif-dismiss {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 50%;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+
+.seller-notif-dismiss:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #0f172a;
+}
+
+@media (max-width: 575px) {
+  .seller-notif {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .seller-notif-body {
+    order: 2;
+    width: 100%;
+  }
+
+  .seller-notif-link,
+  .seller-notif-badge {
+    order: 1;
+  }
+
+  .seller-notif-dismiss {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+  }
+}

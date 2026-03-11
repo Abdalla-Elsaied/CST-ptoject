@@ -11,7 +11,7 @@
 
 <body>
   <!-- Become Seller Button -->
-  <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#becomeSellerModal">
+  <button id="becomeSeller" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#becomeSellerModal">
     Become a Seller
   </button>
 
@@ -121,6 +121,15 @@
     import { addCustomerToSeller, getCurrentUser } from "../../JS/Core/Auth.js";
 
     document.addEventListener("DOMContentLoaded", function () {
+      // Auto-open modal when landing with #becomeSeller
+      if (window.location.hash === "#becomeSeller") {
+        const modalEl = document.getElementById("becomeSellerModal");
+        if (modalEl) {
+          const modal = new bootstrap.Modal(modalEl);
+          modal.show();
+        }
+      }
+
       const form = document.getElementById("becomeSellerForm");
 
       form.addEventListener("submit", function (event) {

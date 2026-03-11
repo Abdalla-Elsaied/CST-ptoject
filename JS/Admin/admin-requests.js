@@ -10,11 +10,20 @@ import {
     rejectCustomerSellerRequest
 } from '../Core/Auth.js';
 
+import { getLS, setLS } from '../Core/Storage.js';
+import { KEY_APPROVAL, KEY_SELLER_OUTCOMES } from '../Core/Constants.js';
+
 import {
     showToast,
     showConfirm,
     escapeHTML
 } from './admin-helpers.js';
+
+function saveRejectedOutcome(userId, storeName) {
+    const outcomes = getLS(KEY_SELLER_OUTCOMES) || [];
+    outcomes.push({ userId, storeName, status: 'rejected', at: new Date().toISOString() });
+    setLS(KEY_SELLER_OUTCOMES, outcomes);
+}
 
 /**
  * Main entry point for the seller requests section.
@@ -50,7 +59,8 @@ export function renderRequestsTable() {
         tbody.innerHTML = `
             <tr>
                 <td colspan="7" class="empty-state">
-                    All caught up! No pending seller applications.
+                    <i class="bi bi-check-circle fs-1 text-success d-block mb-2"></i>
+                    <strong>All caught up!</strong> No pending seller applications.
                 </td>
             </tr>`;
         return;
@@ -110,7 +120,10 @@ function bindRequestsEvents() {
                     renderRequests();
                 });
             } else if (action === 'reject') {
+                const requests = getAllCustomerToApproved();
+                const req = requests.find(r => r.id === id);
                 showConfirm(`Reject and delete this application?`, () => {
+                    if (req?.userId) saveRejectedOutcome(req.userId, req.storeName || '');
                     rejectCustomerSellerRequest(id);
                     showToast('Application rejected.', 'error');
                     renderRequests();
@@ -141,7 +154,12 @@ function bindRequestsEvents() {
             if (selected.length === 0) return showToast('Please select at least one request', 'warning');
 
             showConfirm(`Reject and delete ${selected.length} selected applications?`, () => {
-                selected.forEach(id => rejectCustomerSellerRequest(id));
+                const requests = getAllCustomerToApproved();
+                selected.forEach(id => {
+                    const req = requests.find(r => r.id === id);
+                    if (req?.userId) saveRejectedOutcome(req.userId, req.storeName || '');
+                    rejectCustomerSellerRequest(id);
+                });
                 showToast('Selected applications rejected.', 'error');
                 renderRequests();
             });
