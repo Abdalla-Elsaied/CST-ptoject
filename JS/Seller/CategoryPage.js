@@ -1,12 +1,12 @@
 import { KEY_CATEGORIES, KEY_PRODUCTS } from "../Core/Constants.js";
 
 const seedCategories = [
-  { id: "cat-1", name: "Women Fashion", products: 214, revenue: 12840, visibility: "active", updated: "Mar 06, 2026", description: "" },
-  { id: "cat-2", name: "Men Essentials", products: 162, revenue: 9940, visibility: "active", updated: "Mar 02, 2026", description: "" },
-  { id: "cat-3", name: "Beauty & Care", products: 88, revenue: 6210, visibility: "hidden", updated: "Feb 28, 2026", description: "" },
-  { id: "cat-4", name: "Electronics", products: 132, revenue: 18210, visibility: "active", updated: "Mar 08, 2026", description: "" },
-  { id: "cat-5", name: "Home & Living", products: 104, revenue: 7420, visibility: "draft", updated: "Feb 22, 2026", description: "" },
-  { id: "cat-6", name: "Shoes", products: 96, revenue: 5580, visibility: "active", updated: "Mar 01, 2026", description: "" }
+  { id: "cat-1", name: "Women Fashion", products: 214, visibility: "active", updated: "Mar 06, 2026", description: "" },
+  { id: "cat-2", name: "Men Essentials", products: 162, visibility: "active", updated: "Mar 02, 2026", description: "" },
+  { id: "cat-3", name: "Beauty & Care", products: 88, visibility: "hidden", updated: "Feb 28, 2026", description: "" },
+  { id: "cat-4", name: "Electronics", products: 132, visibility: "active", updated: "Mar 08, 2026", description: "" },
+  { id: "cat-5", name: "Home & Living", products: 104, visibility: "draft", updated: "Feb 22, 2026", description: "" },
+  { id: "cat-6", name: "Shoes", products: 96, visibility: "active", updated: "Mar 01, 2026", description: "" }
 ];
 
 const loadCategories = () => {
@@ -75,10 +75,6 @@ const persistTheme = () => {
   }
 };
 
-const formatRevenue = (value) => {
-  return `$${value.toLocaleString()}`;
-};
-
 const renderStats = () => {
   const products = getStoredProducts();
   stats.total.textContent = categories.length;
@@ -118,7 +114,6 @@ const renderTable = () => {
             </div>
           </td>
           <td>${cat.products}</td>
-          <td>${formatRevenue(cat.revenue)}</td>
           <td><span class="badge ${cat.visibility}">${cat.visibility}</span></td>
           <td>${cat.updated}</td>
           <td class="text-end">
@@ -201,7 +196,6 @@ const handleSave = () => {
       visibility,
       description,
       products: 0,
-      revenue: 0,
       updated: formatDate(new Date())
     });
   }
