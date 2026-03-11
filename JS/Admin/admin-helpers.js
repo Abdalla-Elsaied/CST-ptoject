@@ -173,6 +173,22 @@ export function showConfirm(message, onConfirm) {
 }
 
 /**
+ * Escapes HTML special characters to prevent XSS attacks.
+ * Converts &, <, >, ", ' to their HTML entity equivalents.
+ */
+export function escapeHTML(text) {
+    if (!text) return '';
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, char => map[char]);
+}
+
+/**
  * Returns seller's storeName by their id.
  * Used to show seller name in products and orders tables.
  * Falls back to 'Unknown Seller' if not found.

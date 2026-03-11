@@ -2,7 +2,7 @@ import {
     getSellers,
     getUsers,
     getOrders
-} from '/JS/Admin/admin-helpers.js';
+} from './admin-helpers.js';
 
 
 /**
