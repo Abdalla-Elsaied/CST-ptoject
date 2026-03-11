@@ -1,4 +1,3 @@
-// Your add product script
 
 import { saveProductToDisk } from '../Core/FileStorage.js';
 import { KEY_CATEGORIES } from '../Core/Constants.js';
@@ -13,7 +12,6 @@ function applyStoredTheme() {
             document.body.classList.remove('dark');
         }
     } catch (_err) {
-        // ignore storage failures
     }
 }
 
@@ -136,7 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const formData = new FormData(form);
 
-        // const selectedColors = formData.getAll('colors');
 
 
         const product = {
@@ -149,9 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
             expirationEnd: formData.get('expirationEnd') || null,
             stockQuantity: Number(formData.get('stockQuantity')) || 0,
             stockStatus: formData.get('stockStatus'),
-            // category: formData.get('category') || '',
             category: categorySelect?.value || "",
-            // tag: formData.get('tag') || '',
             tag: document.getElementById("tagSelect").value || "",
             colors: colorBoxes,
             createdAt: new Date().toISOString(),

@@ -54,7 +54,7 @@ body {
 .actions input {
     padding: 10px;
     
-    /* width: 40px; */
+    
     border: 1px solid var(--border-color);
     border-radius: 6px;
 }
@@ -62,7 +62,7 @@ body {
 h1,h2,h3{
 
 
-    /* margin: 1px; */
+    
 }
 
 .page-wrapper {
@@ -125,19 +125,19 @@ select option {
 .row {
     display: flex;
     gap: 15px;
-    /* space between fields */
+    
     width: 100%;
 }
 
 .row>div {
     flex: 1;
-    /* each column takes equal width */
+    
 }
 
 .row input,
 .row select {
     width: 90%;
-    /* inputs fill their column */
+    
 }
 
 .btn {

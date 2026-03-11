@@ -14,7 +14,6 @@ const loadCategories = () => {
     const parsed = JSON.parse(localStorage.getItem(KEY_CATEGORIES));
     if (Array.isArray(parsed) && parsed.length) return parsed;
   } catch (_err) {
-    // ignore parse errors
   }
   localStorage.setItem(KEY_CATEGORIES, JSON.stringify(seedCategories));
   return [...seedCategories];
@@ -60,7 +59,6 @@ const applyStoredTheme = () => {
       document.body.classList.remove("dark");
     }
   } catch (_err) {
-    // ignore storage failures
   }
 };
 
@@ -71,7 +69,6 @@ const persistTheme = () => {
       document.body.classList.contains("dark") ? "dark" : "light"
     );
   } catch (_err) {
-    // ignore storage failures
   }
 };
 
@@ -90,7 +87,6 @@ const getStoredProducts = () => {
       const parsed = JSON.parse(localStorage.getItem(key));
       if (Array.isArray(parsed)) return parsed;
     } catch (_err) {
-      // try next key
     }
   }
   return [];
@@ -285,7 +281,6 @@ const applySearchFromUrl = () => {
     currentQuery = searchParam.toLowerCase();
     if (searchInput) searchInput.value = searchParam;
   } catch (_err) {
-    // ignore malformed URLs
   }
 };
 

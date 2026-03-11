@@ -1,22 +1,16 @@
-/* ═══════════════════════════════════════════════
-   DEALPORT – SELLER DASHBOARD  |  script.js
-═══════════════════════════════════════════════ */
+
 
 import { loadProductsFromFolder } from '../Core/FileStorage.js';
 import { KEY_CATEGORIES, KEY_ORDERS, KEY_PRODUCTS } from '../Core/Constants.js';
 
 $(function () {
 
-  /* ─────────────────────────────────────────
-     SIDEBAR: Desktop collapse toggle
-  ───────────────────────────────────────── */
+  
   $('#sidebarCollapseBtn').on('click', function () {
     $('#sidebar').toggleClass('collapsed');
   });
 
-  /* ─────────────────────────────────────────
-     SIDEBAR: Mobile open / close
-  ───────────────────────────────────────── */
+  
   $('#mobileSidebarBtn').on('click', function () {
     $('#sidebar').addClass('mobile-open');
     $('#sidebarOverlay').addClass('active');
@@ -40,7 +34,7 @@ $(function () {
   let dashboardProductsCache = null;
   let dashboardProductsLoaded = false;
   let usersBarChart = null;
-  const REPORT_WEEK_START_DAY = 4; // 0=Sun ... 4=Thu
+  const REPORT_WEEK_START_DAY = 4; 
   const GLOBAL_SEARCH_KEYS = [KEY_PRODUCTS, 'products', 'sellerProducts'];
 
   function closeMobileSidebar() {
@@ -120,7 +114,6 @@ $(function () {
     try {
       iframe.contentWindow.localStorage.setItem(THEME_STORAGE_KEY, darkMode ? 'dark' : 'light');
     } catch (_err) {
-      // ignore storage failures
     }
   }
 
@@ -144,7 +137,6 @@ $(function () {
     try {
       localStorage.setItem(THEME_STORAGE_KEY, darkMode ? 'dark' : 'light');
     } catch (_err) {
-      // ignore storage failures
     }
   }
 
@@ -247,12 +239,10 @@ $(function () {
     if (itemsTotal > 0) {
       if (!Number.isFinite(rawAmount) || rawAmount <= 0) return itemsTotal;
 
-      // Some data may store totals in cents.
       const centsAsMajor = rawAmount / 100;
       const centsLooksValid = Math.abs(centsAsMajor - itemsTotal) <= Math.max(1, itemsTotal * 0.05);
       if (rawAmount >= itemsTotal * 50 && centsLooksValid) return centsAsMajor;
 
-      // Prevent extreme outliers when line-items exist.
       if (rawAmount > itemsTotal * 10) return itemsTotal;
       return rawAmount;
     }
@@ -266,7 +256,7 @@ $(function () {
   function startOfWeek(dateValue) {
     const d = new Date(dateValue || Date.now());
     d.setHours(0, 0, 0, 0);
-    const day = d.getDay(); // 0=Sun ... 6=Sat
+    const day = d.getDay(); 
     const offset = (day - REPORT_WEEK_START_DAY + 7) % 7;
     d.setDate(d.getDate() - offset);
     return d;
@@ -306,8 +296,6 @@ $(function () {
       totals[dayIndex] += amount;
     });
 
-    // For the current week, don't force future days to zero.
-    // Using null avoids the sharp drop line after "today".
     if (weekOffset === 0) {
       const today = mapDayToReportIndex(new Date().getDay());
       return totals.map((v, idx) => (idx > today ? null : Number(v.toFixed(2))));
@@ -448,7 +436,6 @@ $(function () {
         const parsed = JSON.parse(localStorage.getItem(key));
         if (Array.isArray(parsed)) return parsed;
       } catch (_err) {
-        // try next key
       }
     }
     return [];
@@ -1268,7 +1255,6 @@ $(function () {
         const parsed = JSON.parse(localStorage.getItem(key));
         if (Array.isArray(parsed)) return parsed;
       } catch (_err) {
-        // try next key
       }
     }
     return [];
@@ -1374,13 +1360,10 @@ $(function () {
         refreshDashboardOrderWidgets();
       }
     } catch (_err) {
-      // ignore access errors
     }
   });
 
-  /* ─────────────────────────────────────────
-     NAV LINK: active state switch
-  ───────────────────────────────────────── */
+  
   $('.nav-link').on('click', function (e) {
     const href = String($(this).attr('href') || '').trim();
     const isEmbedLink = $(this).attr('data-embed') === 'true';
@@ -1454,7 +1437,6 @@ $(function () {
     try {
       category = decodeURIComponent(encodedCategory);
     } catch (_err) {
-      // use raw value if decode fails
     }
 
     if (!category) return;
@@ -1500,8 +1482,6 @@ $(function () {
   });
 
 
-//---------------------------------------------------------------------------------------------------------
-  // moshady21   addProductPage --Add
 
   $('#addProductPageLink').on('click', function () {
     showaddProductPage();
@@ -1522,7 +1502,6 @@ $(function () {
     closeMobileSidebar();
   }
 
-  // update product page-------------------------------------------------------------
 
 
   $('#updateProductPageLink').on('click', function () {
@@ -1542,14 +1521,11 @@ $(function () {
 
 
 
-//---------------------------------------------------------------------------------------------------------
 
 
    
 
-  /* ─────────────────────────────────────────
-     THEME TOGGLE (light ↔ dark)
-  ───────────────────────────────────────── */
+  
   applyInitialTheme();
 
   $('#themeToggle').on('click', function () {
@@ -1558,14 +1534,11 @@ $(function () {
     syncThemeIcon();
     persistTheme();
 
-    // Update charts for dark mode
     updateChartColors();
     syncEmbeddedTheme();
   });
 
-  /* ─────────────────────────────────────────
-     WEEK TOGGLE BUTTONS
-  ───────────────────────────────────────── */
+  
   let weeklyChartOffset = 0;
   function renderWeeklyReportChart(animationMode = 'none') {
     const data = getReportSeriesData(weeklyChartOffset);
@@ -1595,9 +1568,7 @@ $(function () {
     renderWeeklyReportChart('active');
   });
 
-  /* ─────────────────────────────────────────
-     METRIC ITEMS: click to activate
-  ───────────────────────────────────────── */
+  
   $('.metric-item').on('click', function () {
     $('.metric-item').removeClass('active');
     $(this).addClass('active');
@@ -1605,15 +1576,12 @@ $(function () {
     renderWeeklyReportChart('active');
   });
 
-  /* ═══════════════════════════════════════════
-     CHART.JS – WEEKLY SALES LINE CHART
-  ═══════════════════════════════════════════ */
+  
   const weekDays   = buildReportWeekLabels();
   const salesData  = [];
 
   const weeklyCtx  = document.getElementById('weeklyChart').getContext('2d');
 
-  // Gradient fill
   const gradient = weeklyCtx.createLinearGradient(0, 0, 0, 220);
   gradient.addColorStop(0,   'rgba(34,197,94,0.28)');
   gradient.addColorStop(0.6, 'rgba(34,197,94,0.08)');
@@ -1687,9 +1655,7 @@ $(function () {
     }
   });
 
-  /* ═══════════════════════════════════════════
-     CHART.JS – USERS PER MINUTE BAR CHART
-  ═══════════════════════════════════════════ */
+  
   const barCtx = document.getElementById('usersBarChart').getContext('2d');
 
   usersBarChart = new Chart(barCtx, {
@@ -1746,20 +1712,16 @@ $(function () {
     }
   });
 
-  /* ─────────────────────────────────────────
-     Helper: update chart colors on theme toggle
-  ───────────────────────────────────────── */
+  
   function updateChartColors() {
     const tickColor = darkMode ? '#94a3b8' : '#6b7280';
     const gridColor = darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)';
 
-    // Weekly chart
     weeklyChart.options.scales.x.ticks.color = tickColor;
     weeklyChart.options.scales.y.ticks.color = tickColor;
     weeklyChart.options.scales.x.grid.color  = gridColor;
     weeklyChart.options.scales.y.grid.color  = gridColor;
 
-    // Re-draw gradient for dark
     const ctx2 = weeklyCtx;
     const grad2 = ctx2.createLinearGradient(0, 0, 0, 220);
     if (darkMode) {
@@ -1776,14 +1738,11 @@ $(function () {
     usersBarChart.update();
   }
 
-  /* ─────────────────────────────────────────
-     NOTIFICATION BUTTON: subtle pulse demo
-  ───────────────────────────────────────── */
+  
   $('.notif-btn').on('click', function () {
     $(this).find('.badge-dot').fadeOut(200).fadeIn(200);
   });
 
-  // Ensure first paint uses computed data/max immediately.
   renderWeeklyReportChart('none');
 
   renderDashboardOrderStats();

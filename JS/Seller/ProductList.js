@@ -1,4 +1,3 @@
-// import PRODUCTS_ENDPOINT from '../Core/FileStorage.js'
 
 const API_BASE = 'https://69abf0bc9ca639a5217dcac2.mockapi.io/api';
 const PRODUCTS_ENDPOINT = `${API_BASE}/Products`;
@@ -156,7 +155,6 @@ async function loadProducts() {
       return;
     }
   } catch (_err) {
-    // keep local fallback when API/network is unavailable
   }
 
   loadedFromApi = false;
@@ -330,7 +328,6 @@ function readSearchFromUrl() {
     const input = document.querySelector('.search');
     if (input) input.value = search ? params.get('search') : '';
   } catch (_err) {
-    // ignore malformed URLs
   }
 }
 

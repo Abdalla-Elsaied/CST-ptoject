@@ -11,7 +11,6 @@ function readProductsFromStorage() {
         return parsed;
       }
     } catch (_err) {
-      // ignore bad data and continue
     }
   }
   return [];

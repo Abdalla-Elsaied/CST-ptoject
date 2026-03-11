@@ -373,7 +373,6 @@ function applyFiltersFromUrl(){
     else if(filter === 'Cancelled' && tabs[3]) tabs[3].classList.add('active');
     else if(tabs[0]) tabs[0].classList.add('active');
   }catch(_err){
-    // keep defaults on malformed URL
   }
 }
 

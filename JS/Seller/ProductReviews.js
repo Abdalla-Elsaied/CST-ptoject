@@ -82,7 +82,6 @@ function loadProducts() {
         break;
       }
     } catch (_err) {
-      // try next key
     }
   }
   productMap = new Map(
