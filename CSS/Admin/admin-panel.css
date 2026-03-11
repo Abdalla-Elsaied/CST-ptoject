@@ -1406,15 +1406,37 @@ a {
     background: var(--green-light-bg);
 }
 
-/* Centering for table cells */
-th,
-td {
+/* Table alignment - left by default for better readability */
+.data-card .table thead th {
+    text-align: left;
+}
+
+.data-card .table tbody td {
+    text-align: left;
+}
+
+/* Center align specific columns */
+.data-card .table thead th:first-child,
+.data-card .table tbody td:first-child {
     text-align: center;
 }
 
-/* Seller info column - left aligned */
+.data-card .table thead th:last-child,
+.data-card .table tbody td:last-child {
+    text-align: center;
+}
+
+/* Utility classes */
 .text-start {
     text-align: left !important;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+.text-end {
+    text-align: right !important;
 }
 
 
