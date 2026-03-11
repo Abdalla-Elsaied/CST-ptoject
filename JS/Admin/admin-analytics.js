@@ -77,7 +77,7 @@ function renderOrdersByStatusChart() {
     destroyChart('ordersByStatusChart');
 
     const orders = getOrders();
-    const statuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+    const statuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Refunded'];
 
     // Count orders per status
     const counts = statuses.map(s => orders.filter(o => o.status === s).length);
@@ -89,7 +89,7 @@ function renderOrdersByStatusChart() {
             datasets: [{
                 label: 'Orders',
                 data: counts,
-                backgroundColor: ['#f59e0b', '#3b82f6', '#8b5cf6', '#22c55e', '#ef4444'],
+                backgroundColor: ['#f59e0b', '#3b82f6', '#8b5cf6', '#22c55e', '#ef4444', '#6b7280'],
                 borderRadius: 6,
                 borderWidth: 0
             }]
@@ -119,12 +119,20 @@ function renderTopSellersChart() {
     const orders = getOrders();
     const sellers = getSellers();
 
-    // Group orders by sellerId and sum subtotals
+    // Group revenue by seller: from order items (multi-seller support) or order-level sellerId
     const revenueMap = {};
     orders.forEach(o => {
-        const id = o.sellerId;
-        if (!id) return;
-        revenueMap[id] = (revenueMap[id] || 0) + (o.subtotal || 0);
+        if (o.items && o.items.length > 0) {
+            o.items.forEach(item => {
+                const sid = item.sellerId;
+                if (!sid) return;
+                const amt = (Number(item.price) || 0) * (Number(item.quantity) || 1);
+                revenueMap[sid] = (revenueMap[sid] || 0) + amt;
+            });
+        } else if (o.sellerId) {
+            const amt = Number(o.subtotal) || Number(o.total) || Number(o.totalPrice) || 0;
+            revenueMap[o.sellerId] = (revenueMap[o.sellerId] || 0) + amt;
+        }
     });
 
     // Sort and take top 5
@@ -205,9 +213,12 @@ function renderDailyOrdersChart() {
         days.push(d.toISOString().slice(0, 10));
     }
 
-    // Count how many orders fall on each day
+    // Count how many orders fall on each day (support date, createdAt)
     const counts = days.map(day =>
-        orders.filter(o => o.createdAt && o.createdAt.slice(0, 10) === day).length
+        orders.filter(o => {
+            const d = o.createdAt || o.date;
+            return d && String(d).slice(0, 10) === day;
+        }).length
     );
 
     // Short label format: "Mar 5"

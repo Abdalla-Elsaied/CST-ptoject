@@ -34,11 +34,11 @@ function renderKPICards() {
     const orders = getOrders();
     const users = getUsers();
 
-    // Count customers only (filter by role)
-    const customerCount = users.filter(u => u.role === 'customer').length;
+    // Count customers only (exclude admin and seller)
+    const customerCount = users.filter(u => (u.role || '').toLowerCase() === 'customer').length;
 
-    // Total platform revenue = sum of all order subtotals
-    const totalRevenue = orders.reduce((sum, o) => sum + (o.subtotal || 0), 0);
+    // Total platform revenue = sum of all order totals
+    const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.subtotal) || Number(o.total) || Number(o.totalPrice) || 0), 0);
 
     const cards = [
         {
@@ -57,7 +57,7 @@ function renderKPICards() {
         },
         {
             label: 'Total Products',
-            value: products.filter(p => p.isActive).length,
+            value: products.filter(p => p.isActive !== false).length,
             icon: '<i class="bi bi-box-seam"></i>',
             color: '#8b5cf6',
             border: '#6d28d9'
@@ -108,7 +108,7 @@ function renderRecentSellers() {
 
     tbody.innerHTML = sellers.map(s => `
         <tr>
-            <td>${escapeHTML(s.fullName)}</td>
+            <td>${escapeHTML(s.fullName || s.name)}</td>
             <td>${escapeHTML(s.storeName)}</td>
             <td>${escapeHTML(s.city)}</td>
             <td>${escapeHTML(s.paymentMethod)}</td>
@@ -158,7 +158,7 @@ function renderRecentOrders() {
             <td class="order-id">${o.id || 'N/A'}</td>
             <td>${getCustomerName(o.customerId)}</td>
             <td>${sellerText}</td>
-            <td>${formatPrice(o.subtotal || o.totalPrice || o.total)}</td>
+            <td>${formatPrice(o.subtotal || o.total || o.totalPrice)}</td>
             <td>${statusBadge(o.status)}</td>
         </tr>
     `;

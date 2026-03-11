@@ -16,6 +16,7 @@ import {
     showConfirm,
     escapeHTML
 } from '../Admin/admin-helpers.js';
+import { KEY_CATEGORIES } from '../Core/Constants.js';
 
 // Active filter state — persists while user stays on products section
 let productFilters = {
@@ -29,6 +30,17 @@ let productFilters = {
  * Main entry point for the products section.
  * Called every time the user clicks "Products" in the sidebar.
  */
+function loadCategoryOptions() {
+    try {
+        const parsed = JSON.parse(localStorage.getItem(KEY_CATEGORIES));
+        if (Array.isArray(parsed) && parsed.length) {
+            const names = [...new Set(parsed.map(c => c.name).filter(Boolean))].sort();
+            return names;
+        }
+    } catch (_e) {}
+    return [];
+}
+
 export function renderProducts() {
     // Reset filters on section load
     productFilters = { search: '', category: 'All', status: 'All' };
@@ -38,8 +50,18 @@ export function renderProducts() {
     const statFilter = document.getElementById('productStatusFilter');
 
     if (searchInput) searchInput.value = '';
-    if (catFilter) catFilter.value = 'All';
     if (statFilter) statFilter.value = 'All';
+
+    // Populate category filter from ls_categories + product categories in use
+    if (catFilter) {
+        const storedCats = loadCategoryOptions();
+        const products = getProducts();
+        const productCats = [...new Set(products.map(p => p.category || p.productCategory).filter(Boolean))];
+        const allCats = [...new Set([...storedCats, ...productCats])].sort();
+        catFilter.innerHTML = '<option value="All">All Categories</option>' +
+            allCats.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+        catFilter.value = 'All';
+    }
 
     renderProductsTable();
     bindProductsEvents();
@@ -59,9 +81,9 @@ export function renderProductsTable() {
 
     // Apply all 3 filters together
     const filtered = products.filter(p => {
-        const pName = (p.name || '').toLowerCase();
+        const pName = (p.name || p.productName || '').toLowerCase();
         const matchSearch = pName.includes(productFilters.search.toLowerCase());
-        const matchCategory = productFilters.category === 'All' || p.category === productFilters.category;
+        const matchCategory = productFilters.category === 'All' || (p.category || p.productCategory) === productFilters.category;
         const matchStatus = productFilters.status === 'All' ||
             (productFilters.status === 'Active' && p.isActive) ||
             (productFilters.status === 'Inactive' && !p.isActive);
@@ -94,14 +116,14 @@ export function renderProductsTable() {
             <td><span class="text-muted small fw-bold">${i + 1}</span></td>
             <td>
                 <img src="${imageUrl}"
-                     alt="${p.name}"
+                     alt="${escapeHTML(p.name || p.productName || 'Product')}"
                      class="product-thumb rounded shadow-sm"
                      style="width: 40px; height: 40px; object-fit: cover;"
                      onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22%3E%3Crect fill=%22%23e5e7eb%22 width=%2240%22 height=%2240%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-size=%2212%22 fill=%22%239ca3af%22%3ENo Img%3C/text%3E%3C/svg%3E'">
             </td>
-            <td><div class="fw-bold">${escapeHTML(p.name)}</div></td>
+            <td><div class="fw-bold">${escapeHTML(p.name || p.productName)}</div></td>
             <td>${getSellerName(p.sellerId)}</td>
-            <td><span class="badge bg-light text-dark border">${escapeHTML(p.category)}</span></td>
+            <td><span class="badge bg-light text-dark border">${escapeHTML(p.category || p.productCategory || '—')}</span></td>
             <td class="fw-bold">${formatPrice(p.price)}</td>
             <td>${stockBadge(p.stock)}</td>
             <td>${activeBadge(p.isActive)}</td>
@@ -204,7 +226,7 @@ export function confirmDeactivateProduct(id) {
     if (!product) return;
 
     showConfirm(
-        `Deactivate "${product.name}"? It will be hidden from the catalog.`,
+        `Deactivate "${product.name || product.productName}"? It will be hidden from the catalog.`,
         () => toggleProductStatus(id, false)
     );
 }
@@ -218,14 +240,15 @@ export function confirmDeleteProduct(id) {
     const product = getProducts().find(p => p.id == id);
     if (!product) return;
 
+    const productName = product.name || product.productName;
     // Check if any order contains this product
     const hasOrders = getOrders().some(o =>
         o.items && o.items.some(item => (item.productId == id || item.id == id))
     );
 
     const message = hasOrders
-        ? `"${product.name}" has existing orders. Deleting it will NOT remove those orders but the product name will show as missing. Are you sure?`
-        : `Permanently delete "${product.name}"? This cannot be undone.`;
+        ? `"${productName}" has existing orders. Deleting it will NOT remove those orders but the product name will show as missing. Are you sure?`
+        : `Permanently delete "${productName}"? This cannot be undone.`;
 
     showConfirm(message, () => {
         const updated = getProducts().filter(p => p.id != id);

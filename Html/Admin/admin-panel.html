@@ -40,8 +40,8 @@
             <a href="#" class="nav-link" data-section="analytics">
                 <span class="nav-icon"><i class="bi bi-graph-up-arrow"></i></span> Analytics
             </a>
-            <a href="../Customer/CustomerHomePage.html" class="nav-link">
-                <span class="nav-icon"><i class="bi bi-box-arrow-up-right"></i></span> View Site
+            <a href="../Customer/CustomerHomePage.html" class="nav-link" target="_blank" rel="noopener">
+                <span class="nav-icon"><i class="bi bi-box-arrow-up-right"></i></span> View Storefront
             </a>
 
             <div class="sidebar-section-label">Management</div>
@@ -50,9 +50,11 @@
             </a>
             <a href="#" class="nav-link" data-section="requests">
                 <span class="nav-icon"><i class="bi bi-person-check"></i></span> Seller Requests
+                <span class="nav-badge d-none">0</span>
             </a>
             <a href="#" class="nav-link" data-section="categories">
-                <span class="nav-icon"><i class="bi bi-tags"></i></span> Suggestion Categories
+                <span class="nav-icon"><i class="bi bi-tags"></i></span> Category Suggestions
+                <span class="nav-badge d-none">0</span>
             </a>
             <a href="#" class="nav-link" data-section="customers">
                 <span class="nav-icon"><i class="bi bi-people"></i></span> Users
@@ -236,13 +238,23 @@
         <section id="categoriesSection" class="admin-section" style="display:none">
             <div class="section-header">
                 <div>
-                    <h2 class="section-title">Category Suggestions</h2>
+                    <h2 class="section-title">Category Management</h2>
                     <p class="section-subtitle" id="categoryRequestsCount">Loading...</p>
                 </div>
             </div>
 
-            <!-- Table -->
-            <div class="data-card">
+            <!-- Tabs -->
+            <div class="filter-bar">
+                <button id="catTabSuggestions" type="button" class="btn-outline-green cat-tab active">
+                    Suggestions
+                </button>
+                <button id="catTabAll" type="button" class="btn-outline-green cat-tab">
+                    All Categories
+                </button>
+            </div>
+
+            <!-- Suggestions table -->
+            <div class="data-card" id="categorySuggestionsCard">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead>
@@ -254,6 +266,24 @@
                             </tr>
                         </thead>
                         <tbody id="categoryRequestsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- All categories table -->
+            <div class="data-card mt-3" id="allCategoriesCard" style="display:none">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Category Name</th>
+                                <th>Products</th>
+                                <th>Visibility</th>
+                                <th>Last Update</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allCategoriesTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -310,12 +340,7 @@
 
                 <select id="productCategoryFilter" class="filter-select">
                     <option value="All">All Categories</option>
-                    <option>Electronics</option>
-                    <option>Clothing</option>
-                    <option>Books</option>
-                    <option>Home</option>
-                    <option>Sports</option>
-                    <option>Other</option>
+                    <!-- Populated dynamically from ls_categories + product data -->
                 </select>
 
                 <select id="productStatusFilter" class="filter-select">
@@ -390,6 +415,7 @@
                                 <th>Status</th>
                                 <th>Date</th>
                                 <th>Change Status</th>
+                                <th>Details</th>
                             </tr>
                         </thead>
                         <tbody id="ordersTableBody"></tbody>
@@ -527,6 +553,35 @@
         </div>
     </div>
 
+    <!-- Edit Category Modal (for Edit & Approve flow) -->
+    <div class="modal fade" id="editCategoryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit & Approve Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editCategoryId">
+                    <div class="mb-3">
+                        <label class="form-label">Category Name</label>
+                        <input type="text" class="form-control" id="editCategoryName" placeholder="e.g. Women Fashion">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Description (optional)</label>
+                        <textarea class="form-control" id="editCategoryDesc" rows="3" placeholder="Short description"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn-primary-green" onclick="if(window.saveEditCategoryAndApprove)window.saveEditCategoryAndApprove()">
+                        <i class="bi bi-check-lg"></i> Save & Approve
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Confirm Action Modal — reusable for all delete/deactivate confirmations -->
     <div class="modal fade" id="confirmModal" tabindex="-1">
         <div class="modal-dialog modal-sm">
@@ -543,6 +598,24 @@
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
                     <!-- onConfirm callback set dynamically by showConfirm() -->
                     <button type="button" class="btn btn-danger btn-sm" id="confirmActionBtn">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Detail Modal -->
+    <div class="modal fade" id="orderDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="orderDetailTitle">Order Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="orderDetailBody">
+                    <!-- Filled by admin-orders.js -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>

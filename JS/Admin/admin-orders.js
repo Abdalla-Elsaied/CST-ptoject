@@ -106,7 +106,7 @@ export function renderOrdersTable() {
     if (filtered.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="9" class="empty-state">
+                <td colspan="10" class="empty-state">
                     No orders match your filter criteria.
                 </td>
             </tr>`;
@@ -144,7 +144,7 @@ export function renderOrdersTable() {
                 <td>${getCustomerName(o.customerId)}</td>
                 <td>${sellerText}</td>
                 <td>${o.items ? o.items.length : 0} item(s)</td>
-                <td><span class="fw-bold text-success">${formatPrice(o.totalPrice || o.total)}</span></td>
+                <td><span class="fw-bold text-success">${formatPrice(o.totalPrice || o.total || o.subtotal)}</span></td>
                 <td>${statusBadge(o.status)}</td>
                 <td>${formatDate(o.date || o.createdAt)}</td>
                 <td>
@@ -154,11 +154,121 @@ export function renderOrdersTable() {
                         ${statusOptions}
                     </select>
                 </td>
+                <td class="text-center">
+                    <button class="btn-action btn-view" data-id="${o.id}" data-action="view">
+                        <i class="bi bi-eye"></i> View
+                    </button>
+                </td>
             </tr>
         `;
     }).join('');
 }
 
+
+// ─── ORDER DETAIL MODAL ──────────────────────────────────────
+
+function openOrderDetail(orderId) {
+    const orders = getOrders();
+    const order = orders.find(o => String(o.id) === String(orderId));
+    if (!order) return;
+
+    const modalEl = document.getElementById('orderDetailModal');
+    const titleEl = document.getElementById('orderDetailTitle');
+    const bodyEl = document.getElementById('orderDetailBody');
+    if (!modalEl || !bodyEl || !titleEl) return;
+
+    titleEl.textContent = `Order #${order.id}`;
+
+    const customerName = getCustomerName(order.customerId);
+
+    // Sellers summary
+    let sellerSummary = '—';
+    if (order.items && order.items.length > 0) {
+        const uniqueSellerIds = [...new Set(order.items.map(i => i.sellerId).filter(Boolean))];
+        if (uniqueSellerIds.length === 0) {
+            sellerSummary = '—';
+        } else if (uniqueSellerIds.length > 1) {
+            sellerSummary = 'Multiple Sellers';
+        } else {
+            sellerSummary = getSellerName(uniqueSellerIds[0]);
+        }
+    } else if (order.sellerId) {
+        sellerSummary = getSellerName(order.sellerId);
+    }
+
+    const createdAt = formatDate(order.date || order.createdAt);
+    const total = formatPrice(order.totalPrice || order.total || order.subtotal);
+
+    const items = Array.isArray(order.items) ? order.items : [];
+
+    const itemsRows = items.map((item, idx) => {
+        const name = item.name || item.productName || item.product || `Item ${idx + 1}`;
+        const qty = item.quantity || item.qty || 1;
+        const price = Number(item.price) || 0;
+        const lineTotal = price * qty;
+        const seller = item.sellerId ? getSellerName(item.sellerId) : sellerSummary;
+        return `
+            <tr>
+                <td>${idx + 1}</td>
+                <td>${name}</td>
+                <td>${seller}</td>
+                <td>${qty}</td>
+                <td>${formatPrice(price)}</td>
+                <td>${formatPrice(lineTotal)}</td>
+            </tr>
+        `;
+    }).join('') || `
+        <tr>
+            <td colspan="6" class="empty-state">No line items recorded for this order.</td>
+        </tr>
+    `;
+
+    const shippingAddress = order.shippingAddress || order.address || order.fullAddress || null;
+    const paymentMethod = order.paymentMethod || order.payment || 'Not specified';
+
+    bodyEl.innerHTML = `
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <h6 class="fw-bold mb-1">Summary</h6>
+                <p class="mb-1"><strong>Status:</strong> ${statusBadge(order.status)}</p>
+                <p class="mb-1"><strong>Placed on:</strong> ${createdAt}</p>
+                <p class="mb-1"><strong>Total:</strong> ${total}</p>
+                <p class="mb-0"><strong>Payment:</strong> ${paymentMethod}</p>
+            </div>
+            <div class="col-md-6">
+                <h6 class="fw-bold mb-1">Participants</h6>
+                <p class="mb-1"><strong>Customer:</strong> ${customerName}</p>
+                <p class="mb-0"><strong>Seller(s):</strong> ${sellerSummary}</p>
+            </div>
+        </div>
+
+        <h6 class="fw-bold mb-2">Items</h6>
+        <div class="table-responsive mb-3">
+            <table class="table table-sm align-middle">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Product</th>
+                        <th>Seller</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${itemsRows}
+                </tbody>
+            </table>
+        </div>
+
+        ${shippingAddress ? `
+        <h6 class="fw-bold mb-1">Shipping Address</h6>
+        <p class="mb-0">${shippingAddress}</p>
+        ` : ''}
+    `;
+
+    new bootstrap.Modal(modalEl).show();
+}
 
 // ─── EVENT LISTENERS ─────────────────────────────────────────
 
@@ -214,6 +324,14 @@ function bindOrdersEvents() {
                 if (newStatus !== oldStatus) {
                     confirmChangeOrderStatus(id, newStatus, e.target);
                 }
+            }
+        };
+
+        tbody.onclick = (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            if (btn.dataset.action === 'view') {
+                openOrderDetail(btn.dataset.id);
             }
         };
     }

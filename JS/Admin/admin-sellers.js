@@ -67,7 +67,7 @@ export function renderSellersTable() {
             <tr>
                 <td colspan="9" class="empty-state">
                     ${sellers.length === 0
-                ? 'No sellers registered yet. <a href="/Html/Admin/AddSeller.html">Add one now.</a>'
+                ? 'No sellers registered yet. Use the button above to onboard a new vendor.'
                 : 'No sellers match your search.'}
                 </td>
             </tr>`;
@@ -233,10 +233,16 @@ export function submitAddSeller(e) {
 
     // Check for duplicate email
     const allUsers = getUsers();
-    const emailExists = allUsers.some(u => u.email.toLowerCase() === email);
-
+    const emailExists = allUsers.some(u => (u.email || '').toLowerCase() === email);
     if (emailExists) {
         showToast('Email already exists. Please use a different email.', 'error');
+        return;
+    }
+
+    // Check for duplicate store name
+    const storeExists = allUsers.some(u => (u.storeName || '').toLowerCase() === storeName.toLowerCase());
+    if (storeExists) {
+        showToast('Store name is already taken. Please choose another.', 'error');
         return;
     }
 
@@ -453,14 +459,28 @@ export function saveSellerEdit() {
     const index = sellers.findIndex(s => s.id == id);
     if (index === -1) return;
 
+    const newStoreName = document.getElementById('editSellerStoreName').value.trim();
+    // Check store name uniqueness (excluding current seller)
+    const storeExists = getUsers().some(u =>
+        u.role === ROLES.SELLER &&
+        u.id !== id &&
+        (u.storeName || '').toLowerCase() === newStoreName.toLowerCase()
+    );
+    if (storeExists) {
+        showToast('Store name is already taken by another seller.', 'error');
+        return;
+    }
+
     sellers[index] = {
         ...sellers[index],
         fullName: document.getElementById('editSellerFullName').value.trim(),
+        name: document.getElementById('editSellerFullName').value.trim(),
         email: document.getElementById('editSellerEmail').value.trim(),
         phone: document.getElementById('editSellerPhone').value.trim(),
-        storeName: document.getElementById('editSellerStoreName').value.trim(),
+        storeName: newStoreName,
         city: document.getElementById('editSellerCity').value.trim(),
         description: document.getElementById('editSellerDescription').value.trim(),
+        storeDescription: document.getElementById('editSellerDescription').value.trim(),
         paymentMethod: document.getElementById('editSellerPayment').value,
     };
 
