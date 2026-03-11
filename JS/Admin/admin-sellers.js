@@ -15,7 +15,7 @@ import {
     showToast,
     showConfirm,
     escapeHTML
-} from '../Admin/admin-helpers.js';
+} from './admin-helpers.js';
 
 import { ROLES } from '../Core/Auth.js';
 

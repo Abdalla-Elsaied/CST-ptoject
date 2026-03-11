@@ -4,7 +4,7 @@
 // Depends on: admin-helpers.js, Constants.js
 // ============================================================
 
-import { KEY_CATEGORIES } from '../Core\Constants.js';
+import { KEY_CATEGORIES } from '../Core/Constants.js';
 import { showToast, showConfirm, escapeHTML } from './admin-helpers.js';
 
 /**

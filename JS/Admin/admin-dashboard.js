@@ -8,7 +8,7 @@ import {
     formatPrice,
     statusBadge,
     escapeHTML
-} from '../Admin/admin-helpers.js';
+} from './admin-helpers.js';
 
 
 /**

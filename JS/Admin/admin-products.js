@@ -15,7 +15,7 @@ import {
     showToast,
     showConfirm,
     escapeHTML
-} from '../Admin/admin-helpers.js';
+} from './admin-helpers.js';
 import { KEY_CATEGORIES } from '../Core/Constants.js';
 
 // Active filter state — persists while user stays on products section

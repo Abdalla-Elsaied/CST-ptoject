@@ -15,7 +15,7 @@ import {
     showConfirm,
     showToast,
     escapeHTML
-} from '../Admin/admin-helpers.js';
+} from './admin-helpers.js';
 
 import { getLS } from '../Core/Storage.js';
 import { ROLES } from '../Core/Auth.js';
