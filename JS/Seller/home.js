@@ -83,9 +83,21 @@ $(function () {
       return;
     }
 
+    if (fileName === 'productreviews.html') {
+      setActiveNavLink('#productReviewsLink');
+      $pageTitle.text('Product Reviews');
+      return;
+    }
+
     if (fileName === 'categorypage.html') {
       setActiveNavLink('#categoriesLink');
       $pageTitle.text('Categories');
+      return;
+    }
+
+    if (fileName === 'customers.html') {
+      setActiveNavLink('#customersLink');
+      $pageTitle.text('Customers');
       return;
     }
 
@@ -1208,6 +1220,15 @@ $(function () {
     closeMobileSidebar();
   }
 
+  function showProductReviews() {
+    $embeddedPageFrame.attr('src', 'ProductReviews.html');
+    $dashboardView.hide();
+    $orderManagementView.show();
+    $pageTitle.text('Product Reviews');
+    setActiveNavLink('#productReviewsLink');
+    closeMobileSidebar();
+  }
+
   function showCategories(searchText) {
     const searchValue = String(searchText ?? '').trim();
     const url = searchValue ? `CategoryPage.html?search=${encodeURIComponent(searchValue)}` : 'CategoryPage.html';
@@ -1216,6 +1237,15 @@ $(function () {
     $orderManagementView.show();
     $pageTitle.text('Categories');
     setActiveNavLink('#categoriesLink');
+    closeMobileSidebar();
+  }
+
+  function showCustomers() {
+    $embeddedPageFrame.attr('src', 'Customers.html');
+    $dashboardView.hide();
+    $orderManagementView.show();
+    $pageTitle.text('Customers');
+    setActiveNavLink('#customersLink');
     closeMobileSidebar();
   }
 
@@ -1313,12 +1343,20 @@ $(function () {
       showProductMedia();
       return true;
     }
+    if (page === 'productreviews') {
+      showProductReviews();
+      return true;
+    }
     if (page === 'addproduct') {
       showaddProductPage();
       return true;
     }
     if (page === 'categories') {
       showCategories();
+      return true;
+    }
+    if (page === 'customers') {
+      showCustomers();
       return true;
     }
     return false;
@@ -1400,6 +1438,9 @@ $(function () {
   $('#categoriesLink').on('click', function () {
     showCategories();
   });
+  $('#customersLink').on('click', function () {
+    showCustomers();
+  });
 
   $('#categoriesSeeMoreBtn').on('click', function () {
     showCategories();
@@ -1434,6 +1475,9 @@ $(function () {
 
   $('#productMediaLink').on('click', function () {
     showProductMedia();
+  });
+  $('#productReviewsLink').on('click', function () {
+    showProductReviews();
   });
 
   const $globalSearchInput = $('.topnav .search-input');

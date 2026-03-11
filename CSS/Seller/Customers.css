@@ -1,0 +1,166 @@
+.customers-page {
+  display: block;
+  min-height: 100vh;
+}
+
+.customers-page .dashboard-content {
+  padding: 24px;
+}
+
+.customers-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.customers-header h2 {
+  margin: 0 0 8px;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.customers-eyebrow {
+  margin: 0 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.7rem;
+  color: var(--text-sec);
+  font-weight: 700;
+}
+
+.customers-sub {
+  margin: 0;
+  color: var(--text-sec);
+}
+
+.customers-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-filter-light {
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 7px 16px;
+}
+
+.customers-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.customers-panel {
+  margin-bottom: 30px;
+}
+
+.customers-panel-head {
+  align-items: flex-start;
+}
+
+.customers-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.filter-field {
+  display: grid;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-sec);
+}
+
+.filter-field input,
+.filter-field select {
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--page-bg);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  font-size: 0.9rem;
+}
+
+.customers-table th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.customers-table td {
+  vertical-align: middle;
+}
+
+.customer-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+}
+
+.customer-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--green-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.8rem;
+}
+
+.role-badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.role-badge.customer {
+  background: rgba(34, 197, 94, 0.14);
+  color: var(--green-dark);
+}
+
+.role-badge.seller {
+  background: rgba(59, 130, 246, 0.16);
+  color: #1d4ed8;
+}
+
+.role-badge.admin {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--warning);
+}
+
+.customers-empty {
+  text-align: center;
+  padding: 30px 10px 10px;
+  color: var(--text-sec);
+}
+
+.customers-empty i {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 10px;
+  color: var(--warning);
+}
+
+@media (max-width: 767.98px) {
+  .customers-actions {
+    width: 100%;
+  }
+  .customers-actions button {
+    flex: 1;
+  }
+}

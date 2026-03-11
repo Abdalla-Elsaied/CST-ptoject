@@ -160,6 +160,13 @@ body.dark .category-table .badge.active {
   color: var(--text-primary);
 }
 
+.category-table .actions-end {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .modal {
   position: fixed;
   inset: 0;
