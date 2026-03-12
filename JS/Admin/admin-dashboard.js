@@ -112,38 +112,34 @@ function renderKPICards() {
         {
             label: 'Total Sellers',
             value: sellers.length,
-            icon: '<i class="bi bi-shop"></i>',
-            color: 'var(--green-primary)',
-            border: 'var(--green-dark)',
+            icon: 'bi-shop',
             section: 'sellers',
-            trend: trends.sellers
+            trend: trends.sellers,
+            iconClass: 'sellers'
         },
         {
             label: 'Total Customers',
             value: customerCount,
-            icon: '<i class="bi bi-people"></i>',
-            color: '#3b82f6',
-            border: '#1d4ed8',
+            icon: 'bi-people',
             section: 'customers',
-            trend: trends.customers
+            trend: trends.customers,
+            iconClass: 'customers'
         },
         {
             label: 'Total Products',
             value: products.filter(p => p.isActive !== false).length,
-            icon: '<i class="bi bi-box-seam"></i>',
-            color: '#8b5cf6',
-            border: '#6d28d9',
+            icon: 'bi-box-seam',
             section: 'products',
-            trend: trends.products
+            trend: trends.products,
+            iconClass: 'products'
         },
         {
             label: 'Total Revenue',
             value: formatPrice(totalRevenue),
-            icon: '<i class="bi bi-cash-stack"></i>',
-            color: '#f59e0b',
-            border: '#b45309',
+            icon: 'bi-cash-stack',
             section: 'orders',
-            trend: trends.revenue
+            trend: trends.revenue,
+            iconClass: 'orders'
         }
     ];
 
@@ -151,14 +147,26 @@ function renderKPICards() {
     if (!container) return;
 
     container.innerHTML = cards.map(card => `
-        <div class="col-sm-6 col-xl-3">
-            <div class="kpi-card" style="border-top: 4px solid ${card.border}" data-section="${card.section}">
-                <div class="kpi-header">
-                    <div class="kpi-icon ${getIconClass(card.section)}">${card.icon}</div>
-                    ${card.trend ? `<div class="kpi-trend ${card.trend.direction}">${card.trend.icon} ${card.trend.text}</div>` : ''}
+        <div class="kpi-card" data-section="${card.section}">
+            <div class="kpi-card-header">
+                <div class="kpi-icon-wrapper ${card.iconClass}">
+                    <i class="bi ${card.icon}"></i>
                 </div>
+                ${card.trend ? `
+                    <div class="kpi-trend ${card.trend.direction === 'up' ? 'positive' : 'negative'}">
+                        ${card.trend.icon} ${card.trend.percentage || Math.floor(Math.random() * 15) + 5}%
+                    </div>
+                ` : ''}
+            </div>
+            <div class="kpi-content">
                 <div class="kpi-label">${card.label}</div>
-                <div class="kpi-value" style="color:${card.color}">${card.value}</div>
+                <div class="kpi-value">${card.value}</div>
+                ${card.trend ? `
+                    <div class="kpi-change ${card.trend.direction === 'up' ? 'positive' : 'negative'}">
+                        <span class="kpi-change-icon">${card.trend.icon}</span>
+                        ${card.trend.text}
+                    </div>
+                ` : ''}
             </div>
         </div>
     `).join('');
@@ -183,30 +191,50 @@ function renderKPICards() {
 function calculateTrends(sellersCount, customersCount, productsCount, revenue) {
     // Mock trend data - in real app, get from analytics/historical data
     const trends = {
-        sellers: sellersCount > 0 ? { direction: 'up', icon: '↑', text: '+2 this week' } : null,
-        customers: customersCount > 2 ? { direction: 'up', icon: '↑', text: '+5 this week' } : 
-                   customersCount > 0 ? { direction: 'up', icon: '↑', text: '+1 this week' } : null,
-        products: productsCount > 3 ? { direction: 'up', icon: '↑', text: '+3 this week' } : 
-                  productsCount > 0 ? { direction: 'up', icon: '↑', text: '+1 this week' } : null,
-        revenue: revenue > 100 ? { direction: 'up', icon: '↑', text: '+12% this week' } : 
-                 revenue > 0 ? { direction: 'up', icon: '↑', text: 'First sales!' } : null
+        sellers: sellersCount > 0 ? { 
+            direction: 'up', 
+            icon: '↗', 
+            text: '+2 this week',
+            percentage: Math.floor(Math.random() * 20) + 5
+        } : null,
+        customers: customersCount > 2 ? { 
+            direction: 'up', 
+            icon: '↗', 
+            text: '+5 this week',
+            percentage: Math.floor(Math.random() * 25) + 8
+        } : customersCount > 0 ? { 
+            direction: 'up', 
+            icon: '↗', 
+            text: '+1 this week',
+            percentage: Math.floor(Math.random() * 15) + 3
+        } : null,
+        products: productsCount > 3 ? { 
+            direction: 'up', 
+            icon: '↗', 
+            text: '+3 this week',
+            percentage: Math.floor(Math.random() * 18) + 6
+        } : productsCount > 0 ? { 
+            direction: 'up', 
+            icon: '↗', 
+            text: '+1 this week',
+            percentage: Math.floor(Math.random() * 12) + 2
+        } : null,
+        revenue: revenue > 100 ? { 
+            direction: 'up', 
+            icon: '↗', 
+            text: '+12% this week',
+            percentage: Math.floor(Math.random() * 30) + 10
+        } : revenue > 0 ? { 
+            direction: 'up', 
+            icon: '↗', 
+            text: 'First sales!',
+            percentage: 100
+        } : null
     };
 
     return trends;
 }
 
-/**
- * Returns the appropriate icon class based on the section.
- */
-function getIconClass(section) {
-    const iconClasses = {
-        sellers: 'green',
-        customers: 'blue', 
-        products: 'purple',
-        orders: 'yellow'
-    };
-    return iconClasses[section] || 'green';
-}
 
 
 // ─── RECENT SELLERS TABLE ────────────────────────────────────
