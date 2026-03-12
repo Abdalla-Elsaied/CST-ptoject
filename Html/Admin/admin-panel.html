@@ -300,27 +300,58 @@
                     <h2 class="section-title">User Management</h2>
                     <p class="section-subtitle" id="customersCount">Loading...</p>
                 </div>
+                <div class="d-flex gap-2">
+                    <button class="btn-outline-green" id="bulkActionsBtn" style="display: none;">
+                        <i class="bi bi-check2-square"></i> Bulk Actions
+                    </button>
+                    <button class="btn-primary-green" onclick="window.open('../Customer/register.html', '_blank')">
+                        <i class="bi bi-person-plus"></i> Add User
+                    </button>
+                </div>
             </div>
 
-            <!-- Search bar -->
+            <!-- Search and filters -->
             <div class="filter-bar">
                 <input type="text" id="customerSearchInput" class="filter-input"
                     placeholder="Search by name, email, or role...">
+                <select id="customerStatusFilter" class="filter-select">
+                    <option value="All">All Status</option>
+                    <option value="Active">Active Users</option>
+                    <option value="Banned">Banned Users</option>
+                </select>
+                <select id="customerRoleFilter" class="filter-select">
+                    <option value="All">All Roles</option>
+                    <option value="customer">Customers</option>
+                    <option value="seller">Sellers</option>
+                    <option value="admin">Admins</option>
+                </select>
             </div>
 
             <!-- Table -->
             <div class="data-card">
+                <div class="data-card-header">
+                    <span>User Management</span>
+                    <div class="header-actions">
+                        <button class="btn-outline-green btn-sm" onclick="exportUsersData()">
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                    </div>
+                </div>
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-hover align-middle mb-0 users-table">
                         <thead>
                             <tr>
-                                <th>#</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Registered</th>
-                                <th>Orders</th>
-                                <th class="text-center">Actions</th>
+                                <th style="width: 40px;">
+                                    <input type="checkbox" id="selectAllUsers" class="form-check-input">
+                                </th>
+                                <th style="width: 50px;">#</th>
+                                <th style="width: 200px;">User</th>
+                                <th style="width: 180px;">Contact</th>
+                                <th style="width: 100px;">Role</th>
+                                <th style="width: 100px;">Status</th>
+                                <th style="width: 120px;">Joined</th>
+                                <th style="width: 80px;">Orders</th>
+                                <th style="width: 160px;" class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="customersTableBody"></tbody>
