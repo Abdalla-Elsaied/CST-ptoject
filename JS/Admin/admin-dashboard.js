@@ -10,15 +10,80 @@ import {
     escapeHTML
 } from './admin-helpers.js';
 
+import { getLS } from '../Core/Storage.js';
+
 
 /**
  * Main function for the dashboard section.
  * Called every time the user clicks "Dashboard" in the sidebar.
  */
 export function renderDashboard() {
+    renderActionAlerts();
     renderKPICards();
     renderRecentSellers();
     renderRecentOrders();
+}
+
+/**
+ * Renders action alerts banner showing pending items that need attention.
+ */
+function renderActionAlerts() {
+    const alertsContainer = document.getElementById('actionAlerts');
+    if (!alertsContainer) return;
+
+    const requests = getLS('ls_approval') || [];
+    const pendingRequests = requests.filter(r => r.status === 'pending').length;
+    
+    const categories = getLS('ls_categories') || [];
+    const pendingCategories = categories.filter(c => c.visibility === 'draft').length;
+
+    const alerts = [];
+    
+    if (pendingRequests > 0) {
+        alerts.push({
+            icon: 'bi-person-check',
+            text: `${pendingRequests} seller request${pendingRequests > 1 ? 's' : ''} pending review`,
+            action: 'Review Now',
+            section: 'requests'
+        });
+    }
+    
+    if (pendingCategories > 0) {
+        alerts.push({
+            icon: 'bi-tags',
+            text: `${pendingCategories} category suggestion${pendingCategories > 1 ? 's' : ''} waiting`,
+            action: 'Review Now',
+            section: 'categories'
+        });
+    }
+
+    if (alerts.length === 0) {
+        alertsContainer.innerHTML = '';
+        return;
+    }
+
+    alertsContainer.innerHTML = `
+        <div class="action-alerts">
+            ${alerts.map(alert => `
+                <div class="alert-item">
+                    <i class="bi ${alert.icon}"></i>
+                    <span class="alert-text">⚠️ ${alert.text}</span>
+                    <button class="alert-action" data-section="${alert.section}">
+                        ${alert.action} →
+                    </button>
+                </div>
+            `).join('')}
+        </div>
+    `;
+
+    // Bind click events to alert action buttons
+    alertsContainer.querySelectorAll('.alert-action[data-section]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const section = btn.dataset.section;
+            const navLink = document.querySelector(`[data-section="${section}"]`);
+            if (navLink) navLink.click();
+        });
+    });
 }
 
 
@@ -46,28 +111,32 @@ function renderKPICards() {
             value: sellers.length,
             icon: '<i class="bi bi-shop"></i>',
             color: 'var(--green-primary)',
-            border: 'var(--green-dark)'
+            border: 'var(--green-dark)',
+            section: 'sellers'
         },
         {
             label: 'Total Customers',
             value: customerCount,
             icon: '<i class="bi bi-people"></i>',
             color: '#3b82f6',
-            border: '#1d4ed8'
+            border: '#1d4ed8',
+            section: 'customers'
         },
         {
             label: 'Total Products',
             value: products.filter(p => p.isActive !== false).length,
             icon: '<i class="bi bi-box-seam"></i>',
             color: '#8b5cf6',
-            border: '#6d28d9'
+            border: '#6d28d9',
+            section: 'products'
         },
         {
             label: 'Total Revenue',
             value: formatPrice(totalRevenue),
             icon: '<i class="bi bi-cash-stack"></i>',
             color: '#f59e0b',
-            border: '#b45309'
+            border: '#b45309',
+            section: 'orders'
         }
     ];
 
@@ -76,13 +145,38 @@ function renderKPICards() {
 
     container.innerHTML = cards.map(card => `
         <div class="col-sm-6 col-xl-3">
-            <div class="kpi-card" style="border-top: 4px solid ${card.border}">
-                <div class="kpi-icon">${card.icon}</div>
+            <div class="kpi-card" style="border-top: 4px solid ${card.border}" data-section="${card.section}">
+                <div class="kpi-icon ${getIconClass(card.section)}">${card.icon}</div>
                 <div class="kpi-label">${card.label}</div>
                 <div class="kpi-value" style="color:${card.color}">${card.value}</div>
             </div>
         </div>
     `).join('');
+
+    // Make KPI cards clickable - navigate to their section
+    container.querySelectorAll('.kpi-card[data-section]').forEach(card => {
+        card.addEventListener('click', () => {
+            const section = card.dataset.section;
+            if (section) {
+                // Trigger the sidebar navigation
+                const navLink = document.querySelector(`[data-section="${section}"]`);
+                if (navLink) navLink.click();
+            }
+        });
+    });
+}
+
+/**
+ * Returns the appropriate icon class based on the section.
+ */
+function getIconClass(section) {
+    const iconClasses = {
+        sellers: 'green',
+        customers: 'blue', 
+        products: 'purple',
+        orders: 'yellow'
+    };
+    return iconClasses[section] || 'green';
 }
 
 
@@ -101,7 +195,14 @@ function renderRecentSellers() {
     if (sellers.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="4" class="empty-state">No sellers registered yet.</td>
+                <td colspan="4" class="empty-state">
+                    <i class="bi bi-shop empty-icon"></i>
+                    <p>No sellers registered yet</p>
+                    <p class="empty-sub">Add your first seller to get started</p>
+                    <button class="btn-primary-green" onclick="openAddSellerModal()">
+                        <i class="bi bi-plus-lg"></i> Onboard Seller
+                    </button>
+                </td>
             </tr>`;
         return;
     }
@@ -131,7 +232,14 @@ function renderRecentOrders() {
     if (orders.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="5" class="empty-state">No orders placed yet.</td>
+                <td colspan="5" class="empty-state">
+                    <i class="bi bi-receipt empty-icon"></i>
+                    <p>No orders placed yet</p>
+                    <p class="empty-sub">Orders will appear here once customers start purchasing</p>
+                    <button class="btn-outline-green" onclick="document.querySelector('[data-section=\\"products\\"]').click()">
+                        <i class="bi bi-box-seam"></i> View Products
+                    </button>
+                </td>
             </tr>`;
         return;
     }
