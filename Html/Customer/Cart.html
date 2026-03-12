@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Shopping Cart – DEALPORT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="../../CSS/Customer/CustomerHomePage.css"/>
+  <link rel="stylesheet" href="../../CSS/Customer/Cart.css"/>
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<header class="navbar-top sticky-top">
+  <div class="container-fluid px-3 px-lg-4">
+    <div class="d-flex align-items-center gap-3 gap-lg-4 py-2">
+
+      <!-- Logo -->
+      <a href="CustomerHomePage.html" class="logo-brand text-decoration-none flex-shrink-0">
+        <span class="logo-deal">DEAL</span><span class="logo-port"><i class="bi bi-shop"></i>RT</span>
+      </a>
+
+      <!-- Breadcrumb (desktop) -->
+      <div class="flex-grow-1 d-none d-md-block">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-0 small">
+            <li class="breadcrumb-item"><a href="CustomerHomePage.html" class="text-success text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item active">Shopping Cart</li>
+          </ol>
+        </nav>
+      </div>
+
+      <!-- Right Icons -->
+      <div class="nav-icons d-flex align-items-center gap-2 gap-lg-3 flex-shrink-0 ms-auto">
+        <!-- Cart (active) -->
+        <a href="Cart.html" class="nav-icon-btn d-flex flex-column align-items-center position-relative text-decoration-none"
+           style="color: var(--green-dark)">
+          <i class="bi bi-cart3"></i>
+          <span class="cart-badge" id="cartBadge">0</span>
+          <span>Cart</span>
+        </a>
+        <!-- Account dropdown -->
+        <div class="dropdown">
+          <button class="nav-icon-btn d-none d-md-flex flex-column align-items-center border-0 bg-transparent"
+                  id="accountNavBtn" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person"></i>
+            <span id="accountNavLabel">Account</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end account-dropdown" id="accountDropdownMenu">
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main class="cart-page">
+  <div class="container-fluid px-3 px-lg-4">
+
+    <h1 class="cart-page-title"><i class="bi bi-cart3 me-2 text-success"></i>Shopping Cart</h1>
+    <p class="cart-breadcrumb">
+      <a href="CustomerHomePage.html">Home</a> &rsaquo; Cart
+    </p>
+
+    <!-- ── Empty State (hidden by default) ── -->
+    <div id="cartEmpty" class="cart-empty d-none">
+      <i class="bi bi-cart-x cart-empty-icon"></i>
+      <h3>Your cart is empty</h3>
+      <p>Looks like you haven't added any items yet. Start shopping to fill it up!</p>
+      <a href="CustomerHomePage.html" class="btn btn-add-cart px-4">
+        <i class="bi bi-arrow-left me-2"></i>Continue Shopping
+      </a>
+    </div>
+
+    <!-- ── Cart Content (hidden until loaded) ── -->
+    <div id="cartContent" class="d-none">
+      <div class="row g-4">
+
+        <!-- LEFT: Cart Items -->
+        <div class="col-lg-8">
+          <div class="cart-panel">
+            <div class="cart-panel-header">
+              <h5><i class="bi bi-bag me-2 text-success"></i>Items in Your Cart <span class="text-muted fw-400 fs-6" id="cartItemCount"></span></h5>
+              <button class="btn-clear-cart" id="btnClearCart">
+                <i class="bi bi-trash3 me-1"></i> Clear Cart
+              </button>
+            </div>
+            <!-- Cart items injected here -->
+            <div id="cartItemsList"></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Order Summary -->
+        <div class="col-lg-4">
+          <div class="summary-panel">
+            <h5><i class="bi bi-receipt me-2 text-success"></i>Order Summary</h5>
+
+            <!-- Free shipping progress bar -->
+            <div class="free-shipping-bar" id="shippingBar">
+              <div id="shippingBarText"></div>
+              <div class="progress-track">
+                <div class="progress-fill" id="shippingBarFill" style="width:0%"></div>
+              </div>
+            </div>
+
+            <!-- Promo code -->
+            <div class="promo-wrap">
+              <label class="checkout-field-label">Promo Code</label>
+              <div class="promo-group">
+                <input type="text" class="promo-input" id="promoInput" placeholder="Enter code"/>
+                <button class="btn-promo-apply" id="promoApplyBtn">Apply</button>
+              </div>
+              <div id="promoMsg" class="small mt-1"></div>
+            </div>
+
+            <!-- Summary rows -->
+            <div class="summary-row">
+              <span>Subtotal (<span id="summaryItemCount">0</span> items)</span>
+              <span class="val" id="summarySubtotal">$0.00</span>
+            </div>
+            <div class="summary-row">
+              <span>Shipping</span>
+              <span class="val" id="summaryShipping">$0.00</span>
+            </div>
+            <div class="summary-row" id="summaryDiscountRow" style="display:none">
+              <span>Promo Discount</span>
+              <span class="val text-success" id="summaryDiscount">-$0.00</span>
+            </div>
+            <hr class="summary-divider"/>
+            <div class="summary-row total">
+              <span>Total</span>
+              <span class="val" id="summaryTotal">$0.00</span>
+            </div>
+
+            <!-- Checkout button -->
+            <button class="btn-checkout mt-4" id="btnCheckout">
+              <i class="bi bi-lock-fill me-2"></i>Proceed to Checkout
+            </button>
+            <a href="CustomerHomePage.html" class="btn-continue-shopping">
+              <i class="bi bi-arrow-left me-1"></i> Continue Shopping
+            </a>
+
+            <!-- Trust badges -->
+            <div class="trust-badges">
+              <div class="trust-badge">
+                <i class="bi bi-shield-lock-fill"></i>
+                <span>Secure</span>
+              </div>
+              <div class="trust-badge">
+                <i class="bi bi-truck"></i>
+                <span>Fast Delivery</span>
+              </div>
+              <div class="trust-badge">
+                <i class="bi bi-arrow-repeat"></i>
+                <span>Easy Returns</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ===== CHECKOUT MODAL ===== -->
+<div class="modal fade" id="checkoutModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-md">
+    <div class="modal-content" style="border-radius:16px; overflow:hidden;">
+
+      <!-- Success state (hidden by default) -->
+      <div id="checkoutSuccess" class="d-none">
+        <div class="order-success">
+          <div class="order-success-icon">
+            <i class="bi bi-check-lg"></i>
+          </div>
+          <h4>Order Placed! 🎉</h4>
+          <p class="text-muted small mb-3">Thank you for your purchase. Your order has been received.</p>
+          <div class="order-id-badge" id="orderIdBadge"></div>
+          <p class="text-muted small mb-4">You can track your order in your profile under <strong>My Orders</strong>.</p>
+          <a href="profile.html#orders" class="btn btn-add-cart px-4 me-2">View Order</a>
+          <a href="CustomerHomePage.html" class="btn-continue-shopping d-inline-block px-4" style="width:auto">Keep Shopping</a>
+        </div>
+      </div>
+
+      <!-- Form state -->
+      <div id="checkoutForm">
+        <div class="modal-header border-0 pb-0 px-4 pt-4">
+          <h5 class="fw-800"><i class="bi bi-bag-check me-2 text-success"></i>Checkout</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body px-4 pb-4">
+
+          <!-- Order mini-summary -->
+          <div class="free-shipping-bar mb-3" id="checkoutOrderSummary" style="text-align:left">
+          </div>
+
+          <!-- Delivery address -->
+          <label class="checkout-field-label">Delivery Address *</label>
+          <textarea class="checkout-input" id="checkoutAddress" rows="2"
+                    placeholder="e.g. 42 El Nasr St, Cairo, Egypt"></textarea>
+
+          <!-- Payment method -->
+          <label class="checkout-field-label">Payment Method</label>
+          <label class="payment-option">
+            <input type="radio" name="paymentMethod" value="cash" checked/>
+            <i class="bi bi-cash-coin"></i> Cash on Delivery
+          </label>
+          <label class="payment-option">
+            <input type="radio" name="paymentMethod" value="card"/>
+            <i class="bi bi-credit-card"></i> Credit / Debit Card
+          </label>
+          <label class="payment-option">
+            <input type="radio" name="paymentMethod" value="instapay"/>
+            <i class="bi bi-phone"></i> InstaPay / Wallet
+          </label>
+
+          <div id="checkoutError" class="alert alert-danger d-none py-2 small mt-3 mb-0"></div>
+
+          <button class="btn-place-order" id="btnPlaceOrder">
+            <i class="bi bi-bag-check me-2"></i>Place Order
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<footer class="site-footer">
+  <div class="container-fluid px-3 px-lg-4">
+    <div class="footer-bottom" style="border-top: 1.5px solid rgba(255,255,255,0.1); padding: 20px 0;">
+      <p>© 2025 Dealport. All rights reserved.</p>
+      <div class="social-icons">
+        <a href="CustomerHomePage.html" class="text-muted small text-decoration-none">
+          <i class="bi bi-arrow-left me-1"></i> Back to Shopping
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module" src="../../JS/Customer/CartPage.js"></script>
+</body>
+</html>

@@ -123,6 +123,11 @@ function productCardHTML(p) {
           <div class="product-actions">
             <button class="btn btn-add-cart${outOfStock ? ' btn-out-of-stock' : ''}"
                     data-id="${p.id}"
+                    data-name="${p.name.replace(/"/g, '&quot;')}"
+                    data-price="${p.price}"
+                    data-old-price="${p.oldPrice || ''}"
+                    data-category="${p.category}"
+                    data-image="${imgSrc}"
                     ${outOfStock ? 'disabled' : ''}>
               <i class="bi bi-cart-plus me-1"></i>
               ${outOfStock ? 'Out of Stock' : 'Add to Cart'}
