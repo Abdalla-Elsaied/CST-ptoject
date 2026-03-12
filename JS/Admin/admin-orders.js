@@ -17,6 +17,8 @@ import {
     showConfirm
 } from './admin-helpers.js';
 
+import { logAdminAction } from './admin-profile.js';
+
 // Active filter state
 const orderFilters = {
     search: '',
@@ -402,6 +404,7 @@ export function confirmChangeOrderStatus(orderId, newStatus, selectElement) {
         }
         
         saveOrders(orders);
+        logAdminAction('changed_order_status', `Order #${orderId} (${currentStatus} → ${newStatus})`, orderId);
         renderOrdersTable();
         
         console.log(`[AUDIT] Order #${orderId} status changed from ${currentStatus} to ${newStatus}`);

@@ -17,6 +17,7 @@ import {
     escapeHTML
 } from './admin-helpers.js';
 import { KEY_CATEGORIES } from '../Core/Constants.js';
+import { logAdminAction } from './admin-profile.js';
 
 // Active filter state — persists while user stays on products section
 let productFilters = {
@@ -227,7 +228,10 @@ export function confirmDeactivateProduct(id) {
 
     showConfirm(
         `Deactivate "${product.name || product.productName}"? It will be hidden from the catalog.`,
-        () => toggleProductStatus(id, false)
+        () => {
+            toggleProductStatus(id, false);
+            logAdminAction('deactivated_product', product.name || product.productName, id);
+        }
     );
 }
 
@@ -253,6 +257,7 @@ export function confirmDeleteProduct(id) {
     showConfirm(message, () => {
         const updated = getProducts().filter(p => p.id != id);
         saveProducts(updated);
+        logAdminAction('deleted_product', productName, id);
         renderProductsTable();
         showToast('Product deleted.', 'error');
     });

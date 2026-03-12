@@ -57,6 +57,19 @@ $(document).ready(function () {
       return;
     }
 
+    // Update last login timestamp
+    const users = JSON.parse(localStorage.getItem('ls_users') || '[]');
+    const userIndex = users.findIndex(u => u.id === user.id);
+    
+    if (userIndex !== -1) {
+      users[userIndex].lastLoginAt = new Date().toISOString();
+      localStorage.setItem('ls_users', JSON.stringify(users));
+      
+      // Update current user as well
+      user.lastLoginAt = users[userIndex].lastLoginAt;
+      localStorage.setItem('ls_currentUser', JSON.stringify(user));
+    }
+
     // Check if user is suspended
     if (user.isSuspended) {
       alert("Your account has been suspended. Please contact support.");

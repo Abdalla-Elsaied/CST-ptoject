@@ -11,6 +11,7 @@ import {
 } from './admin-helpers.js';
 
 import { getLS } from '../Core/Storage.js';
+import { updateSidebarBadges } from './admin-profile.js';
 
 
 /**
@@ -18,6 +19,7 @@ import { getLS } from '../Core/Storage.js';
  * Called every time the user clicks "Dashboard" in the sidebar.
  */
 export function renderDashboard() {
+    updateSidebarBadges(); // Update badges when dashboard loads
     renderActionAlerts();
     renderKPICards();
     renderRecentSellers();
@@ -31,11 +33,11 @@ function renderActionAlerts() {
     const alertsContainer = document.getElementById('actionAlerts');
     if (!alertsContainer) return;
 
-    const requests = getLS('ls_approval') || [];
+    const requests = getLS('ls_sellerRequests') || getLS('ls_approval') || [];
     const pendingRequests = requests.filter(r => r.status === 'pending').length;
     
-    const categories = getLS('ls_categories') || [];
-    const pendingCategories = categories.filter(c => c.visibility === 'draft').length;
+    const categories = getLS('ls_categoryRequests') || getLS('ls_categories') || [];
+    const pendingCategories = categories.filter(c => c.status === 'pending' || c.visibility === 'draft').length;
 
     const alerts = [];
     
@@ -80,8 +82,12 @@ function renderActionAlerts() {
     alertsContainer.querySelectorAll('.alert-action[data-section]').forEach(btn => {
         btn.addEventListener('click', () => {
             const section = btn.dataset.section;
-            const navLink = document.querySelector(`[data-section="${section}"]`);
-            if (navLink) navLink.click();
+            if (window.activateSection) {
+                window.activateSection(section);
+            } else {
+                const navLink = document.querySelector(`[data-section="${section}"]`);
+                if (navLink) navLink.click();
+            }
         });
     });
 }
@@ -176,11 +182,21 @@ function renderKPICards() {
         card.addEventListener('click', () => {
             const section = card.dataset.section;
             if (section) {
-                // Trigger the sidebar navigation
-                const navLink = document.querySelector(`[data-section="${section}"]`);
-                if (navLink) navLink.click();
+                // Add hover effect classes
+                card.style.cursor = 'pointer';
+                
+                // Navigate to section
+                if (window.activateSection) {
+                    window.activateSection(section);
+                } else {
+                    const navLink = document.querySelector(`[data-section="${section}"]`);
+                    if (navLink) navLink.click();
+                }
             }
         });
+        
+        // Add hover effects
+        card.style.cursor = 'pointer';
     });
 }
 
@@ -338,7 +354,7 @@ function renderRecentOrders() {
                     <i class="bi bi-receipt empty-icon"></i>
                     <p>No orders placed yet</p>
                     <p class="empty-sub">Orders will appear here once customers start purchasing</p>
-                    <button class="btn-outline-green" onclick="document.querySelector('[data-section=\\"products\\"]').click()">
+                    <button class="btn-outline-green" onclick="if(window.activateSection) window.activateSection('products'); else document.querySelector('[data-section=\\"products\\"]').click()">
                         <i class="bi bi-box-seam"></i> View Products
                     </button>
                 </td>

@@ -19,6 +19,8 @@ import {
     escapeHTML
 } from './admin-helpers.js';
 
+import { logAdminAction } from './admin-profile.js';
+
 function saveRejectedOutcome(userId, storeName) {
     const outcomes = getLS(KEY_SELLER_OUTCOMES) || [];
     outcomes.push({ userId, storeName, status: 'rejected', at: new Date().toISOString() });
@@ -115,7 +117,12 @@ function bindRequestsEvents() {
 
             if (action === 'approve') {
                 showConfirm(`Approve this seller application?`, () => {
+                    const requests = getAllCustomerToApproved();
+                    const req = requests.find(r => r.id === id);
                     acceptCustomerSellerRequest(id);
+                    if (req) {
+                        logAdminAction('approved_seller', req.storeName || req.fullName || 'Unknown', id);
+                    }
                     showToast('Seller request approved!', 'success');
                     renderRequests();
                 });
@@ -125,6 +132,9 @@ function bindRequestsEvents() {
                 showConfirm(`Reject and delete this application?`, () => {
                     if (req?.userId) saveRejectedOutcome(req.userId, req.storeName || '');
                     rejectCustomerSellerRequest(id);
+                    if (req) {
+                        logAdminAction('rejected_seller', req.storeName || req.fullName || 'Unknown', id);
+                    }
                     showToast('Application rejected.', 'error');
                     renderRequests();
                 });
@@ -140,7 +150,14 @@ function bindRequestsEvents() {
             if (selected.length === 0) return showToast('Please select at least one request', 'warning');
 
             showConfirm(`Approve ${selected.length} selected applications?`, () => {
-                selected.forEach(id => acceptCustomerSellerRequest(id));
+                const requests = getAllCustomerToApproved();
+                selected.forEach(id => {
+                    const req = requests.find(r => r.id === id);
+                    acceptCustomerSellerRequest(id);
+                    if (req) {
+                        logAdminAction('approved_seller', req.storeName || req.fullName || 'Unknown', id);
+                    }
+                });
                 showToast('Selected applications approved!', 'success');
                 renderRequests();
             });
@@ -159,6 +176,9 @@ function bindRequestsEvents() {
                     const req = requests.find(r => r.id === id);
                     if (req?.userId) saveRejectedOutcome(req.userId, req.storeName || '');
                     rejectCustomerSellerRequest(id);
+                    if (req) {
+                        logAdminAction('rejected_seller', req.storeName || req.fullName || 'Unknown', id);
+                    }
                 });
                 showToast('Selected applications rejected.', 'error');
                 renderRequests();

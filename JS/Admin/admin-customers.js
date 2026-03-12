@@ -19,6 +19,7 @@ import {
 
 import { getLS } from '../Core/Storage.js';
 import { ROLES } from '../Core/Auth.js';
+import { logAdminAction } from './admin-profile.js';
 
 // Current search filter
 let customerSearchQuery = '';
@@ -468,6 +469,7 @@ export function confirmDeleteCustomer(id) {
         () => {
             const updated = users.filter(u => String(u.id) !== String(id));
             saveUsers(updated);
+            logAdminAction('deleted_user', customer.name || customer.fullName || customer.email, id);
             renderCustomersTable();
             showToast('Customer account deleted.', 'info');
         }
@@ -513,10 +515,12 @@ export function saveResetPassword() {
     }
 
     // Update in the correct LS array
+    let userEmail = '';
     if (type === 'customer') {
         const users = getUsers();
         const index = users.findIndex(u => String(u.id) === String(id));
         if (index === -1) return;
+        userEmail = users[index].email;
         users[index].password = newPass;
         saveUsers(users);
 
@@ -524,9 +528,12 @@ export function saveResetPassword() {
         const sellers = getSellers();
         const index = sellers.findIndex(s => String(s.id) === String(id));
         if (index === -1) return;
+        userEmail = sellers[index].email;
         sellers[index].password = newPass;
         saveSellers(sellers);
     }
+
+    logAdminAction('reset_password', userEmail, id);
 
     const modalEl = document.getElementById('resetPasswordModal');
     const modal = bootstrap.Modal.getInstance(modalEl);
