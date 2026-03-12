@@ -10,6 +10,7 @@ import {
   getWishlist, addToWishlist, removeFromWishlist,
   toggleWishlist, isWishlisted, getWishlistCount,
 } from './Wishlist.js';
+import { addToCart } from './Cart.js';
 import { getLS, setLS }  from '../Core/FileStorage.js';
 import { KEY_LOCATION }  from '../Core/Constants.js';
 import {
@@ -208,6 +209,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Add to cart
     const cartBtn = e.target.closest('.btn-add-cart');
     if (cartBtn && !cartBtn.disabled) {
+      const card = cartBtn.closest('.product-card');
+      const product = {
+        id:       cartBtn.dataset.id || card?.dataset.id || String(Date.now()),
+        name:     cartBtn.dataset.name     || card?.querySelector('.product-name')?.textContent || 'Product',
+        price:    parseFloat(cartBtn.dataset.price)    || parseFloat(card?.querySelector('.price-now')?.textContent?.replace('$','') || 0),
+        oldPrice: cartBtn.dataset.oldPrice ? parseFloat(cartBtn.dataset.oldPrice) : null,
+        category: cartBtn.dataset.category || card?.querySelector('.product-category')?.textContent || '',
+        image:    cartBtn.dataset.image    || card?.querySelector('.product-img')?.src || '',
+      };
+      addToCart(product, 1);
       const original = cartBtn.innerHTML;
       cartBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Added!';
       cartBtn.style.background = '#16a34a';

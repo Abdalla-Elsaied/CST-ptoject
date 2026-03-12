@@ -13,6 +13,7 @@ import {
   starsHTML, formatDate,
 } from './Reviews.js';
 import { getLS, setLS } from '../Core/FileStorage.js';
+import { addToCart, getCartCount } from './Cart.js';
 
 /* ── Helpers ─────────────────────────────────────── */
 const $ = id => document.getElementById(id);
@@ -297,6 +298,18 @@ function renderProduct(p) {
   }
   addCartBtn?.addEventListener('click', () => {
     if (!p.stock) return;
+    const qty = parseInt(qtyInput?.value || 1) || 1;
+    addToCart({
+      id:       p.id,
+      name:     p.name,
+      price:    p.price,
+      oldPrice: p.oldPrice,
+      category: p.category,
+      image:    p.image,
+    }, qty);
+    // Update cart badge in navbar
+    const badge = document.getElementById('cartBadge');
+    if (badge) badge.textContent = getCartCount();
     const original = addCartBtn.innerHTML;
     addCartBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Added!';
     addCartBtn.disabled = true;
