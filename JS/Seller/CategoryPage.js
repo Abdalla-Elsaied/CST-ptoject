@@ -154,7 +154,9 @@ const openModal = (options = {}) => {
   categoryNameInput.disabled = viewOnly;
   categoryVisibilityInput.disabled = viewOnly || isEdit;
   categoryDescInput.disabled = viewOnly;
-  saveCategoryBtn.textContent = viewOnly ? "Close" : "Save";
+  cancelModalBtn.textContent = viewOnly ? "Close" : "Cancel";
+  saveCategoryBtn.textContent = "Save";
+  saveCategoryBtn.style.display = viewOnly ? "none" : "";
 
   modal.classList.add("show");
 };
