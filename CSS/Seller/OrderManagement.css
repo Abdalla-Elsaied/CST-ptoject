@@ -406,6 +406,52 @@ border-color:var(--green);
 color:var(--green-dark);
 background:var(--green-light);
 }
+.toast-container{
+position:fixed;
+top:18px;
+right:18px;
+display:flex;
+flex-direction:column;
+gap:10px;
+z-index:10;
+}
+.toast{
+background:var(--card-bg);
+border:1.5px solid var(--border);
+box-shadow:var(--shadow-md);
+padding:10px 14px;
+border-radius:10px;
+font-size:.85rem;
+font-weight:600;
+color:var(--text-primary);
+opacity:0;
+transform:translateY(-6px);
+transition:opacity .2s ease,transform .2s ease;
+}
+.toast.show{
+opacity:1;
+transform:translateY(0);
+}
+.toast-error{
+border-color:var(--danger);
+color:var(--danger);
+background:#fef2f2;
+}
+.toast-success{
+border-color:var(--green);
+color:var(--green-dark);
+background:var(--green-light);
+}
+.toast-warning{
+border-color:var(--warning);
+color:#b45309;
+background:#fffbeb;
+}
+.toast-info{
+border-color:var(--info);
+color:#0369a1;
+background:#eff6ff;
+}
 @media (max-width:992px){
 .cards{
 grid-template-columns:repeat(2,1fr);

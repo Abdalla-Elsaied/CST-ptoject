@@ -1,7 +1,16 @@
 import { loadProductsFromFolder, saveProductToDisk } from '../Core/FileStorage.js';
 import { KEY_CATEGORIES } from '../Core/Constants.js';
+import { getCurrentUser, requireRole, ROLES } from '../Core/Auth.js';
 
 const THEME_STORAGE_KEY = 'seller_theme';
+
+const hasAccess = requireRole([ROLES.SELLER]);
+const currentUser = getCurrentUser();
+const sellerId = currentUser?.id ? String(currentUser.id) : '';
+
+if (!hasAccess || !sellerId) {
+    throw new Error('Seller access required.');
+}
 
 function applyStoredTheme() {
     try {
@@ -11,7 +20,6 @@ function applyStoredTheme() {
             document.body.classList.remove('dark');
         }
     } catch (_err) {
-        // ignore storage failures
     }
 }
 
@@ -61,8 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
     loadProductById(queryId);
 });
 
-let currentProduct = null; // stores product fetched from API
-let existingImages = [];    // store images already uploaded
+let currentProduct = null; 
+let existingImages = [];    
 
 function setSelectValue(selectElement, value) {
     if (!selectElement) return;
@@ -102,22 +110,26 @@ function loadCategories() {
 }
 
 async function loadProductById(id) {
-    // if (!id) return alert('Please enter a product ID');
     try {
         showLoading(true, 'Loading product...');
-        const products = await loadProductsFromFolder(); // fetch all products
+        const products = await loadProductsFromFolder(); 
         const product = products.find(p => String(p.id) === String(id));
 
-        // if (!product) return alert('Product not found');
         if (!product) {
             showLoading(false);
             showMessage('Product not found.', 'error');
             return;
         }
 
+        const productSellerId = String(product?.sellerId ?? product?.seller_id ?? product?.seller?.id ?? '').trim();
+        if (productSellerId && productSellerId !== sellerId) {
+            showLoading(false);
+            showMessage('You do not have access to this product.', 'error');
+            return;
+        }
+
         currentProduct = product;
 
-        // Fill form fields
         form.dataset.productId = product.id;
         form.productName.value = product.name;
         form.description.value = product.description;
@@ -132,21 +144,17 @@ async function loadProductById(id) {
         setSelectValue(categorySelect, product.category);
         setSelectValue(tagSelect, product.tag);
 
-        // Colors
         const checkboxes = form.querySelectorAll('input[name="colors"]');
         const selectedColors = Array.isArray(product.colors) ? product.colors : [];
         checkboxes.forEach(cb => cb.checked = selectedColors.includes(cb.value));
 
-        // Images
         existingImages = product.images || [];
         refreshPreview();
 
-        // alert('Product loaded. You can now edit it.');
         showLoading(false);
 
     } catch (err) {
         console.error(err);
-        // alert('Failed to load products from API');
         showLoading(false);
         showMessage('Failed to load product.', 'error');
     }
@@ -160,18 +168,16 @@ searchButton.addEventListener('click', () => {
 function refreshPreview() {
     previewContainer.innerHTML = '';
 
-    // Existing images
     existingImages.forEach((img, index) => {
         const div = document.createElement('div');
         div.style.margin = '8px';
 
         const image = document.createElement('img');
-        image.src = img.url; // Cloudinary URL from API
+        image.src = img.url; 
         image.style.maxWidth = '140px';
         image.style.borderRadius = '6px';
         div.appendChild(image);
 
-        // Optional remove button
         const delBtn = document.createElement('button');
         delBtn.textContent = 'X';
         delBtn.onclick = () => {
@@ -183,7 +189,6 @@ function refreshPreview() {
         previewContainer.appendChild(div);
     });
 
-    // Newly selected files
     Array.from(fileInput.files).forEach(file => {
         if (!file.type.startsWith('image/')) return;
         const div = document.createElement('div');
@@ -206,14 +211,12 @@ form.addEventListener('submit', async (e) => {
     const imageFiles = Array.from(fileInput.files || []);
 
     if (!currentProduct) {
-        // alert('No product selected for update');
         showMessage('No product selected for update.', 'error');
         return;
     }
 
-    // Merge existing images with newly uploaded ones
     const productData = {
-        ...currentProduct, // keep id and createdAt
+        ...currentProduct, 
         name: formData.get('productName').trim(),
         description: formData.get('description').trim(),
         price: Number(formData.get('price')) || 0,
@@ -226,13 +229,13 @@ form.addEventListener('submit', async (e) => {
         category: categorySelect ? categorySelect.value : null,
         tag: tagSelect ? tagSelect.value : null,
         colors: formData.getAll('colors'),
-        images: existingImages
+        images: existingImages,
+        sellerId: currentProduct?.sellerId ?? sellerId
     };
 
     try {
         showLoading(true, 'Updating product...');
-        await saveProductToDisk(productData, imageFiles); // automatically does PUT if id exists
-        // alert('Product updated successfully!');
+        await saveProductToDisk(productData, imageFiles); 
         showLoading(false);
         showMessage('Product updated successfully!', 'success');
         setTimeout(() => {
@@ -240,7 +243,6 @@ form.addEventListener('submit', async (e) => {
         }, 900);
     } catch (err) {
         console.error(err);
-        // alert('Failed to update product');
         showLoading(false);
         showMessage('Failed to update product.', 'error');
     }

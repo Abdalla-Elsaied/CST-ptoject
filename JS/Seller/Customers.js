@@ -1,5 +1,6 @@
 import { getLS } from '../Core/FileStorage.js';
-import { KEY_USERS } from '../Core/Constants.js';
+import { KEY_USERS, KEY_ORDERS, KEY_PRODUCTS } from '../Core/Constants.js';
+import { getCurrentUser, requireRole, ROLES } from '../Core/Auth.js';
 
 const searchInput = document.getElementById('customerSearchInput');
 const roleFilter = document.getElementById('roleFilter');
@@ -15,16 +16,77 @@ const stats = {
   totalSellers: document.getElementById('statTotalSellers')
 };
 
+const hasAccess = requireRole([ROLES.SELLER]);
+const currentUser = getCurrentUser();
+const sellerId = currentUser?.id ? String(currentUser.id) : '';
+
+if (!hasAccess || !sellerId) {
+  throw new Error('Seller access required.');
+}
+
 let users = [];
 
 function safeLower(value) {
   return String(value ?? '').trim().toLowerCase();
 }
 
+function loadOrders() {
+  const stored = getLS(KEY_ORDERS);
+  return Array.isArray(stored) ? stored : [];
+}
+
+function loadSellerProductIds() {
+  const keys = [KEY_PRODUCTS, 'products', 'sellerProducts'];
+  for (const key of keys) {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(key));
+      if (Array.isArray(parsed) && parsed.length) {
+        return new Set(parsed
+          .filter((p) => String(p?.sellerId ?? p?.seller_id ?? p?.seller?.id ?? '').trim() === sellerId)
+          .map((p) => String(p?.id ?? '')));
+      }
+    } catch (_err) {
+    }
+  }
+  return new Set();
+}
+
+function getOrderItems(order) {
+  if (Array.isArray(order?.products) && order.products.length) return order.products;
+  if (Array.isArray(order?.items) && order.items.length) return order.items;
+  return [];
+}
+
+function orderBelongsToSeller(order) {
+  if (!order) return false;
+  if (String(order?.sellerId ?? '') === sellerId) return true;
+  const items = getOrderItems(order);
+  if (items.some((item) => String(item?.sellerId ?? '') === sellerId)) return true;
+  const sellerProductIds = loadSellerProductIds();
+  if (!sellerProductIds.size) return false;
+  return items.some((item) => {
+    const pid = item?.id ?? item?.productId ?? item?.product_id ?? '';
+    return sellerProductIds.has(String(pid));
+  });
+}
+
+function getSellerCustomerIds() {
+  const orders = loadOrders();
+  const ids = new Set();
+  orders.forEach((order) => {
+    if (!orderBelongsToSeller(order)) return;
+    const cid = order?.customerId ?? order?.userId ?? order?.user?.id ?? null;
+    if (cid) ids.add(String(cid));
+  });
+  return ids;
+}
+
 function loadUsers() {
   const stored = getLS(KEY_USERS);
-  if (Array.isArray(stored)) return stored;
-  return [];
+  if (!Array.isArray(stored)) return [];
+  const allowedIds = getSellerCustomerIds();
+  if (!allowedIds.size) return [];
+  return stored.filter((u) => u.role === 'customer' && allowedIds.has(String(u.id)));
 }
 
 function initialsFromName(name) {

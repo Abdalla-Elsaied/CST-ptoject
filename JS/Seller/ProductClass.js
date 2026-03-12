@@ -1,7 +1,7 @@
-// Your add product script
 
 import { saveProductToDisk } from '../Core/FileStorage.js';
 import { KEY_CATEGORIES } from '../Core/Constants.js';
+import { getCurrentUser } from '../Core/Auth.js';
 
 const THEME_STORAGE_KEY = 'seller_theme';
 
@@ -13,7 +13,6 @@ function applyStoredTheme() {
             document.body.classList.remove('dark');
         }
     } catch (_err) {
-        // ignore storage failures
     }
 }
 
@@ -136,8 +135,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const formData = new FormData(form);
 
-        // const selectedColors = formData.getAll('colors');
 
+
+        const currentUser = getCurrentUser();
+        const sellerId = currentUser?.id ?? null;
 
         const product = {
             name: formData.get('productName')?.trim() || '(no name)',
@@ -149,12 +150,11 @@ document.addEventListener('DOMContentLoaded', () => {
             expirationEnd: formData.get('expirationEnd') || null,
             stockQuantity: Number(formData.get('stockQuantity')) || 0,
             stockStatus: formData.get('stockStatus'),
-            // category: formData.get('category') || '',
             category: categorySelect?.value || "",
-            // tag: formData.get('tag') || '',
             tag: document.getElementById("tagSelect").value || "",
             colors: colorBoxes,
             createdAt: new Date().toISOString(),
+            sellerId,
             images: []
         };
 

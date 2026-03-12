@@ -1,6 +1,16 @@
+import { getCurrentUser, requireRole, ROLES } from '../Core/Auth.js';
+
 let products = [];
 let filter = "all";
 let search = "";
+
+const hasAccess = requireRole([ROLES.SELLER]);
+const currentUser = getCurrentUser();
+const sellerId = currentUser?.id ? String(currentUser.id) : '';
+
+if (!hasAccess || !sellerId) {
+  throw new Error('Seller access required.');
+}
 
 function readProductsFromStorage() {
   const keys = ["ls_products", "products", "sellerProducts"];
@@ -8,13 +18,30 @@ function readProductsFromStorage() {
     try {
       const parsed = JSON.parse(localStorage.getItem(key));
       if (Array.isArray(parsed) && parsed.length) {
-        return parsed;
+        return parsed.filter((item) =>
+          String(item?.sellerId ?? item?.seller_id ?? item?.seller?.id ?? '').trim() === sellerId
+        );
       }
     } catch (_err) {
-      // ignore bad data and continue
     }
   }
   return [];
+}
+
+function readAllProductsFromStorage() {
+  const keys = ["ls_products", "products", "sellerProducts"];
+  for (const key of keys) {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(key));
+      if (Array.isArray(parsed) && parsed.length) return parsed;
+    } catch (_err) {
+    }
+  }
+  return [];
+}
+
+function belongsToSeller(item) {
+  return String(item?.sellerId ?? item?.seller_id ?? item?.seller?.id ?? '').trim() === sellerId;
 }
 
 function defaultImage(name) {
@@ -176,11 +203,12 @@ function searchProducts(value) {
 }
 
 function seedMediaForDemo() {
-  const raw = readProductsFromStorage();
+  const raw = readAllProductsFromStorage();
   if (!Array.isArray(raw) || raw.length === 0) return;
 
   const demoVideo = "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4";
   const updated = raw.map((item, idx) => {
+    if (!belongsToSeller(item)) return item;
     const name = item?.productName ?? item?.name ?? `Product ${idx + 1}`;
     const images = Array.isArray(item?.images) ? [...item.images] : [];
     if (!images.length) images.push(defaultImage(name));

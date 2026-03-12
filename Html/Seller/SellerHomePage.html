@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dealport – Seller Dashboard</title>
 
-    <!-- Google Fonts -->
+    
     <link
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
 
-    <!-- Bootstrap 5 -->
+    
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
 
-    <!-- Bootstrap Icons -->
+    
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
       rel="stylesheet"
@@ -26,7 +26,7 @@
     <link rel="stylesheet" href="../../CSS/Seller/home.css" />
   </head>
   <body>
-    <!-- ═══════════════════════════════════ SIDEBAR ═══════════════════════════════════ -->
+    
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-logo">
         <span class="logo-text">DEALP<span class="logo-dot">O</span>RT</span>
@@ -128,25 +128,26 @@
             src="https://i.pravatar.cc/40?img=12"
             alt="avatar"
             class="user-avatar"
+            id="sellerUserAvatar"
           />
           <div class="user-info">
-            <span class="user-name">Dealport</span>
-            <span class="user-email">Mark@thedesigner...</span>
+            <span class="user-name" id="sellerUserName">Dealport</span>
+            <span class="user-email" id="sellerUserEmail">Mark@thedesigner...</span>
           </div>
-          <button class="btn-icon">
+          <button class="btn-icon" id="sellerLogoutBtn" aria-label="Logout">
             <i class="bi bi-box-arrow-right"></i>
           </button>
         </div>
-        <a href="#" class="btn-shop"
+        <a href="#" class="btn-shop" id="sellerShopLink"
           ><i class="bi bi-shop"></i><span>Your Shop</span
           ><i class="bi bi-arrow-up-right-square ms-auto"></i
         ></a>
       </div>
     </aside>
 
-    <!-- ═══════════════════════════════════ MAIN WRAPPER ═══════════════════════════════════ -->
+    
     <div class="main-wrapper" id="mainWrapper">
-      <!-- ─────────── TOP NAVBAR ─────────── -->
+      
       <header class="topnav">
         <div class="topnav-left">
           <button class="btn-icon sidebar-mobile-toggle" id="mobileSidebarBtn">
@@ -176,16 +177,17 @@
             src="https://i.pravatar.cc/36?img=12"
             alt="avatar"
             class="topnav-avatar"
+            id="sellerTopAvatar"
           />
         </div>
       </header>
 
-      <!-- ─────────── DASHBOARD CONTENT ─────────── -->
+      
       <main class="dashboard-content">
         <div id="dashboardView">
-          <!-- ROW 1 – STAT CARDS -->
+          
           <div class="row g-4 mb-4">
-            <!-- Card 1: Total Sales -->
+            
             <div class="col-12 col-md-4">
               <div class="stat-card">
                 <div class="stat-card-header">
@@ -210,7 +212,7 @@
               </div>
             </div>
 
-            <!-- Card 2: Total Orders -->
+            
             <div class="col-12 col-md-4">
               <div class="stat-card">
                 <div class="stat-card-header">
@@ -235,7 +237,7 @@
               </div>
             </div>
 
-            <!-- Card 3: Pending & Cancelled -->
+            
             <div class="col-12 col-md-4">
               <div class="stat-card">
                 <div class="stat-card-header">
@@ -265,9 +267,9 @@
             </div>
           </div>
 
-          <!-- ROW 2 – CHART + ANALYTICS -->
+          
           <div class="row g-4 mb-4">
-            <!-- Weekly Report Chart -->
+            
             <div class="col-12 col-xl-7">
               <div class="card-panel">
                 <div class="panel-header">
@@ -281,7 +283,7 @@
                   </div>
                 </div>
 
-                <!-- Metrics Row -->
+                
                 <div class="metrics-row">
                   <div class="metric-item active" data-chart-source="sales">
                     <span class="metric-val" id="dashboardWeeklySalesMetricValue">$0</span>
@@ -311,7 +313,7 @@
               </div>
             </div>
 
-            <!-- Analytics Panel -->
+            
             <div class="col-12 col-xl-5">
               <div class="card-panel h-100">
                 <div class="panel-header">
@@ -333,9 +335,9 @@
             </div>
           </div>
 
-          <!-- ROW 3 – TRANSACTION + TOP PRODUCTS -->
+          
           <div class="row g-4 mb-4">
-            <!-- Transaction Table -->
+            
             <div class="col-12 col-xl-7">
               <div class="card-panel">
                 <div class="panel-header">
@@ -368,7 +370,7 @@
               </div>
             </div>
 
-            <!-- Top Products -->
+            
             <div class="col-12 col-xl-5">
               <div class="card-panel h-100">
                 <div class="panel-header">
@@ -388,9 +390,9 @@
             </div>
           </div>
 
-          <!-- ROW 4 – BEST SELLING + ADD NEW PRODUCT -->
+          
           <div class="row g-4 mb-4">
-            <!-- Best Selling Products -->
+            
             <div class="col-12 col-xl-7">
               <div class="card-panel">
                 <div class="panel-header">
@@ -422,7 +424,7 @@
               </div>
             </div>
 
-            <!-- Add New Product -->
+            
             <div class="col-12 col-xl-5">
               <div class="card-panel h-100">
                 <div class="panel-header">
@@ -443,9 +445,9 @@
               </div>
             </div>
           </div>
-          <!-- /ROW 4 -->
+          
         </div>
-        <!-- /dashboardView -->
+        
 
         <div id="orderManagementView" style="display: none">
           <div class="embedded-page-wrap">
@@ -458,18 +460,18 @@
           </div>
         </div>
       </main>
-      <!-- /dashboard-content -->
+      
     </div>
-    <!-- /main-wrapper -->
+    
 
-    <!-- Overlay for mobile sidebar -->
+    
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <!-- Bootstrap JS -->
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Chart.js -->
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <!-- jQuery (optional) -->
+    
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
     <script type="module" src="../../JS/Seller/home.js"></script>
