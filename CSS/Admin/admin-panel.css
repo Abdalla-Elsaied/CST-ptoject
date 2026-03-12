@@ -349,58 +349,63 @@ a {
 /* ─── TOP NAVBAR ───────────────────────────────────────────── */
 .admin-topbar {
     height: var(--topbar-height);
-    background: var(--card-bg);
-    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+    border-bottom: 2px solid var(--border-light);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 28px;
+    padding: 0 32px;
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .topbar-left {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 20px;
 }
 
 .topbar-date {
     font-size: 12px;
+    font-weight: 600;
     color: var(--text-muted);
-    padding-left: 16px;
-    border-left: 1px solid var(--border);
+    padding-left: 20px;
+    border-left: 2px solid var(--border);
 }
 
 .topbar-title {
     color: var(--text-secondary);
     font-size: 14px;
+    font-weight: 500;
 }
 
 .topbar-title strong {
     color: var(--text-primary);
-    font-weight: 700;
+    font-weight: 800;
+    letter-spacing: -0.3px;
 }
 
 /* Search Box in topbar */
 .topbar-search {
     position: relative;
-    width: 320px;
+    width: 340px;
 }
 
 .topbar-search input {
     width: 100%;
-    padding: 9px 14px 9px 38px;
+    padding: 10px 16px 10px 40px;
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     font-size: 13px;
+    font-weight: 500;
     font-family: 'Inter', sans-serif;
     color: var(--text-primary);
-    background: var(--page-bg);
+    background: var(--card-bg);
     outline: none;
-    transition: var(--transition);
+    transition: var(--transition-slow);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .topbar-search input::placeholder {
@@ -409,72 +414,89 @@ a {
 
 .topbar-search input:focus {
     border-color: var(--green-primary);
-    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
     background: #fff;
 }
 
 .topbar-search .search-icon {
     position: absolute;
-    left: 12px;
+    left: 14px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-muted);
     font-size: 14px;
     pointer-events: none;
+    transition: var(--transition);
+}
+
+.topbar-search input:focus ~ .search-icon {
+    color: var(--green-primary);
 }
 
 /* Topbar Right Section */
 .topbar-right {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
 }
 
 .topbar-icon-btn {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border);
-    background: var(--card-bg);
+    background: linear-gradient(135deg, #ffffff, #fafbfc);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transition-slow);
     color: var(--text-secondary);
     font-size: 16px;
     position: relative;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .topbar-icon-btn:hover {
-    background: var(--green-light-bg);
+    background: linear-gradient(135deg, var(--green-light-bg), #d1fae5);
     border-color: var(--green-primary);
     color: var(--green-dark);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+    transform: translateY(-2px);
+}
+
+.topbar-icon-btn:focus {
+    outline: 2px solid var(--green-primary);
+    outline-offset: 2px;
 }
 
 .topbar-icon-btn .badge-dot {
     position: absolute;
-    top: 6px;
-    right: 6px;
-    width: 8px;
-    height: 8px;
+    top: 4px;
+    right: 4px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background: var(--danger);
     border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+    animation: badgePulse 2s ease-in-out infinite;
 }
 
 .topbar-user {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 4px 8px 4px 4px;
+    gap: 12px;
+    padding: 6px 12px 6px 6px;
     border-radius: var(--radius-md);
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transition-slow);
+    background: linear-gradient(135deg, transparent, rgba(34, 197, 94, 0.02));
 }
 
 .topbar-user:hover {
-    background: var(--page-bg);
+    background: linear-gradient(135deg, var(--green-light-bg), rgba(34, 197, 94, 0.05));
+    border-radius: var(--radius-md);
 }
 
 .topbar-user-avatar {
