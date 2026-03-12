@@ -1,6 +1,4 @@
-/* ═══════════════════════════════════════════════
-   DEALPORT – SELLER DASHBOARD  |  style.css
-═══════════════════════════════════════════════ */
+
 
 :root {
   --green:       #22c55e;
@@ -21,7 +19,7 @@
   --shadow-md:   0 4px 16px rgba(0,0,0,.09);
 }
 
-/* DARK THEME */
+
 body.dark,
 html.dark body {
   --text-primary:#f1f5f9;
@@ -31,7 +29,7 @@ html.dark body {
   --border:      #334155;
 }
 
-/* ─── RESET / BASE ─── */
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { font-size: 14px; scroll-behavior: smooth; }
@@ -43,14 +41,13 @@ body {
   display: flex;
   min-height: 100vh;
   transition: background .3s, color .3s;
+  overflow-x: hidden;
 }
 
 a { text-decoration: none; }
 img { max-width: 100%; }
 
-/* ═══════════════════════════════════
-   SIDEBAR
-═══════════════════════════════════ */
+
 .sidebar {
   width: var(--sidebar-w);
   min-height: 100vh;
@@ -67,7 +64,7 @@ img { max-width: 100%; }
   scrollbar-color: var(--border) transparent;
 }
 
-/* Collapsed state */
+
 .sidebar.collapsed { width: 72px; }
 .sidebar.collapsed .logo-text { display: none; }
 .sidebar.collapsed .nav-section-label,
@@ -77,7 +74,7 @@ img { max-width: 100%; }
 .sidebar.collapsed .sidebar-footer .user-name,
 .sidebar.collapsed .sidebar-footer .user-email { display: none; }
 
-/* Logo */
+
 .sidebar-logo {
   display: flex;
   align-items: center;
@@ -102,7 +99,7 @@ img { max-width: 100%; }
   vertical-align: middle;
 }
 
-/* Nav */
+
 .sidebar-nav {
   flex: 1;
   padding: 14px 12px;
@@ -143,7 +140,7 @@ img { max-width: 100%; }
   font-weight: 600;
 }
 
-/* Footer */
+
 .sidebar-footer {
   padding: 14px 12px;
   border-top: 1px solid var(--border);
@@ -205,9 +202,7 @@ img { max-width: 100%; }
 
 .btn-shop:hover { background: #d1fae5; }
 
-/* ═══════════════════════════════════
-   MAIN WRAPPER
-═══════════════════════════════════ */
+
 .main-wrapper {
   margin-left: var(--sidebar-w);
   flex: 1;
@@ -219,9 +214,7 @@ img { max-width: 100%; }
 
 .sidebar.collapsed ~ .main-wrapper { margin-left: 72px; }
 
-/* ═══════════════════════════════════
-   TOP NAVBAR
-═══════════════════════════════════ */
+
 .topnav {
   height: var(--topnav-h);
   background: var(--card-bg);
@@ -291,9 +284,7 @@ img { max-width: 100%; }
   border: 2px solid var(--border);
 }
 
-/* ═══════════════════════════════════
-   SHARED BUTTON STYLES
-═══════════════════════════════════ */
+
 .btn-icon {
   width: 36px; height: 36px;
   border-radius: 50%;
@@ -346,9 +337,7 @@ img { max-width: 100%; }
 
 .sidebar-mobile-toggle { display: none; }
 
-/* ═══════════════════════════════════
-   DASHBOARD CONTENT
-═══════════════════════════════════ */
+
 .dashboard-content {
   padding: 24px;
   flex: 1;
@@ -370,9 +359,7 @@ img { max-width: 100%; }
   background: #fff;
 }
 
-/* ═══════════════════════════════════
-   STAT CARDS
-═══════════════════════════════════ */
+
 .stat-card {
   background: var(--card-bg);
   border-radius: var(--radius);
@@ -468,7 +455,7 @@ img { max-width: 100%; }
   color: var(--green);
 }
 
-/* Pending card */
+
 .pending-body {
   flex-direction: row;
   gap: 32px;
@@ -514,9 +501,7 @@ img { max-width: 100%; }
   color: var(--text-sec);
 }
 
-/* ═══════════════════════════════════
-   PANELS (cards with content)
-═══════════════════════════════════ */
+
 .card-panel {
   background: var(--card-bg);
   border-radius: var(--radius);
@@ -556,7 +541,7 @@ img { max-width: 100%; }
   margin: 0;
 }
 
-/* Week toggle buttons */
+
 .btn-week {
   padding: 4px 12px;
   border-radius: 999px;
@@ -577,7 +562,7 @@ img { max-width: 100%; }
   color: var(--green-dark);
 }
 
-/* Metrics row */
+
 .metrics-row {
   display: flex;
   gap: 0;
@@ -616,7 +601,7 @@ img { max-width: 100%; }
   padding-bottom: 2px;
 }
 
-/* Chart */
+
 .chart-wrap {
   position: relative;
   height: 220px;
@@ -633,7 +618,7 @@ img { max-width: 100%; }
   margin-bottom: 6px;
 }
 
-/* Country section */
+
 .country-section { margin-top: 4px; }
 
 .country-header {
@@ -714,9 +699,7 @@ img { max-width: 100%; }
   color: var(--green);
 }
 
-/* ═══════════════════════════════════
-   TABLES
-═══════════════════════════════════ */
+
 .dash-table {
   margin-bottom: 0;
   font-size: .85rem;
@@ -766,7 +749,7 @@ img { max-width: 100%; }
   object-fit: cover;
 }
 
-/* Filter button */
+
 .btn-filter {
   display: flex;
   align-items: center;
@@ -784,9 +767,7 @@ img { max-width: 100%; }
 
 .btn-filter:hover { background: var(--green-dark); }
 
-/* ═══════════════════════════════════
-   TOP PRODUCTS PANEL
-═══════════════════════════════════ */
+
 .link-green {
   font-size: .8rem;
   font-weight: 600;
@@ -858,9 +839,7 @@ img { max-width: 100%; }
   color: var(--text-primary);
 }
 
-/* ═══════════════════════════════════
-   ADD NEW PRODUCT PANEL
-═══════════════════════════════════ */
+
 .cat-label {
   font-size: .72rem;
   font-weight: 700;
@@ -922,9 +901,7 @@ img { max-width: 100%; }
 
 .btn-see-more:hover { color: var(--green-dark); }
 
-/* ═══════════════════════════════════
-   SIDEBAR OVERLAY (mobile)
-═══════════════════════════════════ */
+
 .sidebar-overlay {
   display: none;
   position: fixed;
@@ -935,9 +912,7 @@ img { max-width: 100%; }
 
 .sidebar-overlay.active { display: block; }
 
-/* ═══════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════ */
+
 @media (max-width: 1199.98px) {
   .topnav-center { display: none; }
 }
@@ -974,22 +949,77 @@ img { max-width: 100%; }
 }
 
 @media (max-width: 575.98px) {
-  .topnav { padding: 0 14px; }
+  .topnav {
+    padding: 10px 12px;
+    height: auto;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .topnav-left {
+    flex: 1 1 100%;
+    justify-content: space-between;
+  }
+
+  .page-title { font-size: 1.1rem; }
+
+  .topnav-right {
+    flex: 1 1 100%;
+    justify-content: flex-end;
+    gap: 6px;
+  }
 
   .dashboard-content { padding: 12px; }
 
   .btn-week { display: none; }
 
   .pending-body { gap: 20px; }
+
+  .stat-card,
+  .card-panel {
+    padding: 16px;
+  }
+
+  .dash-table thead th,
+  .dash-table tbody td {
+    padding: 8px 10px;
+    font-size: .8rem;
+  }
 }
 
-/* ─── Scrollbar ─── */
+@media (max-width: 480px) {
+  .stat-body {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .stat-badges {
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .pending-body {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .panel-header {
+    align-items: flex-start;
+  }
+
+  .dashboard-content {
+    padding: 10px;
+  }
+}
+
+
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-sec); }
 
-/* ─── Animations ─── */
+
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }

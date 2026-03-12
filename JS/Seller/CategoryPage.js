@@ -14,7 +14,6 @@ const loadCategories = () => {
     const parsed = JSON.parse(localStorage.getItem(KEY_CATEGORIES));
     if (Array.isArray(parsed) && parsed.length) return parsed;
   } catch (_err) {
-    // ignore parse errors
   }
   localStorage.setItem(KEY_CATEGORIES, JSON.stringify(seedCategories));
   return [...seedCategories];
@@ -60,7 +59,6 @@ const applyStoredTheme = () => {
       document.body.classList.remove("dark");
     }
   } catch (_err) {
-    // ignore storage failures
   }
 };
 
@@ -71,7 +69,6 @@ const persistTheme = () => {
       document.body.classList.contains("dark") ? "dark" : "light"
     );
   } catch (_err) {
-    // ignore storage failures
   }
 };
 
@@ -90,7 +87,6 @@ const getStoredProducts = () => {
       const parsed = JSON.parse(localStorage.getItem(key));
       if (Array.isArray(parsed)) return parsed;
     } catch (_err) {
-      // try next key
     }
   }
   return [];
@@ -146,6 +142,7 @@ const openModal = (options = {}) => {
   const { mode = "add", category = null } = options;
   editingId = category?.id ?? null;
   viewOnly = mode === "view";
+  const isEdit = mode === "edit";
 
   document.getElementById("modalTitle").textContent =
     mode === "edit" ? "Edit Category" : mode === "view" ? "View Category" : "Add Category";
@@ -155,7 +152,7 @@ const openModal = (options = {}) => {
   categoryDescInput.value = category?.description ?? "";
 
   categoryNameInput.disabled = viewOnly;
-  categoryVisibilityInput.disabled = viewOnly;
+  categoryVisibilityInput.disabled = viewOnly || isEdit;
   categoryDescInput.disabled = viewOnly;
   saveCategoryBtn.textContent = viewOnly ? "Close" : "Save";
 
@@ -180,7 +177,9 @@ const handleSave = () => {
     return;
   }
 
-  const visibility = categoryVisibilityInput.value;
+  const visibility = editingId
+    ? (categories.find((cat) => cat.id === editingId)?.visibility ?? categoryVisibilityInput.value)
+    : categoryVisibilityInput.value;
   const description = categoryDescInput.value.trim();
 
   if (editingId) {
@@ -285,7 +284,6 @@ const applySearchFromUrl = () => {
     currentQuery = searchParam.toLowerCase();
     if (searchInput) searchInput.value = searchParam;
   } catch (_err) {
-    // ignore malformed URLs
   }
 };
 

@@ -1,6 +1,7 @@
 import { getLS } from '../Core/FileStorage.js';
 import { KEY_PRODUCTS } from '../Core/Constants.js';
 import { KEY_PRODUCT_REVIEWS, starsHTML, formatDate } from '../Customer/Reviews.js';
+import { getCurrentUser, requireRole, ROLES } from '../Core/Auth.js';
 
 const searchInput = document.getElementById('reviewSearchInput');
 const productFilter = document.getElementById('reviewProductFilter');
@@ -19,6 +20,15 @@ const stats = {
 
 let allReviews = [];
 let productMap = new Map();
+let sellerProductIds = new Set();
+
+const hasAccess = requireRole([ROLES.SELLER]);
+const currentUser = getCurrentUser();
+const sellerId = currentUser?.id ? String(currentUser.id) : '';
+
+if (!hasAccess || !sellerId) {
+  throw new Error('Seller access required.');
+}
 
 function safeLower(value) {
   return String(value ?? '').trim().toLowerCase();
@@ -68,6 +78,7 @@ function normalizeProduct(raw, idx) {
     image:
       image ||
       `https://placehold.co/120x120/ecfdf5/166534?text=${encodeURIComponent(name)}`,
+    sellerId: String(raw?.sellerId ?? raw?.seller_id ?? raw?.seller?.id ?? '').trim()
   };
 }
 
@@ -82,15 +93,19 @@ function loadProducts() {
         break;
       }
     } catch (_err) {
-      // try next key
     }
   }
+
+  list = list.filter((item) => String(item?.sellerId ?? item?.seller_id ?? item?.seller?.id ?? '').trim() === sellerId);
+
   productMap = new Map(
     list.map((item, idx) => {
       const normalized = normalizeProduct(item, idx);
       return [String(normalized.id), normalized];
     })
   );
+
+  sellerProductIds = new Set(list.map((item) => String(item?.id ?? '')));
 }
 
 function flattenReviews() {
@@ -258,7 +273,7 @@ function handleExport() {
 
 function init() {
   loadProducts();
-  allReviews = flattenReviews();
+  allReviews = flattenReviews().filter((review) => sellerProductIds.has(String(review.productId)));
   buildProductFilter();
   renderReviews();
 }
