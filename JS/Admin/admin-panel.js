@@ -81,6 +81,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update pending badges (Seller Requests, Category Suggestions)
     updateSidebarBadges();
 
+    // Init Theme Toggle
+    initTheme();
+
     // Load the last active section, or default to dashboard
     const lastSection = sessionStorage.getItem('adminActiveSection') || 'dashboard';
     activateSection(lastSection);
@@ -218,4 +221,37 @@ function updateNotificationsBell(totalCount) {
             if (requestsLink) requestsLink.click();
         }
     };
+}
+
+// ─── THEME MANAGEMENT ────────────────────────────────────────
+
+function initTheme() {
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    if (!themeToggle || !themeIcon) return;
+
+    // Load saved theme or default to light
+    const savedTheme = localStorage.getItem('adminTheme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeUI(savedTheme);
+
+    themeToggle.onclick = () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('adminTheme', newTheme);
+        updateThemeUI(newTheme);
+    };
+}
+
+function updateThemeUI(theme) {
+    const themeIcon = document.getElementById('themeIcon');
+    if (!themeIcon) return;
+    
+    if (theme === 'dark') {
+        themeIcon.className = 'bi bi-moon-stars';
+    } else {
+        themeIcon.className = 'bi bi-sun';
+    }
 }
