@@ -846,8 +846,8 @@ a {
 
 /* ─── ACTION ALERTS ────────────────────────────────────────── */
 .action-alerts {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    border: 1px solid #f59e0b;
+    background: var(--green-light-bg);
+    border: 1px solid var(--green-primary);
     border-radius: var(--radius-lg);
     padding: 20px 24px;
     margin-bottom: 28px;
@@ -873,7 +873,7 @@ a {
     flex: 1;
     font-size: 14px;
     font-weight: 600;
-    color: #92400e;
+    color: var(--text-primary);
 }
 
 .alert-action {
@@ -896,8 +896,8 @@ a {
 }
 
 .kpi-card {
-    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-    border: 1px solid #e2e8f0;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
     border-radius: 16px;
     padding: 24px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1051,7 +1051,7 @@ a {
     font-size: 32px;
     font-weight: 900;
     line-height: 1;
-    color: #0f172a;
+    color: var(--text-primary);
     margin: 0;
     font-feature-settings: 'tnum';
 }
@@ -1118,7 +1118,7 @@ a {
     font-size: 16px;
     color: var(--text-primary);
     border-bottom: 2px solid var(--border-light);
-    background: linear-gradient(135deg, #fafbfc 0%, #f3f4f6 100%);
+    background: var(--topbar-bg);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1137,7 +1137,7 @@ a {
 }
 
 .data-card .table thead th {
-    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    background: var(--page-bg);
     color: var(--text-secondary);
     font-weight: 700;
     font-size: 11px;

@@ -1,14 +1,17 @@
 import {
     getSellers,
-    getProducts,
-    getOrders,
     getUsers,
-    getCustomerName,
+    getOrders,
     getSellerName,
+    getCustomerName,
     formatPrice,
     statusBadge,
-    escapeHTML
+    escapeHTML,
+    debounce
 } from './admin-helpers.js';
+
+import { fetchProducts } from './admin-data-products.js';
+import { fetchOrders } from './admin-data-orders.js';
 
 import { getLS } from '../Core/Storage.js';
 import { updateSidebarBadges } from './admin-profile.js';
@@ -18,12 +21,19 @@ import { updateSidebarBadges } from './admin-profile.js';
  * Main function for the dashboard section.
  * Called every time the user clicks "Dashboard" in the sidebar.
  */
-export function renderDashboard() {
+export async function renderDashboard() {
     updateSidebarBadges(); // Update badges when dashboard loads
     renderActionAlerts();
-    renderKPICards();
+    
+    // Use async fetchers from service layer to ensure data is synced
+    const [products, orders] = await Promise.all([
+        fetchProducts(),
+        fetchOrders()
+    ]);
+
+    renderKPICards(products, orders);
     renderRecentSellers();
-    renderRecentOrders();
+    renderRecentOrders(orders);
 }
 
 /**
@@ -99,10 +109,11 @@ function renderActionAlerts() {
  * Builds and injects the 4 KPI stat cards into #kpiRow.
  * Reads live data from localStorage on every call.
  */
-function renderKPICards() {
+/**
+ * Builds and injects the 4 KPI stat cards into #kpiRow.
+ */
+function renderKPICards(products, orders) {
     const sellers = getSellers();
-    const products = getProducts();
-    const orders = getOrders();
     const users = getUsers();
 
     // Count customers only (exclude admin and seller)
@@ -341,8 +352,8 @@ window.editSeller = function(sellerId) {
 /**
  * Shows the last 5 orders placed on the platform.
  */
-function renderRecentOrders() {
-    const orders = getOrders().slice(-5).reverse(); // last 5, newest first
+function renderRecentOrders(allOrders) {
+    const orders = (allOrders || getOrders()).slice(-5).reverse(); // last 5, newest first
     const tbody = document.getElementById('recentOrdersBody');
 
     if (!tbody) return;

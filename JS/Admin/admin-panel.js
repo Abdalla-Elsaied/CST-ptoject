@@ -129,7 +129,7 @@ function initSidebar() {
  * Saves the active section to sessionStorage so it persists on refresh.
  * @param {string} section - one of: dashboard, sellers, customers, products, orders, analytics
  */
-function activateSection(section) {
+window.activateSection = function(section) {
     // Hide all sections
     document.querySelectorAll('.admin-section').forEach(el => {
         el.style.display = 'none';
@@ -242,6 +242,10 @@ function initTheme() {
         document.documentElement.setAttribute('data-theme', newTheme);
         localStorage.setItem('adminTheme', newTheme);
         updateThemeUI(newTheme);
+
+        // Refresh current section to update things like Chart.js colors
+        const currentSection = sessionStorage.getItem('adminActiveSection') || 'dashboard';
+        window.activateSection(currentSection);
     };
 }
 
