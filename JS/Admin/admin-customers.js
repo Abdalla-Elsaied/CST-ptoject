@@ -16,7 +16,9 @@ import {
     showConfirm,
     showToast,
     escapeHTML,
-    statusBadge
+    statusBadge,
+    renderPagination,
+    renderTableEmptyState
 } from './admin-helpers.js';
 
 import { getLS } from '../Core/Storage.js';
@@ -27,6 +29,7 @@ import { logAdminAction } from './admin-profile.js';
 let customerSearchQuery = '';
 let customerStatusFilter = 'All';
 let customerRoleFilter = 'All';
+let customerPagination = { page: 1, limit: 10 };
 
 
 /**
@@ -36,6 +39,8 @@ export function renderCustomers() {
     customerSearchQuery = '';
     customerStatusFilter = 'All';
     customerRoleFilter = 'All';
+    customerPagination.page = 1;
+
     const searchInput = document.getElementById('customerSearchInput');
     const statusFilter = document.getElementById('customerStatusFilter');
     const roleFilter = document.getElementById('customerRoleFilter');
@@ -58,6 +63,7 @@ function setupStatusFilter() {
     if (statusFilter) {
         statusFilter.addEventListener('change', (e) => {
             customerStatusFilter = e.target.value;
+            customerPagination.page = 1;
             renderCustomersTable();
         });
     }
@@ -67,6 +73,7 @@ function setupStatusFilter() {
     if (roleFilter) {
         roleFilter.addEventListener('change', (e) => {
             customerRoleFilter = e.target.value;
+            customerPagination.page = 1;
             renderCustomersTable();
         });
     }
@@ -139,31 +146,20 @@ export function renderCustomersTable() {
 
     // Empty state
     if (filtered.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="9" class="empty-state">
-                    <i class="bi bi-people empty-icon"></i>
-                    <div class="empty-content">
-                        <p class="empty-title">
-                            ${users.length === 0 ? 'No users registered yet' : 'No users match your filters'}
-                        </p>
-                        <p class="empty-sub">
-                            ${users.length === 0 
-                                ? 'Users will appear here as they register on the platform' 
-                                : 'Try adjusting your search or filter criteria'}
-                        </p>
-                        ${users.length === 0 ? '' : `
-                            <button class="btn-reset-filters" onclick="resetUserFilters()">
-                                <i class="bi bi-arrow-clockwise"></i> Reset Filters
-                            </button>
-                        `}
-                    </div>
-                </td>
-            </tr>`;
+        tbody.innerHTML = renderTableEmptyState(9, 'No users match your filters.', 'bi-people');
+        renderPagination(0, customerPagination.limit, 1, 'customersPagination', () => {});
         return;
     }
 
-    tbody.innerHTML = filtered.map((c, i) => {
+    // Pagination
+    const totalItems = filtered.length;
+    const totalPages = Math.ceil(totalItems / customerPagination.limit);
+    if (customerPagination.page > totalPages) customerPagination.page = Math.max(1, totalPages);
+
+    const start = (customerPagination.page - 1) * customerPagination.limit;
+    const paginated = filtered.slice(start, start + customerPagination.limit);
+
+    tbody.innerHTML = paginated.map((c, i) => {
         const isBanned = c.isBanned;
         const isAdmin = c.role === 'admin';
         const isSeller = c.role === ROLES.SELLER;
@@ -196,7 +192,7 @@ export function renderCustomersTable() {
                 ${isAdmin ? '' : `<input type="checkbox" class="form-check-input user-checkbox" value="${c.id}">`}
             </td>
             <td>
-                <span class="text-muted small fw-bold">${i + 1}</span>
+                <span class="text-muted small fw-bold">${start + i + 1}</span>
             </td>
             <td>
                 <div class="d-flex align-items-center gap-3">
@@ -273,6 +269,13 @@ export function renderCustomersTable() {
         </tr>
     `;
     }).join('');
+
+    // Render Pagination
+    renderPagination(totalItems, customerPagination.limit, customerPagination.page, 'customersPagination', (newPage) => {
+        customerPagination.page = newPage;
+        renderCustomersTable();
+        document.getElementById('customersSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
 }
 
 
@@ -283,6 +286,7 @@ function bindCustomersEvents() {
     if (searchInput) {
         searchInput.oninput = (e) => {
             customerSearchQuery = e.target.value;
+            customerPagination.page = 1;
             renderCustomersTable();
         };
     }
