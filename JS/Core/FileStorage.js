@@ -59,7 +59,8 @@ export async function saveProductToDisk(product, imageFiles = []) {
       }
     }
 
-    product.images = imagesData;
+    const baseImages = Array.isArray(product.images) ? product.images : [];
+    product.images = imagesData.length ? [...baseImages, ...imagesData] : baseImages;
     product.updatedAt = new Date().toISOString();
 
     let response;
