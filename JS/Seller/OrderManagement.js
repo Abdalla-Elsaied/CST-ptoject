@@ -24,6 +24,30 @@ if (!hasAccess || !sellerId) {
   throw new Error('Seller access required.');
 }
 
+function showMessage(message, type = 'error', timeout = 2600){
+  const safeMessage = String(message || '').trim();
+  if(!safeMessage) return;
+
+  let container = document.getElementById('toastContainer');
+  if(!container){
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = safeMessage;
+  container.appendChild(toast);
+
+  requestAnimationFrame(() => toast.classList.add('show'));
+  window.setTimeout(() => {
+    toast.classList.remove('show');
+    window.setTimeout(() => toast.remove(), 250);
+  }, timeout);
+}
+
 function makeOrderId(){
   return `ORD${Date.now()}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
 }
@@ -584,6 +608,17 @@ function closeProductsModal(){
 
 function saveOrder(){
   refreshProductCatalog();
+
+  if(editingOrderId){
+    const original = allOrders.find((o) => String(o.id) === String(editingOrderId));
+    const originalItems = Array.isArray(original?.products) ? original.products : (Array.isArray(original?.items) ? original.items : []);
+    const missing = originalItems.filter((item) => !resolveProduct(item?.name, item?.id));
+
+    if(missing.length > 0){
+      showMessage("You can't update this order because it contains deleted products.", 'error');
+      return;
+    }
+  }
 
   const payment = document.getElementById('payment').value;
   const status = document.getElementById('status').value;

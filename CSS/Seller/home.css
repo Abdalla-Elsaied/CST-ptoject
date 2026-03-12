@@ -948,13 +948,42 @@ img { max-width: 100%; }
 }
 
 @media (max-width: 575.98px) {
-  .topnav { padding: 0 14px; }
+  .topnav {
+    padding: 10px 12px;
+    height: auto;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .topnav-left {
+    flex: 1 1 100%;
+    justify-content: space-between;
+  }
+
+  .page-title { font-size: 1.1rem; }
+
+  .topnav-right {
+    flex: 1 1 100%;
+    justify-content: flex-end;
+    gap: 6px;
+  }
 
   .dashboard-content { padding: 12px; }
 
   .btn-week { display: none; }
 
   .pending-body { gap: 20px; }
+
+  .stat-card,
+  .card-panel {
+    padding: 16px;
+  }
+
+  .dash-table thead th,
+  .dash-table tbody td {
+    padding: 8px 10px;
+    font-size: .8rem;
+  }
 }
 
 
