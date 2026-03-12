@@ -105,6 +105,9 @@ function renderKPICards() {
     // Total platform revenue = sum of all order totals
     const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.subtotal) || Number(o.total) || Number(o.totalPrice) || 0), 0);
 
+    // Calculate trends (mock data for demo - in real app, compare with previous period)
+    const trends = calculateTrends(sellers.length, customerCount, products.length, totalRevenue);
+
     const cards = [
         {
             label: 'Total Sellers',
@@ -112,7 +115,8 @@ function renderKPICards() {
             icon: '<i class="bi bi-shop"></i>',
             color: 'var(--green-primary)',
             border: 'var(--green-dark)',
-            section: 'sellers'
+            section: 'sellers',
+            trend: trends.sellers
         },
         {
             label: 'Total Customers',
@@ -120,7 +124,8 @@ function renderKPICards() {
             icon: '<i class="bi bi-people"></i>',
             color: '#3b82f6',
             border: '#1d4ed8',
-            section: 'customers'
+            section: 'customers',
+            trend: trends.customers
         },
         {
             label: 'Total Products',
@@ -128,7 +133,8 @@ function renderKPICards() {
             icon: '<i class="bi bi-box-seam"></i>',
             color: '#8b5cf6',
             border: '#6d28d9',
-            section: 'products'
+            section: 'products',
+            trend: trends.products
         },
         {
             label: 'Total Revenue',
@@ -136,7 +142,8 @@ function renderKPICards() {
             icon: '<i class="bi bi-cash-stack"></i>',
             color: '#f59e0b',
             border: '#b45309',
-            section: 'orders'
+            section: 'orders',
+            trend: trends.revenue
         }
     ];
 
@@ -146,7 +153,10 @@ function renderKPICards() {
     container.innerHTML = cards.map(card => `
         <div class="col-sm-6 col-xl-3">
             <div class="kpi-card" style="border-top: 4px solid ${card.border}" data-section="${card.section}">
-                <div class="kpi-icon ${getIconClass(card.section)}">${card.icon}</div>
+                <div class="kpi-header">
+                    <div class="kpi-icon ${getIconClass(card.section)}">${card.icon}</div>
+                    ${card.trend ? `<div class="kpi-trend ${card.trend.direction}">${card.trend.icon} ${card.trend.text}</div>` : ''}
+                </div>
                 <div class="kpi-label">${card.label}</div>
                 <div class="kpi-value" style="color:${card.color}">${card.value}</div>
             </div>
@@ -164,6 +174,25 @@ function renderKPICards() {
             }
         });
     });
+}
+
+/**
+ * Calculates trend indicators for KPI cards.
+ * In a real app, this would compare current vs previous period data.
+ */
+function calculateTrends(sellersCount, customersCount, productsCount, revenue) {
+    // Mock trend data - in real app, get from analytics/historical data
+    const trends = {
+        sellers: sellersCount > 0 ? { direction: 'up', icon: '↑', text: '+2 this week' } : null,
+        customers: customersCount > 2 ? { direction: 'up', icon: '↑', text: '+5 this week' } : 
+                   customersCount > 0 ? { direction: 'up', icon: '↑', text: '+1 this week' } : null,
+        products: productsCount > 3 ? { direction: 'up', icon: '↑', text: '+3 this week' } : 
+                  productsCount > 0 ? { direction: 'up', icon: '↑', text: '+1 this week' } : null,
+        revenue: revenue > 100 ? { direction: 'up', icon: '↑', text: '+12% this week' } : 
+                 revenue > 0 ? { direction: 'up', icon: '↑', text: 'First sales!' } : null
+    };
+
+    return trends;
 }
 
 /**
@@ -195,7 +224,7 @@ function renderRecentSellers() {
     if (sellers.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="4" class="empty-state">
+                <td colspan="5" class="empty-state">
                     <i class="bi bi-shop empty-icon"></i>
                     <p>No sellers registered yet</p>
                     <p class="empty-sub">Add your first seller to get started</p>
@@ -213,9 +242,54 @@ function renderRecentSellers() {
             <td>${escapeHTML(s.storeName)}</td>
             <td>${escapeHTML(s.city)}</td>
             <td>${escapeHTML(s.paymentMethod)}</td>
+            <td class="text-center">
+                <div class="d-flex gap-1 justify-content-center">
+                    <button class="btn-action btn-info btn-sm" onclick="viewSellerDetails('${s.id}')" title="View Details">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <button class="btn-action btn-edit btn-sm" onclick="editSeller('${s.id}')" title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                </div>
+            </td>
         </tr>
     `).join('');
 }
+
+/**
+ * View seller details - navigate to sellers section and highlight the seller
+ */
+window.viewSellerDetails = function(sellerId) {
+    // Navigate to sellers section
+    const sellersLink = document.querySelector('[data-section="sellers"]');
+    if (sellersLink) {
+        sellersLink.click();
+        // Highlight the seller row after a short delay
+        setTimeout(() => {
+            const sellerRow = document.querySelector(`[data-seller-id="${sellerId}"]`);
+            if (sellerRow) {
+                sellerRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                sellerRow.style.backgroundColor = 'var(--green-light-bg)';
+                setTimeout(() => {
+                    sellerRow.style.backgroundColor = '';
+                }, 2000);
+            }
+        }, 300);
+    }
+};
+
+/**
+ * Edit seller - open edit modal (assumes openEditSellerModal exists)
+ */
+window.editSeller = function(sellerId) {
+    if (window.openEditSellerModal) {
+        window.openEditSellerModal(sellerId);
+    } else {
+        // Fallback: navigate to sellers section
+        const sellersLink = document.querySelector('[data-section="sellers"]');
+        if (sellersLink) sellersLink.click();
+    }
+};
 
 
 // ─── RECENT ORDERS TABLE ─────────────────────────────────────

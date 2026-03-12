@@ -100,7 +100,13 @@
                 <span class="topbar-date" id="topbarDate"></span>
             </div>
 
-            <button id="logoutBtn" class="btn-logout"><i class="bi bi-box-arrow-right"></i> Logout</button>
+            <div class="topbar-right">
+                <button class="topbar-icon-btn" id="notificationsBell" title="Notifications">
+                    <i class="bi bi-bell"></i>
+                    <span class="badge-dot d-none" id="notificationsBadge"></span>
+                </button>
+                <button id="logoutBtn" class="btn-logout"><i class="bi bi-box-arrow-right"></i> Logout</button>
+            </div>
         </header>
 
         <!-- ── DASHBOARD SECTION ──────────────────────────── -->
@@ -129,6 +135,7 @@
                                         <th>Store</th>
                                         <th>City</th>
                                         <th>Payment</th>
+                                        <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="recentSellersBody"></tbody>

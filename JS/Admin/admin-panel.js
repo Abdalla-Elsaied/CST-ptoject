@@ -188,4 +188,34 @@ function updateSidebarBadges() {
 
     setBadge(reqBadge, pendingRequests);
     setBadge(catBadge, pendingCategories);
+
+    // Update notifications bell
+    updateNotificationsBell(pendingRequests + pendingCategories);
+}
+
+/**
+ * Updates the notifications bell in the topbar.
+ */
+function updateNotificationsBell(totalCount) {
+    const bell = document.getElementById('notificationsBell');
+    const badge = document.getElementById('notificationsBadge');
+    
+    if (!bell || !badge) return;
+
+    if (totalCount > 0) {
+        badge.classList.remove('d-none');
+        bell.title = `${totalCount} pending notification${totalCount > 1 ? 's' : ''}`;
+    } else {
+        badge.classList.add('d-none');
+        bell.title = 'No notifications';
+    }
+
+    // Add click handler to show notifications dropdown
+    bell.onclick = () => {
+        // For now, just navigate to requests if there are pending items
+        if (totalCount > 0) {
+            const requestsLink = document.querySelector('[data-section="requests"]');
+            if (requestsLink) requestsLink.click();
+        }
+    };
 }
