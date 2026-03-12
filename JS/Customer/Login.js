@@ -6,14 +6,14 @@ import {
   ROLES
 } from '../Core/Auth.js';
 
-import { seedAdmin } from '../Core/SeedData.js';
+import { seedAdmin, seedCategories } from '../Core/SeedData.js';
 
 // Seed default admin account on page load
-seedAdmin();
 
 // Wait for DOM and jQuery to be ready
 $(document).ready(function () {
-
+  seedAdmin();
+  seedCategories();
   // Password visibility toggle (unchanged – nice UX)
   $("#togglePassword").on("click", function () {
     const $input = $("#floatingPassword");
@@ -102,7 +102,7 @@ $(document).ready(function () {
         redirectUrl = "/Html/Seller/SellerHomePage.html";
         break;
       case ROLES.CUSTOMER:
-        redirectUrl = "/Html/Customer/Home.html";
+        redirectUrl = "/Html/Customer/CustomerHomePage.html";
         break;
       default:
         alert("Unknown user role. Contact support.");

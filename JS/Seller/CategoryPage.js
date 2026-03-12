@@ -1,25 +1,7 @@
 import { KEY_CATEGORIES, KEY_PRODUCTS } from "../Core/Constants.js";
+import {getLS, setLS} from "../Core/Storage.js"
 
-const seedCategories = [
-  { id: "cat-1", name: "Women Fashion", products: 214, visibility: "active", updated: "Mar 06, 2026", description: "" },
-  { id: "cat-2", name: "Men Essentials", products: 162, visibility: "active", updated: "Mar 02, 2026", description: "" },
-  { id: "cat-3", name: "Beauty & Care", products: 88, visibility: "hidden", updated: "Feb 28, 2026", description: "" },
-  { id: "cat-4", name: "Electronics", products: 132, visibility: "active", updated: "Mar 08, 2026", description: "" },
-  { id: "cat-5", name: "Home & Living", products: 104, visibility: "draft", updated: "Feb 22, 2026", description: "" },
-  { id: "cat-6", name: "Shoes", products: 96, visibility: "active", updated: "Mar 01, 2026", description: "" }
-];
-
-const loadCategories = () => {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(KEY_CATEGORIES));
-    if (Array.isArray(parsed) && parsed.length) return parsed;
-  } catch (_err) {
-  }
-  localStorage.setItem(KEY_CATEGORIES, JSON.stringify(seedCategories));
-  return [...seedCategories];
-};
-
-let categories = loadCategories();
+let categories = getLS(KEY_CATEGORIES);
 
 const tableBody = document.getElementById("categoryTable");
 const searchInput = document.getElementById("searchInput");
