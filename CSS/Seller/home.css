@@ -209,6 +209,7 @@ img { max-width: 100%; }
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-width: 0;
   transition: margin-left .3s;
 }
 
@@ -341,6 +342,8 @@ img { max-width: 100%; }
 .dashboard-content {
   padding: 24px;
   flex: 1;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .embedded-page-wrap {
@@ -367,6 +370,7 @@ img { max-width: 100%; }
   box-shadow: var(--shadow);
   border: 1px solid var(--border);
   transition: box-shadow .2s;
+  min-width: 0;
 }
 
 .stat-card:hover { box-shadow: var(--shadow-md); }
@@ -509,6 +513,7 @@ img { max-width: 100%; }
   box-shadow: var(--shadow);
   border: 1px solid var(--border);
   transition: background .3s;
+  min-width: 0;
 }
 
 .panel-header {
@@ -605,11 +610,22 @@ img { max-width: 100%; }
 .chart-wrap {
   position: relative;
   height: 220px;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .bar-chart-wrap {
   height: 260px;
   margin-bottom: 0;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+canvas {
+  display: block;
+  max-width: 100%;
 }
 
 .chart-sub-label {
@@ -944,6 +960,7 @@ img { max-width: 100%; }
   .metric-item { min-width: 70px; }
 
   .chart-wrap { height: 180px; }
+  .bar-chart-wrap { height: 220px; }
 
   .embedded-page-frame { height: calc(100vh - 120px); }
 }
