@@ -98,7 +98,7 @@ export async function saveProductToDisk(product, imageFiles = []) {
 }
 
 /**
- * Load all products from MockAPI
+ * Load all products from MockAPI For Seller And Customer
  */
 export async function loadProductsFromFolder() {
   try {
@@ -108,7 +108,34 @@ export async function loadProductsFromFolder() {
       throw new Error(`Failed to load products: ${response.status}`);
     }
 
-    const products = await response.json();
+    let products = await response.json();
+    products = products.filter(x => x.isActive);
+
+    console.log(`Loaded ${products.length} products from MockAPI`);
+
+    return products;
+  } catch (err) {
+    console.error("Load from API failed:", err);
+
+    alert("Could not load products from server.\n\n" + err.message);
+
+    return [];
+  }
+}
+
+/**
+ * Load all products from MockAPI far ADMIN
+ */
+
+export async function loadProductsForAdmin() {
+  try {
+    const response = await fetch(PRODUCTS_ENDPOINT);
+
+    if (!response.ok) {
+      throw new Error(`Failed to load products: ${response.status}`);
+    }
+
+    let products = await response.json();
 
     console.log(`Loaded ${products.length} products from MockAPI`);
 

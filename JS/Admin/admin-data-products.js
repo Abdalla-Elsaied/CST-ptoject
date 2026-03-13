@@ -2,7 +2,7 @@
  * admin-data-products.js
  * Service layer for products. Handles fetching, caching, and filtering.
  */
-import { loadProductsFromFolder, saveProductToDisk, deleteProductFromDisk } from '../Core/FileStorage.js';
+import { loadProductsForAdmin, saveProductToDisk, deleteProductFromDisk } from '../Core/FileStorage.js';
 import { getLS, setLS } from '../Core/Storage.js';
 import { KEY_PRODUCTS } from '../Core/Constants.js';
 
@@ -23,7 +23,7 @@ export async function fetchProducts(forceSync = false) {
     const stored = getLS(KEY_PRODUCTS);
     if (forceSync || !stored || stored.length === 0) {
         try {
-            const remoteProducts = await loadProductsFromFolder();
+            const remoteProducts = await loadProductsForAdmin();
             if (remoteProducts && remoteProducts.length > 0) {
                 setLS(KEY_PRODUCTS, remoteProducts);
                 _productsCache = remoteProducts;
