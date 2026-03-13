@@ -109,6 +109,8 @@ export async function loadProductsFromFolder() {
     }
 
     let products = await response.json();
+    console.log("**********")
+    console.log(products)
     products = products.filter(x => x.isActive);
 
     console.log(`Loaded ${products.length} products from MockAPI`);
