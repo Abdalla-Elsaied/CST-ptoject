@@ -241,7 +241,7 @@ function renderWishlistTab() {
         <i class="bi bi-heart text-muted"></i>
         <h5>Your wishlist is empty</h5>
         <p class="small text-muted">Browse products and click the ♡ to save them here.</p>
-        <a href="index.html" class="btn btn-save mt-2">Start Shopping</a>
+        <a href="CustomerHomePage.html" class="btn btn-save mt-2">Start Shopping</a>
       </div>`;
     return;
   }
