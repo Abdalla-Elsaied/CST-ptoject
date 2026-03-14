@@ -1289,3 +1289,155 @@ body {
 }
 .star-pick:hover, .star-pick.hovered { color: var(--warning); transform: scale(1.15); }
 .star-pick.selected { color: var(--warning); }
+
+
+
+/* =====================================================
+   DEALPORT – Mini Footer + Become-a-Seller Modal
+   Append this block to the END of CustomerHomePage.css
+   ===================================================== */
+
+/* ── Mini Footer ──────────────────────────────────── */
+.site-footer-mini {
+  background: var(--green-light);
+  border-top: 2px solid var(--border);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.footer-mini-top {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 32px;
+  align-items: start;
+  padding: 32px 0 24px;
+  border-bottom: 1.5px solid var(--border);
+}
+
+/* Brand column */
+.footer-mini-brand {
+  min-width: 160px;
+}
+.footer-mini-tagline {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin: 6px 0 0;
+  max-width: 180px;
+  line-height: 1.5;
+}
+
+/* Links column */
+.footer-mini-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  align-items: center;
+  padding-top: 6px;
+}
+.footer-mini-links a {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s;
+  white-space: nowrap;
+}
+.footer-mini-links a:hover { color: var(--green-primary); }
+
+/* Newsletter column */
+.footer-mini-newsletter {
+  min-width: 240px;
+  max-width: 300px;
+}
+.footer-mini-nl-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 8px;
+}
+
+/* Bottom bar */
+.footer-mini-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.footer-mini-bottom p { margin: 0; }
+.footer-mini-ssl {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* Responsive footer */
+@media (max-width: 991px) {
+  .footer-mini-top {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+  }
+  .footer-mini-newsletter {
+    grid-column: 1 / -1;
+    max-width: 100%;
+  }
+}
+@media (max-width: 575px) {
+  .footer-mini-top {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 24px 0 20px;
+  }
+  .footer-mini-links { gap: 6px 14px; }
+  .footer-mini-bottom { justify-content: center; text-align: center; flex-direction: column; gap: 8px; }
+  .footer-mini-ssl { order: 3; }
+}
+
+/* ── Become a Seller Modal ────────────────────────── */
+.seller-modal-content {
+  border-radius: 16px;
+  border: none;
+  overflow: hidden;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.18);
+}
+
+.seller-modal-header {
+  background: linear-gradient(135deg, #0d4a28, #16a34a);
+  border: none;
+  padding: 24px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.seller-modal-header .modal-title {
+  color: #fff;
+  font-size: 1.1rem;
+}
+.seller-modal-header .text-muted {
+  color: rgba(255,255,255,0.7) !important;
+}
+
+.seller-form-section {
+  background: var(--page-bg);
+  border-radius: var(--radius);
+  padding: 20px;
+  border: 1.5px solid var(--border);
+}
+
+.seller-section-label {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--green-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+}
+
+/* Use existing profile-input styles (already in CustomerHomePage.css via profile.css) */
+/* profile-label and btn-save / btn-cancel already exist */

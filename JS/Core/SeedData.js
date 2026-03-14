@@ -63,3 +63,26 @@ export function seedCategories() {
     if (Array.isArray(existing) && existing.length > 0) return;
     setLS(KEY_CATEGORIES, seedCategories);
 }
+
+export function seedTestimonials() {
+
+    const seedTestimonials = [
+        { id: 't1', userId: null, name: 'Emily R.', avatar: 'https://i.pravatar.cc/60?img=1', rating: 5, comment: 'Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!', createdAt: '2025-12-01T10:00:00Z', featured: true },
+
+        { id: 't2', userId: null, name: 'John D.', avatar: 'https://i.pravatar.cc/60?img=12', rating: 5, comment: 'Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!', createdAt: '2025-12-05T14:00:00Z', featured: true },
+
+        { id: 't3', userId: null, name: 'Ahmed M.', avatar: 'https://i.pravatar.cc/60?img=7', rating: 5, comment: 'Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!', createdAt: '2025-12-10T09:00:00Z', featured: true },
+
+        { id: 't4', userId: null, name: 'Alex T.', avatar: 'https://i.pravatar.cc/60?img=33', rating: 5, comment: 'Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!', createdAt: '2025-12-12T11:00:00Z', featured: false },
+
+        { id: 't5', userId: null, name: 'Priya R.', avatar: 'https://i.pravatar.cc/60?img=45', rating: 5, comment: 'Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!', createdAt: '2025-12-14T08:00:00Z', featured: false },
+
+        { id: 't6', userId: null, name: 'David H.', avatar: 'https://i.pravatar.cc/60?img=22', rating: 5, comment: 'Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!', createdAt: '2025-12-16T16:00:00Z', featured: false },
+    ];
+
+    const existing = getLS(KEY_TESTIMONIALS);
+
+    if (Array.isArray(existing) && existing.length > 0) return;
+
+    setLS(KEY_TESTIMONIALS, seedTestimonials);
+}
