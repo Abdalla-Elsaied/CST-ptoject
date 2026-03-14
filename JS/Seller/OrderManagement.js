@@ -733,9 +733,23 @@ function saveOrder(){
       };
 
       if (mixed) {
-        next.sellerStatus = { ...(original.sellerStatus || {}), [sellerId]: status };
+        const nextSellerStatus = { ...(original.sellerStatus || {}), [sellerId]: status };
+        next.sellerStatus = nextSellerStatus;
         next.sellerPayment = { ...(original.sellerPayment || {}), [sellerId]: payment };
         next.sellerSubtotal = { ...(original.sellerSubtotal || {}), [sellerId]: finalPrice };
+
+        const itemsWithSellerId = mergedItems.filter((item) => String(item?.sellerId ?? '').trim());
+        const canCheckAllSellers = mergedItems.length > 0 && itemsWithSellerId.length === mergedItems.length;
+        if (canCheckAllSellers) {
+          const sellerIds = new Set(itemsWithSellerId.map((item) => String(item.sellerId).trim()));
+          const allDelivered = Array.from(sellerIds).every((id) => {
+            const value = nextSellerStatus[id];
+            return String(value || '').toLowerCase() === 'delivered';
+          });
+          if (allDelivered) {
+            next.status = 'Delivered';
+          }
+        }
       } else {
         next.product = products[0]?.name ?? '';
         next.price = finalPrice;
