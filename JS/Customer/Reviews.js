@@ -7,32 +7,28 @@
  */
 
 import { getLS, setLS } from '../Core/FileStorage.js';
+import { seedTestimonials } from '../Core/SeedData.js'; // ← seed moved here
 
 export const KEY_TESTIMONIALS    = 'ls_testimonials';
 export const KEY_PRODUCT_REVIEWS = 'ls_product_reviews';
 
 /* ── Testimonials (home page) ──────────────────────── */
 
-const SEED_TESTIMONIALS = [
-  { id: 't1', userId: null, name: 'Emily R.',  avatar: 'https://i.pravatar.cc/60?img=1',  rating: 5, comment: 'Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!', createdAt: '2025-12-01T10:00:00Z', featured: true },
-  { id: 't2', userId: null, name: 'John D.',   avatar: 'https://i.pravatar.cc/60?img=12', rating: 5, comment: 'Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!', createdAt: '2025-12-05T14:00:00Z', featured: true },
-  { id: 't3', userId: null, name: 'Ahmed M.',  avatar: 'https://i.pravatar.cc/60?img=7',  rating: 5, comment: 'Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!', createdAt: '2025-12-10T09:00:00Z', featured: true },
-  { id: 't4', userId: null, name: 'Alex T.',   avatar: 'https://i.pravatar.cc/60?img=33', rating: 5, comment: 'Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!', createdAt: '2025-12-12T11:00:00Z', featured: false },
-  { id: 't5', userId: null, name: 'Priya R.',  avatar: 'https://i.pravatar.cc/60?img=45', rating: 5, comment: 'Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!', createdAt: '2025-12-14T08:00:00Z', featured: false },
-  { id: 't6', userId: null, name: 'David H.',  avatar: 'https://i.pravatar.cc/60?img=22', rating: 5, comment: 'Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!', createdAt: '2025-12-16T16:00:00Z', featured: false },
-];
-
 export function getTestimonials() {
   const stored = getLS(KEY_TESTIMONIALS);
   if (!stored || stored.length === 0) {
-    setLS(KEY_TESTIMONIALS, SEED_TESTIMONIALS);
-    return SEED_TESTIMONIALS;
+    seedTestimonials(); // seed via SeedData.js instead of inline
+    return getLS(KEY_TESTIMONIALS) || [];
   }
-  return stored;
+
+  // Sort by newest first, return only the first 6
+  return [...stored]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 6);
 }
 
 export function addTestimonial({ userId, name, avatar, rating, comment }) {
-  const list = getTestimonials();
+  const all = getLS(KEY_TESTIMONIALS) || [];
   const entry = {
     id:        'testi-' + Date.now(),
     userId,
@@ -43,13 +39,13 @@ export function addTestimonial({ userId, name, avatar, rating, comment }) {
     createdAt: new Date().toISOString(),
     featured:  false,
   };
-  setLS(KEY_TESTIMONIALS, [entry, ...list]);
+  setLS(KEY_TESTIMONIALS, [entry, ...all]);
   return entry;
 }
 
 export function hasUserTestimonial(userId) {
   if (!userId) return false;
-  return getTestimonials().some(t => t.userId === userId);
+  return (getLS(KEY_TESTIMONIALS) || []).some(t => t.userId === userId);
 }
 
 /* ── Product Reviews ───────────────────────────────── */
