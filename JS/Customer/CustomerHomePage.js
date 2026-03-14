@@ -1,19 +1,12 @@
 /**
- * CustomerHomePage.js – DEALPORT main entry point
- * type="module" in CustomerHomePage.html
- *
- * Changes vs previous version:
- *  – Fixed broken import path for ProductRenderer (was './JS/Core/ProductRenderer.js')
- *  – Feature 1: wishlist drawer items navigate to product-details.html on click
- *  – Feature 1: empty wishlist shows message without a button
- *  – Feature 4: doSearch() hides/shows entire category <section> based on
- *               data-category attribute (not just individual product cols)
- *  – Feature 6: addToCart validates stockQuantity before adding from home page
+ * CustomerHomePage.js
+ * Feature 1 – Mobile dropdown: toggles on tap/click for small screens
+ * Feature 2 – Role-based access: redirect admin away from this page
  */
 
 import { loadProductsFromFolder }                              from '../Core/FileStorage.js';
 import { renderProductsByCategory, showSkeleton, showError }   from './ProductRenderer.js';
-import { getCurrentUser, logoutUser, getCartCount }            from '../Core/Auth.js';
+import { getCurrentUser, logoutUser, getCartCount, ROLES }     from '../Core/Auth.js';
 import {
   getWishlist, removeFromWishlist,
   toggleWishlist, isWishlisted, getWishlistCount,
@@ -27,6 +20,17 @@ import {
 } from './Reviews.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+
+  /* ══════════════════════════════════════════════════
+     FEATURE 2 – Role-based access control
+     Admin must NOT access the customer home page.
+     Seller and Customer are allowed.
+  ══════════════════════════════════════════════════ */
+  const currentUser = getCurrentUser();
+  if (currentUser && currentUser.role === ROLES.ADMIN) {
+    window.location.replace('/Html/Admin/admin-panel.html');
+    return; // stop all further execution
+  }
 
   /* ══════════════════════════════════════════════════
      1. SWIPERS
@@ -106,6 +110,93 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   /* ══════════════════════════════════════════════════
+     FEATURE 1 – Mobile dropdown fix
+     Bootstrap's data-bs-toggle="dropdown" only works on
+     elements that Bootstrap can bind to. On mobile (touch),
+     the account button is hidden (d-none d-md-flex), so we
+     wire a mobile menu button separately.
+     We also ensure any dropdown opened via JS closes properly.
+  ══════════════════════════════════════════════════ */
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+
+  // Mobile hamburger → show a compact offcanvas-style dropdown below navbar
+  if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      let mobileMenu = document.getElementById('mobileNavMenu');
+
+      if (mobileMenu) {
+        // toggle
+        const isOpen = mobileMenu.classList.contains('mobile-nav-open');
+        mobileMenu.classList.toggle('mobile-nav-open', !isOpen);
+        mobileMenu.style.display = isOpen ? 'none' : 'block';
+        return;
+      }
+
+      // Build menu once
+      mobileMenu = document.createElement('div');
+      mobileMenu.id = 'mobileNavMenu';
+      mobileMenu.className = 'mobile-nav-menu mobile-nav-open';
+
+      const user = getCurrentUser();
+      if (!user) {
+        mobileMenu.innerHTML = `
+          <a class="mobile-nav-item" href="Login.html"><i class="bi bi-box-arrow-in-right me-2"></i>Login</a>
+          <a class="mobile-nav-item" href="Register.html"><i class="bi bi-person-plus me-2"></i>Register</a>
+          <a class="mobile-nav-item" href="Cart.html"><i class="bi bi-cart3 me-2"></i>Cart</a>`;
+      } else {
+        const initials = user.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+        mobileMenu.innerHTML = `
+          <div class="mobile-nav-user">
+            <div class="mobile-nav-avatar">${initials}</div>
+            <div>
+              <div class="mobile-nav-name">${user.name}</div>
+              <div class="mobile-nav-email">${user.email}</div>
+            </div>
+          </div>
+          <a class="mobile-nav-item" href="profile.html"><i class="bi bi-person-circle me-2 text-success"></i>My Profile</a>
+          <a class="mobile-nav-item" href="profile.html#orders"><i class="bi bi-bag-check me-2 text-success"></i>My Orders</a>
+          <a class="mobile-nav-item" id="mobileWishlistLink" href="#"><i class="bi bi-heart me-2 text-danger"></i>Wishlist</a>
+          <a class="mobile-nav-item" href="Cart.html"><i class="bi bi-cart3 me-2 text-success"></i>Cart</a>
+          <hr class="my-1"/>
+          <a class="mobile-nav-item text-danger" id="mobileLogoutBtn" href="#"><i class="bi bi-box-arrow-right me-2"></i>Logout</a>`;
+      }
+
+      // Insert below header
+      document.querySelector('header.navbar-top').insertAdjacentElement('afterend', mobileMenu);
+
+      document.getElementById('mobileLogoutBtn')?.addEventListener('click', e => {
+        e.preventDefault(); logoutUser();
+      });
+      document.getElementById('mobileWishlistLink')?.addEventListener('click', e => {
+        e.preventDefault();
+        mobileMenu.style.display = 'none';
+        mobileMenu.classList.remove('mobile-nav-open');
+        openWishlistDrawer();
+      });
+    });
+
+    // Close mobile menu when tapping outside
+    document.addEventListener('click', e => {
+      const menu = document.getElementById('mobileNavMenu');
+      if (menu && !mobileMenuBtn.contains(e.target) && !menu.contains(e.target)) {
+        menu.style.display = 'none';
+        menu.classList.remove('mobile-nav-open');
+      }
+    });
+  }
+
+  // Ensure Bootstrap dropdowns work on touch devices
+  // Bootstrap 5 handles this natively but we add a touch fallback just in case
+  document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(trigger => {
+    trigger.addEventListener('touchstart', function(e) {
+      e.preventDefault(); // prevent double-fire on mobile
+      const dropdownEl = bootstrap.Dropdown.getOrCreateInstance(this);
+      dropdownEl.toggle();
+    }, { passive: false });
+  });
+
+  /* ══════════════════════════════════════════════════
      3. CART BADGE
   ══════════════════════════════════════════════════ */
   const cartBadgeEl = document.getElementById('cartBadge');
@@ -125,8 +216,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   /* ══════════════════════════════════════════════════
      4. WISHLIST DRAWER
-     Feature 1: clicking a product row navigates to product-details.html
-     Feature 1: empty state shows message without a button
   ══════════════════════════════════════════════════ */
   const wishlistNavBtn = document.getElementById('wishlistNavBtn');
   const wishlistDrawer = document.getElementById('wishlistDrawer');
@@ -145,14 +234,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function openWishlistDrawer() {
     renderWishlistDrawer();
-    wishlistDrawer.classList.add('open');
-    drawerBackdrop.classList.add('open');
+    wishlistDrawer?.classList.add('open');
+    drawerBackdrop?.classList.add('open');
     document.body.style.overflow = 'hidden';
   }
 
   function closeWishlistDrawer() {
-    wishlistDrawer.classList.remove('open');
-    drawerBackdrop.classList.remove('open');
+    wishlistDrawer?.classList.remove('open');
+    drawerBackdrop?.classList.remove('open');
     document.body.style.overflow = '';
   }
 
@@ -161,9 +250,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   drawerBackdrop?.addEventListener('click', closeWishlistDrawer);
 
   function renderWishlistDrawer() {
+    if (!drawerBody) return;
     const list = getWishlist();
 
-    // Feature 1: empty → message only, no button
     if (list.length === 0) {
       drawerBody.innerHTML = `
         <div class="drawer-empty">
@@ -174,12 +263,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // Feature 1: each row is a link to product-details.html
     drawerBody.innerHTML = list.map(p => {
       const img = p.image || `https://placehold.co/80x80/ecfdf5/16a34a?text=${encodeURIComponent(p.name)}`;
       return `
         <div class="drawer-product-row" id="drow-${p.id}">
-          <!-- Feature 1: clicking image or name navigates to details page -->
           <a href="product-details.html?id=${p.id}" class="drow-link" title="View product">
             <img src="${img}" alt="${p.name}"
                  onerror="this.src='https://placehold.co/80x80/ecfdf5/16a34a?text=No+Image'"/>
@@ -202,7 +289,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateWishNavBadge();
         updateDropWishCount();
         syncHeartIcons();
-        // Feature 1: if list becomes empty show message (no button)
         if (getWishlistCount() === 0) renderWishlistDrawer();
       });
     });
@@ -222,44 +308,37 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   /* ══════════════════════════════════════════════════
-     6. DELEGATED EVENTS – Cart & Wishlist
-     Feature 6: stock validation before addToCart from home page
+     6. DELEGATED EVENTS – Cart & Wishlist (stock validation)
   ══════════════════════════════════════════════════ */
   document.body.addEventListener('click', e => {
-
-    // ── Add to Cart ──────────────────────────────────
     const cartBtn = e.target.closest('.btn-add-cart');
     if (cartBtn && !cartBtn.disabled) {
-      const card = cartBtn.closest('.product-card');
-      const productId = cartBtn.dataset.id || card?.dataset.id || String(Date.now());
-
-      // Feature 6: read stockQuantity from data attribute
+      const card        = cartBtn.closest('.product-card');
+      const productId   = cartBtn.dataset.id || card?.dataset.id || String(Date.now());
       const stockQtyRaw = cartBtn.dataset.stockQuantity || card?.dataset.stockQuantity || '';
       const stockQty    = stockQtyRaw !== '' ? parseInt(stockQtyRaw) : null;
 
-      // Feature 6: check current cart quantity for this product
       if (stockQty !== null) {
-        const cart        = getCart();
-        const cartItem    = cart.find(i => String(i.id) === String(productId));
-        const currentQty  = cartItem ? (cartItem.quantity || 0) : 0;
-
+        const cartItem   = getCart().find(i => String(i.id) === String(productId));
+        const currentQty = cartItem ? (cartItem.quantity || 0) : 0;
         if (currentQty >= stockQty) {
           alert('You have reached the maximum available stock for this product.');
           return;
         }
       }
 
+      const stockQtyForCart = stockQtyRaw !== '' ? parseInt(stockQtyRaw) : null;
       const product = {
-        id:       productId,
-        name:     cartBtn.dataset.name     || card?.querySelector('.product-name')?.textContent || 'Product',
-        price:    parseFloat(cartBtn.dataset.price)    || 0,
-        oldPrice: cartBtn.dataset.oldPrice ? parseFloat(cartBtn.dataset.oldPrice) : null,
-        category: cartBtn.dataset.category || card?.querySelector('.product-category')?.textContent || '',
-        image:    cartBtn.dataset.image    || card?.querySelector('.product-img')?.src || '',
+        id:            productId,
+        name:          cartBtn.dataset.name     || card?.querySelector('.product-name')?.textContent || 'Product',
+        price:         parseFloat(cartBtn.dataset.price)    || 0,
+        oldPrice:      cartBtn.dataset.oldPrice ? parseFloat(cartBtn.dataset.oldPrice) : null,
+        category:      cartBtn.dataset.category || card?.querySelector('.product-category')?.textContent || '',
+        image:         cartBtn.dataset.image    || card?.querySelector('.product-img')?.src || '',
+        stockQuantity: stockQtyForCart,
       };
 
       addToCart(product, 1);
-
       const original = cartBtn.innerHTML;
       cartBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Added!';
       cartBtn.style.background = '#16a34a';
@@ -272,7 +351,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }, 1800);
     }
 
-    // ── Wishlist toggle ──────────────────────────────
     const wishBtn = e.target.closest('.btn-wishlist');
     if (wishBtn) {
       const card     = wishBtn.closest('.product-card');
@@ -281,9 +359,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const price    = card?.querySelector('.price-now')?.textContent?.replace('$', '') || '0';
       const category = card?.querySelector('.product-category')?.textContent || '';
       const image    = card?.querySelector('.product-img')?.src               || '';
-
-      const added = toggleWishlist({ id, name, price: parseFloat(price), category, image });
-      const icon  = wishBtn.querySelector('i');
+      const added    = toggleWishlist({ id, name, price: parseFloat(price), category, image });
+      const icon     = wishBtn.querySelector('i');
       if (icon) {
         icon.className = added ? 'bi bi-heart-fill' : 'bi bi-heart';
         wishBtn.style.color = added ? '#ef4444' : '';
@@ -294,30 +371,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   /* ══════════════════════════════════════════════════
-     7. LOCATION POPUP (Leaflet + Geolocation API)
+     7. LOCATION POPUP
   ══════════════════════════════════════════════════ */
-  const locationBtn    = document.getElementById('locationBtn');
-  const locAddrText    = document.getElementById('locAddrText');
-  const detectBtn      = document.getElementById('detectLocationBtn');
+  const locationBtn     = document.getElementById('locationBtn');
+  const locAddrText     = document.getElementById('locAddrText');
+  const detectBtn       = document.getElementById('detectLocationBtn');
   const saveLocationBtn = document.getElementById('saveLocationBtn');
-  const manualInput    = document.getElementById('manualAddressInput');
-  const detectedBox    = document.getElementById('detectedAddress');
-  const detectedText   = document.getElementById('detectedAddressText');
-  const mapPlaceholder = document.getElementById('mapPlaceholder');
-  const leafletMapDiv  = document.getElementById('leafletMap');
+  const manualInput     = document.getElementById('manualAddressInput');
+  const detectedBox     = document.getElementById('detectedAddress');
+  const detectedText    = document.getElementById('detectedAddressText');
+  const mapPlaceholder  = document.getElementById('mapPlaceholder');
+  const leafletMapDiv   = document.getElementById('leafletMap');
 
-  let locationModal, leafletMap, leafletMarker;
-  let pendingLocation = null;
+  let locationModal, leafletMap, leafletMarker, pendingLocation = null;
 
   const savedLoc = getLS(KEY_LOCATION);
-  console.log(savedLoc);
   if (savedLoc?.address) {
     locAddrText.innerHTML = truncateAddr(savedLoc.address) + ' <i class="bi bi-chevron-down small"></i>';
   }
-
-  function truncateAddr(addr) {
-    return addr.length > 28 ? addr.slice(0, 28) + '…' : addr;
-  }
+  function truncateAddr(addr) { return addr.length > 28 ? addr.slice(0, 28) + '…' : addr; }
 
   locationBtn?.addEventListener('click', () => {
     if (!locationModal) locationModal = new bootstrap.Modal(document.getElementById('locationModal'));
@@ -325,30 +397,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   detectBtn?.addEventListener('click', () => {
-    if (!navigator.geolocation) { alert('Geolocation is not supported by your browser.'); return; }
+    if (!navigator.geolocation) { alert('Geolocation not supported.'); return; }
     detectBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Detecting…';
     detectBtn.disabled = true;
-
     navigator.geolocation.getCurrentPosition(
       async pos => {
         const { latitude: lat, longitude: lng } = pos.coords;
         pendingLocation = { lat, lng, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` };
         mapPlaceholder.style.display = 'none';
         leafletMapDiv.style.display  = 'block';
-
         if (!leafletMap) {
           leafletMap = L.map('leafletMap').setView([lat, lng], 14);
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-          }).addTo(leafletMap);
-        } else {
-          leafletMap.setView([lat, lng], 14);
-        }
-
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(leafletMap);
+        } else { leafletMap.setView([lat, lng], 14); }
         if (leafletMarker) leafletMarker.remove();
         leafletMarker = L.marker([lat, lng]).addTo(leafletMap);
         setTimeout(() => leafletMap.invalidateSize(), 200);
-
         try {
           const res  = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
           const data = await res.json();
@@ -361,7 +425,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           detectedText.textContent = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
           detectedBox.classList.remove('d-none');
         }
-
         detectBtn.innerHTML = '<i class="bi bi-crosshair me-1"></i> Detected!';
         detectBtn.disabled = false;
       },
@@ -404,15 +467,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
     this.closest('.newsletter-group').innerHTML =
-      '<div class="d-flex align-items-center gap-2 px-3 py-2 text-success fw-bold">' +
-      '<i class="bi bi-check-circle-fill"></i> You\'re subscribed!</div>';
+      '<div class="d-flex align-items-center gap-2 px-3 py-2 text-success fw-bold"><i class="bi bi-check-circle-fill"></i> You\'re subscribed!</div>';
   });
 
   /* ══════════════════════════════════════════════════
-     10. SEARCH – Feature 4
-     Hides/shows ENTIRE category <section> when category filter or
-     text search is applied.  The section carries data-category so
-     category-level hiding is O(1) without looping inner cards.
+     10. SEARCH
   ══════════════════════════════════════════════════ */
   const searchInput = document.querySelector('.search-input');
   const searchBtn   = document.querySelector('.btn-search');
@@ -424,54 +483,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.querySelectorAll('.category-section').forEach(section => {
       const sectionCategory = section.dataset.category || '';
-
-      // Feature 4: if a specific category is selected hide all non-matching sections entirely
       if (category !== 'All' && sectionCategory !== category) {
-        section.style.display = 'none';
-        return;
+        section.style.display = 'none'; return;
       }
-
-      // Text search: check product names inside this section
       if (query) {
         let visibleCount = 0;
         section.querySelectorAll('.product-card').forEach(card => {
           const name = (card.querySelector('.product-name')?.textContent || '').toLowerCase();
           const col  = card.closest('[class*="col-"]');
-          if (name.includes(query)) {
-            col?.classList.remove('d-none');
-            visibleCount++;
-          } else {
-            col?.classList.add('d-none');
-          }
+          if (name.includes(query)) { col?.classList.remove('d-none'); visibleCount++; }
+          else col?.classList.add('d-none');
         });
-        // Feature 4: hide entire section if no products match query
         section.style.display = visibleCount === 0 ? 'none' : '';
       } else {
-        // No text query: restore all hidden product columns
         section.style.display = '';
         section.querySelectorAll('[class*="col-"].d-none').forEach(c => c.classList.remove('d-none'));
       }
     });
 
     const noResults = document.getElementById('no-results-msg');
-    const allHidden = [...document.querySelectorAll('.category-section')]
-      .every(s => s.style.display === 'none');
+    const allHidden = [...document.querySelectorAll('.category-section')].every(s => s.style.display === 'none');
     if (noResults) noResults.style.display = allHidden && (query || category !== 'All') ? 'block' : 'none';
   }
 
   searchBtn?.addEventListener('click', doSearch);
   searchInput?.addEventListener('keypress', e => { if (e.key === 'Enter') doSearch(); });
   searchCat?.addEventListener('change', doSearch);
-
-  // Live clear: restore everything when input is emptied
   searchInput?.addEventListener('input', () => {
     if (!searchInput.value.trim()) {
       const cat = searchCat?.value || 'All';
       document.querySelectorAll('.category-section').forEach(s => {
         s.style.display = (cat === 'All' || s.dataset.category === cat) ? '' : 'none';
-        if (s.style.display !== 'none') {
-          s.querySelectorAll('[class*="col-"].d-none').forEach(c => c.classList.remove('d-none'));
-        }
+        if (s.style.display !== 'none') s.querySelectorAll('[class*="col-"].d-none').forEach(c => c.classList.remove('d-none'));
       });
       const nr = document.getElementById('no-results-msg');
       if (nr) nr.style.display = 'none';
@@ -525,7 +568,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   /* ══════════════════════════════════════════════════
-     13. TESTIMONIALS – dynamic render + add form
+     13. TESTIMONIALS
   ══════════════════════════════════════════════════ */
   const testiGrid      = document.getElementById('testimonialsGrid');
   const testiLoggedIn  = document.getElementById('testiFormLoggedIn');
@@ -545,7 +588,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     testiGrid.innerHTML = list.map((t, i) => {
       const isFeatured = t.featured || i < 3;
-      const stars = reviewStarsHTML(t.rating);
+      const stars    = reviewStarsHTML(t.rating);
       const initials = t.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
       const avatarImg = t.avatar
         ? `<img src="${t.avatar}" alt="${t.name}" class="testi-avatar"
@@ -557,10 +600,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="testimonial-card ${isFeatured ? 'featured-testimonial' : ''}">
             <div class="d-flex align-items-center gap-3 mb-3">
               <div class="testi-avatar-wrap">${avatarImg}</div>
-              <div class="flex-grow-1">
-                <h6 class="mb-0">${t.name}</h6>
-                <div class="testi-stars-row">${stars}</div>
-              </div>
+              <div class="flex-grow-1"><h6 class="mb-0">${t.name}</h6><div class="testi-stars-row">${stars}</div></div>
               <i class="bi bi-quote testi-quote"></i>
             </div>
             <p class="testi-text">"${t.comment}"</p>
@@ -619,11 +659,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const comment = testiCommentIn?.value.trim();
     const user    = getCurrentUser();
     const showErr = msg => { if (testiError) { testiError.textContent = msg; testiError.classList.remove('d-none'); } };
-
-    if (!user)                                return showErr('You must be logged in.');
-    if (rating < 1)                           return showErr('Please select a star rating.');
-    if (!comment || comment.length < 10)      return showErr('Comment must be at least 10 characters.');
-
+    if (!user)                           return showErr('You must be logged in.');
+    if (rating < 1)                      return showErr('Please select a star rating.');
+    if (!comment || comment.length < 10) return showErr('Comment must be at least 10 characters.');
     addTestimonial({ userId: user.id, name: user.name, avatar: null, rating, comment });
     renderTestimonials();
     if (testiCommentIn) testiCommentIn.value = '';
