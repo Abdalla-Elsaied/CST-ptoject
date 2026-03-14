@@ -21,6 +21,9 @@ const exportBtn = document.getElementById("exportBtn");
 const categoryNameInput = document.getElementById("categoryNameInput");
 const categoryVisibilityInput = document.getElementById("categoryVisibilityInput");
 const categoryDescInput = document.getElementById("categoryDescInput");
+const categoryNotice = document.getElementById("categoryNotice");
+const categoryNoticeText = document.querySelector(".category-notice-text");
+const categoryNoticeOk = document.getElementById("categoryNoticeOk");
 const themeToggleBtn = document.getElementById("themeToggle");
 const sidebar = document.getElementById("sidebar");
 const sidebarCollapseBtn = document.getElementById("sidebarCollapseBtn");
@@ -31,6 +34,8 @@ let currentFilter = "all";
 let currentQuery = "";
 let editingId = null;
 let viewOnly = false;
+const pageSize = 8;
+let page = 1;
 const THEME_STORAGE_KEY = "seller_theme";
 
 const applyStoredTheme = () => {
@@ -81,7 +86,13 @@ const renderTable = () => {
     return matchesFilter && matchesSearch;
   });
 
-  tableBody.innerHTML = filtered
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  if (page > totalPages) page = totalPages;
+
+  const start = (page - 1) * pageSize;
+  const paginated = filtered.slice(start, start + pageSize);
+
+  tableBody.innerHTML = paginated
     .map((cat) => {
       return `
         <tr>
@@ -97,7 +108,6 @@ const renderTable = () => {
           <td class="text-end">
             <div class="actions actions-end">
               <button class="action-btn" data-action="products" data-id="${cat.id}">Products</button>
-              <button class="action-btn" data-action="edit" data-id="${cat.id}">Edit</button>
               <button class="action-btn" data-action="view" data-id="${cat.id}">View</button>
             </div>
           </td>
@@ -105,6 +115,29 @@ const renderTable = () => {
       `;
     })
     .join("");
+
+  renderPagination(filtered.length);
+};
+
+const renderPagination = (total) => {
+  const pages = Math.ceil(total / pageSize);
+  const paginationEl = document.getElementById("pagination");
+  if (!paginationEl) return;
+  if (pages <= 1) {
+    paginationEl.innerHTML = "";
+    return;
+  }
+
+  let html = "";
+  for (let i = 1; i <= pages; i++) {
+    html += `<div class="page ${i === page ? "active" : ""}" data-page="${i}">${i}</div>`;
+  }
+  paginationEl.innerHTML = html;
+};
+
+const gotoPage = (newPage) => {
+  page = newPage;
+  renderTable();
 };
 
 const persistCategories = () => {
@@ -130,7 +163,7 @@ const openModal = (options = {}) => {
     mode === "edit" ? "Edit Category" : mode === "view" ? "View Category" : "Add Category";
 
   categoryNameInput.value = category?.name ?? "";
-  categoryVisibilityInput.value = category?.visibility ?? "active";
+  categoryVisibilityInput.value = category?.visibility ?? "draft";
   categoryDescInput.value = category?.description ?? "";
 
   categoryNameInput.disabled = viewOnly;
@@ -162,8 +195,8 @@ const handleSave = () => {
   }
 
   const visibility = editingId
-    ? (categories.find((cat) => cat.id === editingId)?.visibility ?? categoryVisibilityInput.value)
-    : categoryVisibilityInput.value;
+    ? (categories.find((cat) => cat.id === editingId)?.visibility ?? "draft")
+    : "draft";
   const description = categoryDescInput.value.trim();
 
   if (editingId) {
@@ -173,6 +206,7 @@ const handleSave = () => {
         : cat
     );
   } else {
+    page = 1;
     categories.unshift({
       id: `cat-${Date.now()}`,
       name,
@@ -187,6 +221,14 @@ const handleSave = () => {
   renderStats();
   renderTable();
   closeModal();
+  if (!editingId) {
+    if (categoryNotice) {
+      if (categoryNoticeText) {
+        categoryNoticeText.textContent = "Category submitted. Waiting for admin approval. If no response within 2 days, it will be rejected.";
+      }
+      categoryNotice.style.display = "block";
+    }
+  }
 };
 
 const handleExport = () => {
@@ -251,12 +293,14 @@ filterChips.forEach((chip) => {
     filterChips.forEach((btn) => btn.classList.remove("active"));
     chip.classList.add("active");
     currentFilter = chip.dataset.filter;
+    page = 1;
     renderTable();
   });
 });
 
 searchInput.addEventListener("input", (event) => {
   currentQuery = event.target.value.trim().toLowerCase();
+  page = 1;
   renderTable();
 });
 
@@ -287,10 +331,6 @@ tableBody.addEventListener("click", (event) => {
   const category = categories.find((cat) => cat.id === id);
   if (!category) return;
 
-  if (action === "edit") {
-    openModal({ mode: "edit", category });
-  }
-
   if (action === "view") {
     openModal({ mode: "view", category });
   }
@@ -303,8 +343,25 @@ tableBody.addEventListener("click", (event) => {
   }
 });
 
+const paginationEl = document.getElementById("pagination");
+if (paginationEl) {
+  paginationEl.addEventListener("click", (event) => {
+    const target = event.target.closest(".page");
+    if (!target) return;
+    const next = Number(target.dataset.page);
+    if (!Number.isFinite(next) || next === page) return;
+    gotoPage(next);
+  });
+}
+
 if (exportBtn) {
   exportBtn.addEventListener("click", handleExport);
+}
+
+if (categoryNoticeOk && categoryNotice) {
+  categoryNoticeOk.addEventListener("click", () => {
+    categoryNotice.style.display = "none";
+  });
 }
 
 renderStats();
