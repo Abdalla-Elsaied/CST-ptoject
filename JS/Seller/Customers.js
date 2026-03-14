@@ -1,4 +1,4 @@
-import { getLS } from '../Core/FileStorage.js';
+import { getLS } from '../Core/Storage.js';
 import { KEY_USERS, KEY_ORDERS, KEY_PRODUCTS } from '../Core/Constants.js';
 import { getCurrentUser, requireRole, ROLES } from '../Core/Auth.js';
 
