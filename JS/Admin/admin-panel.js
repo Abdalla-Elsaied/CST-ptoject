@@ -6,7 +6,7 @@
 // ============================================================
 
 import { getCurrentUser } from './admin-helpers.js';
-import { getLS } from '../Core/Storage.js';
+import { getLS, initUsers } from '../Core/Storage.js';
 import { KEY_APPROVAL, KEY_CATEGORIES, KEY_CURRENT_USER } from '../Core/Constants.js';
 import { renderDashboard } from './admin-dashboard.js';
 import { renderSellers } from './admin-sellers.js';
@@ -28,8 +28,9 @@ if (!_currentUser || (String(_currentUser.role || '')).toLowerCase() !== 'admin'
 
 // ─── PAGE INIT ───────────────────────────────────────────────
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
+    await initUsers();
     // Show admin name in the top navbar
     const adminName = (_currentUser && (_currentUser.fullName || _currentUser.name)) || 'Admin';
     const nameEl = document.getElementById('adminUserName');

@@ -8,7 +8,7 @@ import { KEY_USERS } from "../Core/Constants.js";
 $(document).ready(async function () {
 
     await initUsers();  // ① fetch users from MockAPI into cache
-    seedAdmin();        // ② seed defaults if no admin found
+    await seedAdmin();        // ② seed defaults if no admin found
     seedCategories();
 
     $("#togglePassword").on("click", function () {
