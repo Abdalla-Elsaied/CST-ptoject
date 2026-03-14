@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <link rel="stylesheet" href="../../CSS/Customer/CustomerHomePage.css"/>
+  <link rel="stylesheet" href="../../CSS/Customer/profile.css"/>
   <link rel="stylesheet" href="../../CSS/Customer/SellerRequestNotifications.css"/>
 </head>
 <body>
@@ -575,5 +576,128 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="module" src="../../JS/Customer/SellerRequestNotifications.js"></script>
 <script type="module" src="../../JS/Customer/CustomerHomePage.js"></script>
+
+<!-- ===== MOBILE MENU – JS toggle patch ===== -->
+<!-- The CustomerHomePage.js sets inline style display directly which fights the CSS class.
+     This tiny script patches the toggle to use only class-based show/hide. -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('mobileMenuBtn');
+    if (!btn) return;
+
+    // Override the click listener by capturing at the document level first
+    btn.addEventListener('click', (e) => {
+      e.stopImmediatePropagation(); // prevent the original JS handler from also running if it registered first
+
+      const menu = document.getElementById('mobileNavMenu');
+      if (!menu) return; // not built yet — let the original handler run once, then we take over
+
+      const isOpen = menu.classList.contains('mobile-nav-open');
+      // Use ONLY class toggling — no inline style so CSS is authoritative
+      menu.classList.toggle('mobile-nav-open', !isOpen);
+      menu.style.removeProperty('display'); // clear any inline style set by original JS
+    }, true); // capture phase so this runs before the original listener
+
+    // Also watch for the menu being created (first click) and clean up inline styles
+    const observer = new MutationObserver(() => {
+      const menu = document.getElementById('mobileNavMenu');
+      if (menu) {
+        menu.style.removeProperty('display');
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: false });
+  });
+</script>
+
+<!-- ===== BECOME A SELLER – Form Validation ===== -->
+<script type="module">
+  import { addCustomerToSeller, getCurrentUser } from '../../JS/Core/Auth.js';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const form        = document.getElementById('becomeSellerForm');
+    const modalEl     = document.getElementById('becomeSellerModal');
+    if (!form || !modalEl) return;
+
+    /* Reset validation state every time the modal opens fresh */
+    modalEl.addEventListener('show.bs.modal', () => {
+      form.reset();
+      form.classList.remove('was-validated');
+      const errBox = document.getElementById('sellerFormError');
+      if (errBox) errBox.classList.add('d-none');
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      /* Trigger Bootstrap's visual validation feedback */
+      form.classList.add('was-validated');
+
+      if (!form.checkValidity()) return; /* stop – fields highlighted by Bootstrap */
+
+      /* Extra: validate phone is numeric + reasonable length */
+      const phoneVal = document.getElementById('storePhone').value.trim();
+      if (!/^[\d\s\+\-\(\)]{6,20}$/.test(phoneVal)) {
+        document.getElementById('storePhone').setCustomValidity('invalid');
+        form.classList.add('was-validated');
+        return;
+      } else {
+        document.getElementById('storePhone').setCustomValidity('');
+      }
+
+      /* Collect data */
+      const sellerRequest = {
+        storeName:     document.getElementById('storeName').value.trim(),
+        city:          document.getElementById('storeCity').value.trim(),
+        description:   document.getElementById('storeDescription').value.trim(),
+        category:      document.getElementById('storeCategory').value,
+        phone:         phoneVal,
+        paymentMethod: document.getElementById('paymentMethod').value,
+      };
+
+      /* Auth check */
+      const currentUser = getCurrentUser();
+      if (!currentUser) {
+        alert('You must be logged in to apply as a seller.');
+        bootstrap.Modal.getInstance(modalEl)?.hide();
+        window.location.href = 'Login.html';
+        return;
+      }
+
+      const result = addCustomerToSeller(currentUser.id, sellerRequest);
+
+      if (!result.success) {
+        /* Show inline error instead of alert */
+        let errBox = document.getElementById('sellerFormError');
+        if (!errBox) {
+          errBox = document.createElement('div');
+          errBox.id = 'sellerFormError';
+          errBox.className = 'alert alert-danger py-2 small mt-3';
+          form.querySelector('.modal-footer').before(errBox);
+        }
+        errBox.textContent = result.error;
+        errBox.classList.remove('d-none');
+        return;
+      }
+
+      /* Success */
+      form.reset();
+      form.classList.remove('was-validated');
+      bootstrap.Modal.getInstance(modalEl)?.hide();
+      /* Brief success toast */
+      const toast = document.createElement('div');
+      toast.className = 'profile-toast';
+      toast.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Application submitted! We\'ll review it soon.';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    });
+
+    /* Clear custom validity on phone input so error clears on new typing */
+    document.getElementById('storePhone')?.addEventListener('input', function () {
+      this.setCustomValidity('');
+    });
+  });
+</script>
 </body>
 </html>

@@ -36,13 +36,14 @@ export function addToCart(product, quantity = 1) {
   }
 
   const item = {
-    id:       product.id,
-    name:     product.name     || 'Product',
-    price:    parseFloat(product.price)    || 0,
-    oldPrice: product.oldPrice ? parseFloat(product.oldPrice) : null,
-    image:    product.image    || '',
-    category: product.category || '',
-    quantity: quantity,
+    id:            product.id,
+    name:          product.name          || 'Product',
+    price:         parseFloat(product.price)    || 0,
+    oldPrice:      product.oldPrice ? parseFloat(product.oldPrice) : null,
+    image:         product.image         || '',
+    category:      product.category      || '',
+    stockQuantity: product.stockQuantity != null ? parseInt(product.stockQuantity) : null,
+    quantity:      quantity,
   };
   setLS(KEY_CART, [...cart, item]);
   return { added: true, newQty: quantity };

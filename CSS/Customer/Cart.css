@@ -498,3 +498,173 @@
   .cart-item { padding: 16px; }
   .cart-item-img { width: 72px; height: 72px; }
 }
+
+/* =====================================================
+   CHECKOUT MULTI-STEP – fixes plain-text step display
+   ===================================================== */
+
+/* Step indicator row */
+.checkout-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 24px;
+}
+.checkout-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  opacity: 0.4;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+}
+.checkout-step.active { opacity: 1; }
+
+.step-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--border, #e5e7eb);
+  color: var(--text-secondary, #6b7280);
+  font-size: 0.82rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.checkout-step.active .step-dot {
+  background: var(--green-primary, #22c55e);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(34,197,94,0.35);
+}
+.checkout-step > span {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-secondary, #6b7280);
+  white-space: nowrap;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.checkout-step.active > span { color: var(--green-dark, #16a34a); }
+
+/* Connecting line between steps */
+.checkout-step-line {
+  height: 2px;
+  width: 48px;
+  background: var(--border, #e5e7eb);
+  margin-bottom: 20px; /* aligns with dot center */
+  flex-shrink: 0;
+  transition: background 0.25s;
+}
+
+/* Saved address suggestion box */
+.saved-address-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--green-light, #ecfdf5);
+  border: 1.5px solid var(--green-primary, #22c55e);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--green-dark, #16a34a);
+  margin-bottom: 10px;
+  line-height: 1.45;
+}
+.btn-use-saved-addr {
+  margin-left: auto;
+  flex-shrink: 0;
+  background: var(--green-primary, #22c55e);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 11px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.btn-use-saved-addr:hover { background: var(--green-dark, #16a34a); }
+
+/* Credit card form */
+.card-form-wrap {
+  background: var(--page-bg, #f8fafc);
+  border: 1.5px solid var(--border, #e5e7eb);
+  border-radius: var(--radius, 12px);
+  padding: 16px;
+  margin-top: 4px;
+}
+.card-form-header {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--text-primary, #1f2937);
+  margin-bottom: 10px;
+}
+
+/* Order Summary Review (step 3) */
+.order-summary-review {}
+.order-summary-items {
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.os-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+}
+.os-item:last-child { border-bottom: none; }
+.os-img {
+  width: 46px;
+  height: 46px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1.5px solid var(--border, #e5e7eb);
+  flex-shrink: 0;
+  background: var(--green-light, #ecfdf5);
+}
+.os-info { flex: 1; min-width: 0; }
+.os-name {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text-primary, #1f2937);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.os-qty { font-size: 0.72rem; color: var(--text-secondary, #6b7280); }
+.os-price { font-size: 0.9rem; font-weight: 800; flex-shrink: 0; }
+
+.os-totals .os-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.86rem;
+  color: var(--text-secondary, #6b7280);
+  margin-bottom: 5px;
+}
+.os-totals .os-row span:last-child { font-weight: 700; color: var(--text-primary, #1f2937); }
+.os-totals .os-row.fw-800 span { font-weight: 800; }
+.os-totals .os-row.fw-800 span:last-child { color: var(--green-dark, #16a34a); font-size: 1rem; }
+
+.os-meta {
+  background: var(--page-bg, #f8fafc);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.os-meta-row {
+  font-size: 0.82rem;
+  color: var(--text-secondary, #6b7280);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.os-meta-row:last-child { margin-bottom: 0; }
