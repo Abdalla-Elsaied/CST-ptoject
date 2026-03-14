@@ -756,6 +756,11 @@
 
     <!-- 1. jQuery (optional) -->
     <script src="../../Libraries/JQuery.js"></script>
+    <script type="module">
+        import {initUsers} from "../../JS/Core/Storage.js"
+
+        await initUsers() 
+    </script>
 
     <!-- 2. Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"

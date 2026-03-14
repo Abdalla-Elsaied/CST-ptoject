@@ -17,6 +17,7 @@ let _usersMapCache = null;
 
 export function getSellers() {
     const users = getLS(KEY_USERS) || [];
+    console.log("users: "+users)
     return users.filter(u => u.role === ROLES.SELLER);
 }
 

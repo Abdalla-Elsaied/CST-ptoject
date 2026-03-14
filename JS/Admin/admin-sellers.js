@@ -18,6 +18,8 @@ import {
 } from './admin-helpers.js';
 
 import { ROLES } from '../Core/Auth.js';
+import {deleteItem} from "../Core/Storage.js";
+import {KEY_USERS} from "../Core/Constants.js";
 
 // Current search filter value
 let sellerSearchQuery = '';
@@ -43,6 +45,7 @@ export function renderSellers() {
  */
 export function renderSellersTable() {
     const sellers = getSellers();
+    console.log(sellers)
     const query = sellerSearchQuery.toLowerCase();
     const tbody = document.getElementById('sellersTableBody');
 
@@ -292,6 +295,7 @@ export function submitAddSeller(e) {
  */
 export function confirmApproveSeller(id) {
     const seller = getSellers().find(s => s.id == id);
+    console.log(seller)
     if (!seller) return;
 
     showConfirm(
@@ -506,10 +510,9 @@ export function confirmDeleteSeller(id) {
     showConfirm(
         `Are you sure you want to delete seller "${seller.fullName}" (${seller.storeName})?`,
         () => {
-            const updated = getSellers().filter(s => s.id != id);
-            saveSellers(updated);
+            deleteItem(KEY_USERS, id); // ✅ removes from cache + sends DELETE to MockAPI
 
-            // Delete all their products to prevent dangling active items
+            // Delete all their products
             const products = getProducts();
             const updatedProducts = products.filter(p => String(p.sellerId) !== String(id));
             if (products.length !== updatedProducts.length) {
