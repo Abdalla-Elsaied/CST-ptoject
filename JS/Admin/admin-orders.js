@@ -11,18 +11,30 @@ import {
     getSellerName,
     getCurrentUser,
     formatPrice,
-    formatDate,
     statusBadge,
     showToast,
-    showConfirm
+    showConfirm,
+    renderPagination,
+    renderTableEmptyState,
+    debounce
 } from './admin-helpers.js';
+
+import { 
+    fetchOrders, 
+    getFilteredOrders, 
+    updateOrderStatus 
+} from './admin-data-orders.js';
+
+import { logAdminAction } from './admin-profile.js';
 
 // Active filter state
 const orderFilters = {
     search: '',
     status: 'All',
     dateFrom: '',
-    dateTo: ''
+    dateTo: '',
+    page: 1,
+    limit: 10
 };
 
 
@@ -31,11 +43,15 @@ const orderFilters = {
  * Called every time the user clicks "Orders" in the sidebar.
  */
 export function renderOrders() {
+    // Fetch from service
+    fetchOrders();
+
     // Reset filters on section load
     orderFilters.search = '';
     orderFilters.status = 'All';
     orderFilters.dateFrom = '';
     orderFilters.dateTo = '';
+    orderFilters.page = 1;
 
     const searchInput = document.getElementById('orderSearchInput');
     const statusFilter = document.getElementById('orderStatusFilter');
@@ -59,63 +75,30 @@ export function renderOrders() {
  * Applies search, status, and date range filters simultaneously.
  */
 export function renderOrdersTable() {
-    const orders = getOrders();
+    const { items, totalItems, currentPage } = getFilteredOrders(orderFilters);
+    orderFilters.page = currentPage;
+
     const tbody = document.getElementById('ordersTableBody');
     if (!tbody) return;
-
-    const { search, status, dateFrom, dateTo } = orderFilters;
-    const query = search.toLowerCase().trim();
-
-    // Parse filter dates (ignoring time for comparison)
-    const fromDateObj = dateFrom ? new Date(dateFrom) : null;
-    if (fromDateObj) fromDateObj.setHours(0, 0, 0, 0);
-
-    const toDateObj = dateTo ? new Date(dateTo) : null;
-    if (toDateObj) toDateObj.setHours(23, 59, 59, 999);
-
-    const filtered = orders.filter(o => {
-        // 1. Search Filter (Order ID or Customer Name)
-        const custName = getCustomerName(o.customerId).toLowerCase();
-        const orderIdStr = String(o.id).toLowerCase();
-        const matchSearch = orderIdStr.includes(query) || custName.includes(query);
-
-        // 2. Status Filter
-        // Note: HTML select options might say "All Statuses", value might be "All"
-        const filterVal = status === 'All Statuses' ? 'All' : status;
-        const matchStatus = filterVal === 'All' || o.status === filterVal;
-
-        // 3. Date Filter - handle both 'date' and 'createdAt' fields
-        let matchDate = true;
-        const orderDate = o.date || o.createdAt;
-        if (orderDate && (fromDateObj || toDateObj)) {
-            const orderDateObj = new Date(orderDate);
-            if (fromDateObj && orderDateObj < fromDateObj) matchDate = false;
-            if (toDateObj && orderDateObj > toDateObj) matchDate = false;
-        }
-
-        return matchSearch && matchStatus && matchDate;
-    });
 
     // Update count label
     const countEl = document.getElementById('ordersCount');
     if (countEl) {
-        countEl.textContent = `Displaying ${filtered.length} order${filtered.length !== 1 ? 's' : ''}`;
+        countEl.textContent = `Displaying ${totalItems} order${totalItems !== 1 ? 's' : ''}`;
     }
 
     // Empty state
-    if (filtered.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="10" class="empty-state">
-                    No orders match your filter criteria.
-                </td>
-            </tr>`;
+    if (items.length === 0) {
+        tbody.innerHTML = renderTableEmptyState(10, 'No orders match your filter criteria.', 'bi-receipt');
+        renderPagination(0, orderFilters.limit, 1, 'ordersPagination', () => {});
         return;
     }
 
+    const startIdx = (orderFilters.page - 1) * orderFilters.limit;
+
     // Since a single order can have multiple items from different sellers,
     // we take the seller of the first item for display brevity, or 'Multiple Sellers' if multiple.
-    tbody.innerHTML = filtered.map((o, i) => {
+    tbody.innerHTML = items.map((o, i) => {
         let sellerText = '—';
         if (o.items && o.items.length > 0) {
             const uniqueSellerIds = [...new Set(o.items.map(item => item.sellerId).filter(Boolean))];
@@ -139,7 +122,7 @@ export function renderOrdersTable() {
 
         return `
             <tr>
-                <td><span class="text-muted small fw-bold">${i + 1}</span></td>
+                <td><span class="text-muted small fw-bold">${startIdx + i + 1}</span></td>
                 <td><span class="fw-bold">#${o.id}</span></td>
                 <td>${getCustomerName(o.customerId)}</td>
                 <td>${sellerText}</td>
@@ -162,6 +145,13 @@ export function renderOrdersTable() {
             </tr>
         `;
     }).join('');
+
+    // Render Pagination
+    renderPagination(totalItems, orderFilters.limit, orderFilters.page, 'ordersPagination', (newPage) => {
+        orderFilters.page = newPage;
+        renderOrdersTable();
+        document.getElementById('ordersSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
 }
 
 
@@ -279,10 +269,11 @@ function bindOrdersEvents() {
     // 1. Live Search
     const searchInput = document.getElementById('orderSearchInput');
     if (searchInput) {
-        searchInput.oninput = (e) => {
+        searchInput.oninput = debounce((e) => {
             orderFilters.search = e.target.value;
+            orderFilters.page = 1;
             renderOrdersTable();
-        };
+        }, 300);
     }
 
     // 2. Status Filter
@@ -290,6 +281,7 @@ function bindOrdersEvents() {
     if (statusFilter) {
         statusFilter.onchange = (e) => {
             orderFilters.status = e.target.value;
+            orderFilters.page = 1;
             renderOrdersTable();
         };
     }
@@ -299,6 +291,7 @@ function bindOrdersEvents() {
     if (dateFrom) {
         dateFrom.onchange = (e) => {
             orderFilters.dateFrom = e.target.value;
+            orderFilters.page = 1;
             renderOrdersTable();
         };
     }
@@ -307,6 +300,7 @@ function bindOrdersEvents() {
     if (dateTo) {
         dateTo.onchange = (e) => {
             orderFilters.dateTo = e.target.value;
+            orderFilters.page = 1;
             renderOrdersTable();
         };
     }
@@ -392,27 +386,21 @@ export function confirmChangeOrderStatus(orderId, newStatus, selectElement) {
 
     showConfirm(confirmMessage, () => {
         // Confirmed
-        orders[index].status = newStatus;
-        orders[index].statusUpdatedAt = new Date().toISOString();
-        orders[index].statusUpdatedBy = getCurrentUser()?.id;
-        
-        if (newStatus === 'Refunded') {
-            orders[index].refundedAt = new Date().toISOString();
-            orders[index].refundedBy = getCurrentUser()?.id;
-        }
-        
-        saveOrders(orders);
-        renderOrdersTable();
-        
-        console.log(`[AUDIT] Order #${orderId} status changed from ${currentStatus} to ${newStatus}`);
-        showToast(`Order #${orderId} marked as ${newStatus}.`, 'success');
-
-        // Refresh dashboard KPIs in case revenue/recent orders changed
-        const dashboardEl = document.getElementById('dashboardSection');
-        if (dashboardEl && dashboardEl.style.display !== 'none') {
-            import('./admin-dashboard.js').then(m => m.renderDashboard());
+        if (updateOrderStatus(orderId, newStatus)) {
+            logAdminAction('changed_order_status', `Order #${orderId} (${currentStatus} → ${newStatus})`, orderId);
+            renderOrdersTable();
+            showToast(`Order #${orderId} marked as ${newStatus}.`, 'success');
+        } else {
+            showToast('Failed to update status.', 'error');
         }
     });
+
+    // Refresh dashboard KPIs in case revenue/recent orders changed
+    const dashboardEl = document.getElementById('dashboardSection');
+    if (dashboardEl && dashboardEl.style.display !== 'none') {
+        import('./admin-dashboard.js').then(m => m.renderDashboard());
+    }
+
 
     // Handle cancellation by resetting the dropdown
     const modalEl = document.getElementById('confirmModal');

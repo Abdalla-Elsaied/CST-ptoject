@@ -268,6 +268,10 @@ export function getCurrentUser() {
   return getLS(KEY_CURRENT_USER) || null;
 }
 
+export function setCurrentUser(user) {
+  setLS(KEY_CURRENT_USER, user);
+}
+
 export function addCustomerToSeller(userId, storeData) {
 
   const requests = getLS(KEY_APPROVAL) || [];

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Category – DEALPORT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="../../CSS/Customer/CustomerHomePage.css"/>
+  <link rel="stylesheet" href="../../CSS/Customer/categoryProducts.css"/>
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<header class="navbar-top sticky-top">
+  <div class="container-fluid px-3 px-lg-4">
+    <div class="d-flex align-items-center gap-3 gap-lg-4 py-2">
+      <a href="CustomerHomePage.html" class="logo-brand text-decoration-none flex-shrink-0">
+        <span class="logo-deal">DEAL</span><span class="logo-port"><i class="bi bi-shop"></i>RT</span>
+      </a>
+
+      <!-- Breadcrumb (desktop) -->
+      <nav aria-label="breadcrumb" class="d-none d-md-block" style="flex-shrink:0">
+        <ol class="breadcrumb mb-0 small">
+          <li class="breadcrumb-item">
+            <a href="CustomerHomePage.html" class="text-success text-decoration-none">Home</a>
+          </li>
+          <li class="breadcrumb-item active" id="bcCategoryName">...</li>
+        </ol>
+      </nav>
+
+      <!-- Search bar -->
+      <div class="search-wrapper flex-grow-1">
+        <div class="input-group search-group">
+          <input type="text" class="form-control search-input" id="catSearchInput"
+                 placeholder="Search in this category..."/>
+          <button class="btn btn-search" id="catSearchBtn">
+            <i class="bi bi-search"></i> <span class="d-none d-sm-inline">Search</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right icons -->
+      <div class="nav-icons d-flex align-items-center gap-2 gap-lg-3 flex-shrink-0">
+        <a href="CustomerHomePage.html"
+           class="nav-icon-btn d-none d-md-flex flex-column align-items-center text-decoration-none">
+          <i class="bi bi-arrow-left"></i><span>Back</span>
+        </a>
+        <a href="Cart.html"
+           class="nav-icon-btn d-flex flex-column align-items-center position-relative text-decoration-none">
+          <i class="bi bi-cart3"></i>
+          <span class="cart-badge" id="cartBadge">0</span>
+          <span>Cart</span>
+        </a>
+        <div class="dropdown">
+          <button class="nav-icon-btn d-none d-md-flex flex-column align-items-center border-0 bg-transparent"
+                  id="accountNavBtn" data-bs-toggle="dropdown" title="Account">
+            <i class="bi bi-person"></i>
+            <span id="accountNavLabel">Account</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end account-dropdown" id="accountDropdownMenu"></ul>
+        </div>
+        <a href="CustomerHomePage.html"
+           class="d-md-none nav-icon-btn d-flex align-items-center text-decoration-none">
+          <i class="bi bi-arrow-left fs-5"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== HERO HEADER ===== -->
+<div class="cat-page-header" id="catPageHeader">
+  <div class="container-fluid px-3 px-lg-4">
+    <!-- Breadcrumb inside hero -->
+    <div class="cat-breadcrumb">
+      <a href="CustomerHomePage.html"><i class="bi bi-house me-1"></i>Home</a>
+      <span class="sep">/</span>
+      <span class="current" id="heroCategoryName">Loading...</span>
+    </div>
+
+    <div class="d-flex align-items-end justify-content-between flex-wrap gap-3">
+      <div>
+        <h1 class="cat-page-title" id="catPageTitle">Loading...</h1>
+        <p class="cat-page-sub" id="catPageSub">Fetching products...</p>
+      </div>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <!-- Product count chip -->
+        <span class="cat-count-chip" id="catCountChip" style="display:none!important">
+          <i class="bi bi-grid-3x3-gap"></i>
+          <span id="catCountText">0 products</span>
+        </span>
+        <!-- Sort -->
+        <select class="cat-sort-select" id="catSortSelect">
+          <option value="default">✦ Default</option>
+          <option value="price-asc">Price ↑ Low → High</option>
+          <option value="price-desc">Price ↓ High → Low</option>
+          <option value="rating-desc">⭐ Highest Rated</option>
+          <option value="name-asc">A–Z Name</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOOLBAR ===== -->
+<div class="cat-toolbar d-none" id="catToolbar">
+  <div class="container-fluid px-3 px-lg-4">
+    <div class="cat-toolbar-inner">
+
+      <!-- Result info -->
+      <span class="text-muted small fw-600 flex-shrink-0" id="toolbarCount"></span>
+
+      <!-- Spacer -->
+      <div class="flex-grow-1 d-none d-lg-block"></div>
+
+      <!-- Active search chip (shown when searching) -->
+      <div id="activeSearchChip" class="d-none">
+        <span class="filter-chip" id="searchChipLabel">
+          <i class="bi bi-funnel"></i>
+          <span id="searchChipText"></span>
+          <i class="bi bi-x" id="clearSearchChip"></i>
+        </span>
+      </div>
+
+      <!-- View toggle -->
+      <div class="view-toggle-group flex-shrink-0">
+        <button class="view-toggle-btn active" id="btnGridView" title="Grid view">
+          <i class="bi bi-grid-3x3-gap"></i>
+        </button>
+        <button class="view-toggle-btn" id="btnListView" title="List view">
+          <i class="bi bi-list-ul"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LOADING STATE ===== -->
+<div id="catLoading" class="cat-loading-wrap">
+  <div class="mb-4">
+    <div class="spinner-border text-success" style="width:3rem;height:3rem" role="status"></div>
+  </div>
+  <p class="fw-700 text-muted mb-1">Loading products...</p>
+  <p class="small text-muted">Fetching from the latest inventory</p>
+</div>
+
+<!-- ===== NO RESULTS (empty category) ===== -->
+<div id="catNoResults" class="cat-empty-wrap d-none">
+  <div class="empty-icon-wrap"><i class="bi bi-inbox"></i></div>
+  <h5 class="cat-empty-title">No products in this category</h5>
+  <p class="text-muted small mb-4">Check back soon — new items are added regularly.</p>
+  <a href="CustomerHomePage.html" class="btn btn-add-cart px-4">
+    <i class="bi bi-arrow-left me-2"></i>Back to Home
+  </a>
+</div>
+
+<!-- ===== MAIN GRID ===== -->
+<main class="cat-main-content d-none" id="catMain">
+  <div class="container-fluid px-3 px-lg-4">
+
+    <!-- Product grid -->
+    <div class="row g-3" id="catProductGrid"></div>
+
+    <!-- No search match -->
+    <div id="catSearchEmpty" class="cat-empty-wrap d-none" style="min-height:240px">
+      <div class="empty-icon-wrap"><i class="bi bi-search"></i></div>
+      <h5 class="cat-empty-title">No products match</h5>
+      <p class="text-muted small mb-3">Try different keywords or clear your filter.</p>
+      <button class="btn btn-outline-success" id="clearCatSearch">
+        <i class="bi bi-x-circle me-1"></i> Clear Search
+      </button>
+    </div>
+
+    <!-- Load More -->
+    <div class="cat-load-more-wrap d-none" id="catLoadMoreWrap">
+      <button class="btn-load-more" id="catLoadMoreBtn">
+        <i class="bi bi-arrow-down-circle me-2"></i>Load More
+      </button>
+    </div>
+
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module" src="../../JS/Customer/categoryProducts.js"></script>
+</body>
+</html>

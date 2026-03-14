@@ -11,14 +11,17 @@ import {
  * Rebuilds all 4 charts from fresh localStorage data each time.
  */
 export function renderAnalytics() {
-    // Set Chart.js global font defaults
-    Chart.defaults.font.family = 'Arial, sans-serif';
-    Chart.defaults.color = '#1f2937';
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    
+    // Set Chart.js global font and color defaults based on theme
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = isDark ? '#94a3b8' : '#64748b';
+    Chart.defaults.borderColor = isDark ? '#334155' : '#e2e8f0';
 
-    renderUserDistributionChart();
-    renderOrdersByStatusChart();
-    renderTopSellersChart();
-    renderDailyOrdersChart();
+    renderUserDistributionChart(isDark);
+    renderOrdersByStatusChart(isDark);
+    renderTopSellersChart(isDark);
+    renderDailyOrdersChart(isDark);
 }
 
 
@@ -40,7 +43,7 @@ function destroyChart(canvasId) {
 /**
  * Doughnut chart showing how many sellers vs customers exist.
  */
-function renderUserDistributionChart() {
+function renderUserDistributionChart(isDark) {
     destroyChart('userDistributionChart');
 
     const sellersCount = getSellers().length;
@@ -52,17 +55,30 @@ function renderUserDistributionChart() {
             labels: ['Sellers', 'Customers'],
             datasets: [{
                 data: [sellersCount, customersCount],
-                backgroundColor: ['#22c55e', '#3b82f6'],
+                backgroundColor: [isDark ? '#22c55e' : '#10b981', isDark ? '#3b82f6' : '#2563eb'],
                 borderWidth: 2,
-                borderColor: '#ffffff'
+                borderColor: isDark ? '#1e293b' : '#ffffff'
             }]
         },
         options: {
             plugins: {
-                legend: { position: 'bottom' },
-                title: { display: true, text: 'User Distribution', font: { size: 15, weight: 'bold' } }
+                legend: { 
+                    position: 'bottom',
+                    labels: {
+                        color: isDark ? '#f8fafc' : '#1f2937',
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                },
+                title: { 
+                    display: true, 
+                    text: 'User Distribution', 
+                    color: isDark ? '#f8fafc' : '#1f2937',
+                    font: { size: 16, weight: '700' },
+                    padding: { bottom: 20 }
+                }
             },
-            cutout: '60%'
+            cutout: '70%'
         }
     });
 }
@@ -73,7 +89,7 @@ function renderUserDistributionChart() {
 /**
  * Bar chart showing how many orders are in each status.
  */
-function renderOrdersByStatusChart() {
+function renderOrdersByStatusChart(isDark) {
     destroyChart('ordersByStatusChart');
 
     const orders = getOrders();
@@ -97,10 +113,24 @@ function renderOrdersByStatusChart() {
         options: {
             plugins: {
                 legend: { display: false },
-                title: { display: true, text: 'Orders by Status', font: { size: 15, weight: 'bold' } }
+                title: { 
+                    display: true, 
+                    text: 'Orders by Status', 
+                    color: isDark ? '#f8fafc' : '#1f2937',
+                    font: { size: 16, weight: '700' },
+                    padding: { bottom: 20 }
+                }
             },
             scales: {
-                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                y: { 
+                    beginAtZero: true, 
+                    ticks: { stepSize: 1, color: isDark ? '#94a3b8' : '#64748b' },
+                    grid: { color: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)' }
+                },
+                x: {
+                    ticks: { color: isDark ? '#94a3b8' : '#64748b' },
+                    grid: { display: false }
+                }
             }
         }
     });
@@ -113,7 +143,7 @@ function renderOrdersByStatusChart() {
  * Horizontal bar chart of top 5 sellers ranked by total revenue.
  * Revenue = sum of subtotals from orders belonging to each seller.
  */
-function renderTopSellersChart() {
+function renderTopSellersChart(isDark) {
     destroyChart('topSellersChart');
 
     const orders = getOrders();
@@ -184,10 +214,24 @@ function renderTopSellersChart() {
             indexAxis: 'y',   // horizontal bar
             plugins: {
                 legend: { display: false },
-                title: { display: true, text: 'Top 5 Sellers by Revenue', font: { size: 15, weight: 'bold' } }
+                title: { 
+                    display: true, 
+                    text: 'Top 5 Sellers by Revenue', 
+                    color: isDark ? '#f8fafc' : '#1f2937',
+                    font: { size: 16, weight: '700' },
+                    padding: { bottom: 20 }
+                }
             },
             scales: {
-                x: { beginAtZero: true }
+                x: { 
+                    beginAtZero: true,
+                    ticks: { color: isDark ? '#94a3b8' : '#64748b' },
+                    grid: { color: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)' }
+                },
+                y: {
+                    ticks: { color: isDark ? '#94a3b8' : '#64748b' },
+                    grid: { display: false }
+                }
             }
         }
     });
@@ -200,7 +244,7 @@ function renderTopSellersChart() {
  * Line chart showing order count per day for the last 14 days.
  * Days with no orders show 0.
  */
-function renderDailyOrdersChart() {
+function renderDailyOrdersChart(isDark) {
     destroyChart('dailyOrdersChart');
 
     const orders = getOrders();
@@ -246,10 +290,24 @@ function renderDailyOrdersChart() {
         options: {
             plugins: {
                 legend: { display: false },
-                title: { display: true, text: 'Orders — Last 14 Days', font: { size: 15, weight: 'bold' } }
+                title: { 
+                    display: true, 
+                    text: 'Orders — Last 14 Days', 
+                    color: isDark ? '#f8fafc' : '#1f2937',
+                    font: { size: 16, weight: '700' },
+                    padding: { bottom: 20 }
+                }
             },
             scales: {
-                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                y: { 
+                    beginAtZero: true, 
+                    ticks: { stepSize: 1, color: isDark ? '#94a3b8' : '#64748b' },
+                    grid: { color: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)' }
+                },
+                x: {
+                    ticks: { color: isDark ? '#94a3b8' : '#64748b' },
+                    grid: { display: false }
+                }
             }
         }
     });

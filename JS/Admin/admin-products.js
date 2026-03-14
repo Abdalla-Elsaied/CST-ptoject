@@ -8,21 +8,36 @@ import {
     getProducts,
     saveProducts,
     getOrders,
+    getCategories,
     getSellerName,
     formatPrice,
     stockBadge,
     activeBadge,
     showToast,
     showConfirm,
-    escapeHTML
+    escapeHTML,
+    renderPagination,
+    renderTableEmptyState,
+    debounce
 } from './admin-helpers.js';
-import { KEY_CATEGORIES } from '../Core/Constants.js';
+
+import { 
+    fetchProducts, 
+    getFilteredProducts, 
+    updateProductStatus, 
+    deleteProduct,
+    getCachedProducts
+} from './admin-data-products.js';
+
+import { logAdminAction } from './admin-profile.js';
 
 // Active filter state — persists while user stays on products section
 let productFilters = {
     search: '',
     category: 'All',
-    status: 'All'
+    status: 'All',
+    page: 1,
+    limit: 10
 };
 
 
@@ -31,19 +46,39 @@ let productFilters = {
  * Called every time the user clicks "Products" in the sidebar.
  */
 function loadCategoryOptions() {
-    try {
-        const parsed = JSON.parse(localStorage.getItem(KEY_CATEGORIES));
-        if (Array.isArray(parsed) && parsed.length) {
-            const names = [...new Set(parsed.map(c => c.name).filter(Boolean))].sort();
-            return names;
-        }
-    } catch (_e) {}
-    return [];
+    const categories = getCategories();
+    return [...new Set(categories.map(c => c.name).filter(Boolean))].sort();
 }
 
-export function renderProducts() {
+export async function renderProducts() {
+    // Show skeleton loading state
+    const tbody = document.getElementById('productsTableBody');
+    if (tbody) {
+        tbody.innerHTML = Array(5).fill(0).map(() => `
+            <tr>
+                <td><div class="skeleton skeleton-text" style="width: 20px;"></div></td>
+                <td><div class="skeleton skeleton-img"></div></td>
+                <td><div class="skeleton skeleton-text" style="width: 150px;"></div></td>
+                <td><div class="skeleton skeleton-text" style="width: 100px;"></div></td>
+                <td><div class="skeleton skeleton-text" style="width: 80px;"></div></td>
+                <td><div class="skeleton skeleton-text" style="width: 60px;"></div></td>
+                <td><div class="skeleton skeleton-text" style="width: 70px;"></div></td>
+                <td><div class="skeleton skeleton-text" style="width: 60px;"></div></td>
+                <td class="text-center">
+                    <div class="d-flex gap-2 justify-content-center">
+                        <div class="skeleton skeleton-btn"></div>
+                        <div class="skeleton skeleton-btn"></div>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
     // Reset filters on section load
-    productFilters = { search: '', category: 'All', status: 'All' };
+    productFilters = { search: '', category: 'All', status: 'All', page: 1, limit: 10 };
+
+    // Fetch from service (syncs with API if needed)
+    await fetchProducts(true); 
 
     const searchInput = document.getElementById('productSearchInput');
     const catFilter = document.getElementById('productCategoryFilter');
@@ -52,10 +87,10 @@ export function renderProducts() {
     if (searchInput) searchInput.value = '';
     if (statFilter) statFilter.value = 'All';
 
-    // Populate category filter from ls_categories + product categories in use
+    // Populate category filter
     if (catFilter) {
         const storedCats = loadCategoryOptions();
-        const products = getProducts();
+        const products = getCachedProducts();
         const productCats = [...new Set(products.map(p => p.category || p.productCategory).filter(Boolean))];
         const allCats = [...new Set([...storedCats, ...productCats])].sort();
         catFilter.innerHTML = '<option value="All">All Categories</option>' +
@@ -75,45 +110,33 @@ export function renderProducts() {
  * Called on load and whenever any filter changes.
  */
 export function renderProductsTable() {
-    const products = getProducts();
+    const { items, totalItems, currentPage } = getFilteredProducts(productFilters);
+    productFilters.page = currentPage;
+
     const tbody = document.getElementById('productsTableBody');
     if (!tbody) return;
-
-    // Apply all 3 filters together
-    const filtered = products.filter(p => {
-        const pName = (p.name || p.productName || '').toLowerCase();
-        const matchSearch = pName.includes(productFilters.search.toLowerCase());
-        const matchCategory = productFilters.category === 'All' || (p.category || p.productCategory) === productFilters.category;
-        const matchStatus = productFilters.status === 'All' ||
-            (productFilters.status === 'Active' && p.isActive) ||
-            (productFilters.status === 'Inactive' && !p.isActive);
-        return matchSearch && matchCategory && matchStatus;
-    });
 
     // Update count label
     const countEl = document.getElementById('productsCount');
     if (countEl) {
-        countEl.textContent = `${filtered.length} product${filtered.length !== 1 ? 's' : ''}`;
+        countEl.textContent = `${totalItems} product${totalItems !== 1 ? 's' : ''}`;
     }
 
     // Empty state
-    if (filtered.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="9" class="empty-state">
-                    No products match the selected filters.
-                </td>
-            </tr>`;
+    if (items.length === 0) {
+        tbody.innerHTML = renderTableEmptyState(9, 'No products found matching your filters.');
+        renderPagination(0, productFilters.limit, 1, 'productsPagination', () => {});
         return;
     }
 
-    tbody.innerHTML = filtered.map((p, i) => {
-        // Better image fallback - use data URL placeholder if image fails
+    const startIdx = (productFilters.page - 1) * productFilters.limit;
+
+    tbody.innerHTML = items.map((p, i) => {
         const imageUrl = p.imageUrl || p.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"%3E%3Crect fill="%23e5e7eb" width="40" height="40"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="12" fill="%239ca3af"%3ENo Img%3C/text%3E%3C/svg%3E';
 
         return `
         <tr>
-            <td><span class="text-muted small fw-bold">${i + 1}</span></td>
+            <td><span class="text-muted small fw-bold">${startIdx + i + 1}</span></td>
             <td>
                 <img src="${imageUrl}"
                      alt="${escapeHTML(p.name || p.productName || 'Product')}"
@@ -142,6 +165,14 @@ export function renderProductsTable() {
         </tr>
     `;
     }).join('');
+
+    // Render pagination controls
+    renderPagination(totalItems, productFilters.limit, productFilters.page, 'productsPagination', (newPage) => {
+        productFilters.page = newPage;
+        renderProductsTable();
+        // Scroll to top of table or section
+        document.getElementById('productsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
 }
 
 
@@ -155,10 +186,11 @@ function bindProductsEvents() {
     // Search
     const searchInput = document.getElementById('productSearchInput');
     if (searchInput) {
-        searchInput.oninput = (e) => {
+        searchInput.oninput = debounce((e) => {
             productFilters.search = e.target.value;
+            productFilters.page = 1; 
             renderProductsTable();
-        };
+        }, 300);
     }
 
     // Category filter
@@ -166,6 +198,7 @@ function bindProductsEvents() {
     if (catFilter) {
         catFilter.onchange = (e) => {
             productFilters.category = e.target.value;
+            productFilters.page = 1; // Reset to first page
             renderProductsTable();
         };
     }
@@ -175,6 +208,7 @@ function bindProductsEvents() {
     if (statFilter) {
         statFilter.onchange = (e) => {
             productFilters.status = e.target.value;
+            productFilters.page = 1; // Reset to first page
             renderProductsTable();
         };
     }
@@ -204,17 +238,16 @@ function bindProductsEvents() {
  * @param {string|number} id - product id
  * @param {boolean} isActive - true = activate, false = deactivate
  */
-export function toggleProductStatus(id, isActive) {
-    const products = getProducts();
-    const index = products.findIndex(p => p.id == id);
-    if (index === -1) return;
+export async function toggleProductStatus(id, isActive) {
+    try {
+        await updateProductStatus(id, isActive);
+        renderProductsTable();
 
-    products[index].isActive = isActive;
-    saveProducts(products);
-    renderProductsTable();
-
-    const action = isActive ? 'activated' : 'deactivated';
-    showToast(`Product ${action} successfully.`, 'success');
+        const action = isActive ? 'activated' : 'deactivated';
+        showToast(`Product ${action} successfully.`, 'success');
+    } catch (err) {
+        showToast('Operation failed. Please try again.', 'error');
+    }
 }
 
 /**
@@ -227,7 +260,10 @@ export function confirmDeactivateProduct(id) {
 
     showConfirm(
         `Deactivate "${product.name || product.productName}"? It will be hidden from the catalog.`,
-        () => toggleProductStatus(id, false)
+        () => {
+            toggleProductStatus(id, false);
+            logAdminAction('deactivated_product', product.name || product.productName, id);
+        }
     );
 }
 
@@ -250,11 +286,15 @@ export function confirmDeleteProduct(id) {
         ? `"${productName}" has existing orders. Deleting it will NOT remove those orders but the product name will show as missing. Are you sure?`
         : `Permanently delete "${productName}"? This cannot be undone.`;
 
-    showConfirm(message, () => {
-        const updated = getProducts().filter(p => p.id != id);
-        saveProducts(updated);
-        renderProductsTable();
-        showToast('Product deleted.', 'error');
+    showConfirm(message, async () => {
+        try {
+            await deleteProduct(id);
+            logAdminAction('deleted_product', productName, id);
+            renderProductsTable();
+            showToast('Product deleted.', 'success');
+        } catch (err) {
+            showToast('Failed to delete product.', 'error');
+        }
     });
 }
 

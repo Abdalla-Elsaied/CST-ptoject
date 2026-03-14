@@ -1,102 +1,83 @@
-// /JS/Customer/Login.js
+import { loginUser, getCurrentUser, ROLES } from '../Core/Auth.js';
+import { seedAdmin, seedCategories } from '../Core/SeedData.js';
+import { initUsers } from "../Core/Storage.js";
+import { getLS, setLS, updateItem } from "../Core/Storage.js"; // ← use your abstraction
+import { KEY_USERS } from "../Core/Constants.js";
 
-import {
-  loginUser,
-  getCurrentUser,
-  ROLES
-} from '../Core/Auth.js';
+// ✅ async added here
+$(document).ready(async function () {
 
-import { seedAdmin } from '../Core/SeedData.js';
+    await initUsers();  // ① fetch users from MockAPI into cache
+    seedAdmin();        // ② seed defaults if no admin found
+    seedCategories();
 
-// Seed default admin account on page load
-seedAdmin();
+    $("#togglePassword").on("click", function () {
+        const $input = $("#floatingPassword");
+        const type = $input.attr("type") === "password" ? "text" : "password";
+        $input.attr("type", type);
+        $(this).find("i").toggleClass("bi-eye bi-eye-slash");
+    });
 
-// Wait for DOM and jQuery to be ready
-$(document).ready(function () {
+    $("#loginForm").on("submit", function (e) {
+        e.preventDefault();
 
-  // Password visibility toggle (unchanged – nice UX)
-  $("#togglePassword").on("click", function () {
-    const $input = $("#floatingPassword");
-    const type = $input.attr("type") === "password" ? "text" : "password";
-    $input.attr("type", type);
-    $(this).find("i").toggleClass("bi-eye bi-eye-slash");
-  });
+        if (!this.checkValidity()) {
+            e.stopPropagation();
+            $(this).addClass("was-validated");
+            return;
+        }
 
-  // Login form submission
-  $("#loginForm").on("submit", function (e) {
-    e.preventDefault();
+        const email    = $("#floatingEmail").val().trim();
+        const password = $("#floatingPassword").val();
+        const result   = loginUser(email, password);
 
-    // Bootstrap form validation
-    if (!this.checkValidity()) {
-      e.stopPropagation();
-      $(this).addClass("was-validated");
-      return;
-    }
+        if (!result.success) {
+            alert(result.error || "Login failed. Please check your credentials.");
+            if (result.error?.includes("credentials")) {
+                $("#floatingPassword").val("").focus().select();
+            } else {
+                $("#floatingEmail").focus().select();
+            }
+            return;
+        }
 
-    const email    = $("#floatingEmail").val().trim();
-    const password = $("#floatingPassword").val();
+        const user = getCurrentUser();
 
-    const result = loginUser(email, password);
+        if (!user) {
+            alert("Something went wrong after login. Please try again.");
+            return;
+        }
 
-    if (!result.success) {
-      alert(result.error || "Login failed. Please check your credentials.");
-      
-      if (result.error?.includes("credentials")) {
-        $("#floatingPassword").val("").focus().select();
-      } else {
-        $("#floatingEmail").focus().select();
-      }
-      return;
-    }
+        // ✅ Update last login through your abstraction, not raw localStorage
+        updateItem(KEY_USERS, user.id, { lastLoginAt: new Date().toISOString() });
+        user.lastLoginAt = new Date().toISOString();
+        setLS('ls_currentUser', user);
 
-    // Login was successful → get the full user object (optional but useful)
-    const user = getCurrentUser();
+        if (user.isSuspended) {
+            alert("Your account has been suspended. Please contact support.");
+            localStorage.removeItem('ls_currentUser');
+            return;
+        }
 
-    if (!user) {
-      alert("Something went wrong after login. Please try again.");
-      return;
-    }
+        if (user.role === ROLES.SELLER && user.isApproved === false) {
+            alert("Your seller account is pending approval. Please wait for admin approval.");
+            localStorage.removeItem('ls_currentUser');
+            return;
+        }
 
-    // Check if user is suspended
-    if (user.isSuspended) {
-      alert("Your account has been suspended. Please contact support.");
-      // Log them out immediately
-      localStorage.removeItem('ls_currentUser');
-      return;
-    }
+        const welcomeName = user.name || user.email.split('@')[0];
+        alert(`Welcome back, ${welcomeName}!`);
 
-    // Check if seller is not approved yet
-    if (user.role === ROLES.SELLER && user.isApproved === false) {
-      alert("Your seller account is pending approval. Please wait for admin approval.");
-      localStorage.removeItem('ls_currentUser');
-      return;
-    }
+        let redirectUrl = null;
+        switch (user.role) {
+            case ROLES.ADMIN:    redirectUrl = "/Html/Admin/admin-panel.html";          break;
+            case ROLES.SELLER:   redirectUrl = "/Html/Seller/SellerHomePage.html";      break;
+            case ROLES.CUSTOMER: redirectUrl = "/Html/Customer/CustomerHomePage.html";  break;
+            default:
+                alert("Unknown user role. Contact support.");
+                return;
+        }
 
-    // Optional nice feedback
-    const welcomeName = user.name || user.email.split('@')[0];
-    alert(`Welcome back, ${welcomeName}!`);
-
-    // ────────────────────────────────────────────────
-    // Redirect based on role (you can keep this logic here or move to auth.js)
-    // ────────────────────────────────────────────────
-    let redirectUrl = null; // fallback
-
-    switch (user.role) {
-      case ROLES.ADMIN:
-        redirectUrl = "/Html/Admin/admin-panel.html";
-        break;
-      case ROLES.SELLER:
-        redirectUrl = "/Html/Seller/SellerHomePage.html";
-        break;
-      case ROLES.CUSTOMER:
-        redirectUrl = "/Html/Customer/Home.html";
-        break;
-      default:
-        alert("Unknown user role. Contact support.");
-        return;
-    }
-
-    // Redirect
-    window.location.href = redirectUrl;
-  });
+        window.location.href = redirectUrl;
+    });
 });

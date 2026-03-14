@@ -1,0 +1,351 @@
+/* =====================================================
+   DEALPORT – categoryProducts.css  (Enhanced)
+   ===================================================== */
+
+/* ── Page header banner ───────────────────────────── */
+.cat-page-header {
+  background: linear-gradient(135deg, #0d4a28 0%, #16a34a 50%, #22c55e 100%);
+  padding: 36px 0 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative background blobs */
+.cat-page-header::before,
+.cat-page-header::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.12;
+  background: #fff;
+  pointer-events: none;
+}
+.cat-page-header::before {
+  width: 320px;
+  height: 320px;
+  top: -120px;
+  right: -80px;
+}
+.cat-page-header::after {
+  width: 200px;
+  height: 200px;
+  bottom: -80px;
+  left: 40px;
+}
+
+.cat-page-title {
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  font-weight: 900;
+  color: #fff;
+  margin: 0 0 6px;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+
+.cat-page-sub {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.78);
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Breadcrumb inside header */
+.cat-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  font-size: 0.78rem;
+}
+.cat-breadcrumb a {
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.cat-breadcrumb a:hover { color: #fff; }
+.cat-breadcrumb .sep { color: rgba(255,255,255,0.4); }
+.cat-breadcrumb .current { color: #fff; font-weight: 700; }
+
+/* Controls row */
+.cat-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cat-sort-select {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: 1.5px solid rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border-radius: 10px;
+  padding: 7px 14px;
+  min-width: 175px;
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.cat-sort-select:focus {
+  box-shadow: none;
+  outline: none;
+  border-color: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.25);
+}
+.cat-sort-select option {
+  background: #1a2e1a;
+  color: #fff;
+}
+
+/* Result count chip */
+.cat-count-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 5px 14px;
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
+  white-space: nowrap;
+}
+.cat-count-chip i { font-size: 0.82rem; opacity: 0.8; }
+
+/* ── Toolbar bar (below header) ───────────────────── */
+.cat-toolbar {
+  background: #fff;
+  border-bottom: 1.5px solid var(--border);
+  padding: 12px 0;
+  position: sticky;
+  top: 60px;           /* below sticky navbar */
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+
+.cat-toolbar-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.cat-toolbar-inner::-webkit-scrollbar { display: none; }
+
+/* View toggle */
+.view-toggle-group {
+  display: flex;
+  gap: 2px;
+  background: var(--page-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 2px;
+  flex-shrink: 0;
+}
+.view-toggle-btn {
+  width: 32px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.view-toggle-btn.active,
+.view-toggle-btn:hover {
+  background: var(--green-primary);
+  color: #fff;
+}
+
+/* Active filter chips */
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--green-light);
+  border: 1.5px solid var(--green-primary);
+  color: var(--green-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.filter-chip:hover { background: var(--danger); border-color: var(--danger); color: #fff; }
+.filter-chip i { font-size: 0.7rem; }
+
+/* ── Main content area ────────────────────────────── */
+.cat-main-content {
+  background: var(--page-bg);
+  min-height: 60vh;
+  padding: 28px 0 48px;
+}
+
+/* Grid view (default) */
+#catProductGrid.grid-view .col-cat { /* uses Bootstrap cols */ }
+
+/* List view */
+#catProductGrid.list-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+#catProductGrid.list-view .col-cat {
+  width: 100% !important;
+  max-width: 100% !important;
+  flex: 0 0 100% !important;
+}
+#catProductGrid.list-view .product-card {
+  flex-direction: row;
+  height: auto !important;
+}
+#catProductGrid.list-view .product-img-wrap {
+  width: 180px;
+  min-width: 180px;
+  height: 180px !important;
+  flex-shrink: 0;
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+#catProductGrid.list-view .product-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+#catProductGrid.list-view .product-name {
+  font-size: 1rem;
+  -webkit-line-clamp: 2;
+}
+#catProductGrid.list-view .product-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+#catProductGrid.list-view .btn-add-cart {
+  width: auto;
+  padding: 8px 20px;
+}
+
+/* ── Loading / empty ──────────────────────────────── */
+.cat-loading-wrap,
+.cat-empty-wrap {
+  min-height: 55vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text-secondary);
+}
+
+.cat-empty-wrap .empty-icon-wrap {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--green-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 2.4rem;
+  color: var(--green-primary);
+}
+
+.cat-empty-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+/* ── Pagination / load-more ───────────────────────── */
+.cat-load-more-wrap {
+  text-align: center;
+  padding: 32px 0 8px;
+}
+.btn-load-more {
+  background: transparent;
+  border: 2px solid var(--green-primary);
+  color: var(--green-primary);
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 11px 36px;
+  border-radius: 12px;
+  transition: all 0.25s;
+  cursor: pointer;
+}
+.btn-load-more:hover {
+  background: var(--green-primary);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(34,197,94,0.25);
+}
+.btn-load-more:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── Search bar (inside toolbar) ──────────────────── */
+.cat-search-wrap { flex: 1; min-width: 160px; max-width: 360px; }
+.cat-search-wrap .search-group { border-width: 1.5px; }
+
+/* ── Skeleton cards on category page ─────────────── */
+.cat-skeleton-card {
+  background: #fff;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  overflow: hidden;
+}
+.cat-skeleton-card .sk-img {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+.cat-skeleton-card .sk-body { padding: 14px; }
+.cat-skeleton-card .sk-line {
+  height: 13px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+.cat-skeleton-card .sk-line.w-half  { width: 55%; }
+.cat-skeleton-card .sk-line.w-third { width: 35%; }
+.cat-skeleton-card .sk-line.w-full  { width: 100%; }
+
+/* ── Responsive ───────────────────────────────────── */
+@media (max-width: 991px) {
+  .cat-page-header { padding: 28px 0 24px; }
+}
+
+@media (max-width: 767px) {
+  .cat-page-title { font-size: 1.5rem; }
+  .cat-toolbar { top: 56px; }
+  #catProductGrid.list-view .product-img-wrap { width: 120px; min-width: 120px; height: 140px !important; }
+}
+
+@media (max-width: 575px) {
+  .cat-sort-select { min-width: 140px; }
+  .cat-count-chip  { display: none; } /* save space on tiny screens */
+  #catProductGrid.list-view .product-img-wrap { width: 100px; min-width: 100px; }
+  .cat-page-header::before,
+  .cat-page-header::after { display: none; }
+}

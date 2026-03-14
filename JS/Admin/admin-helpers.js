@@ -2,11 +2,16 @@ import {
     KEY_USERS,
     KEY_PRODUCTS,
     KEY_ORDERS,
+    KEY_CATEGORIES,
     KEY_CURRENT_USER
 } from '../Core/Constants.js';
 
 import { getLS, setLS } from '../Core/Storage.js';
 import { ROLES } from '../Core/Auth.js';
+
+// Memory caches for O(1) lookup
+let _sellersMapCache = null;
+let _usersMapCache = null;
 
 // ─── DATA ACCESS ─────────────────────────────────────────────
 
@@ -31,6 +36,10 @@ export function getCurrentUser() {
     return getLS(KEY_CURRENT_USER) || null;
 }
 
+export function getCategories() {
+    return getLS(KEY_CATEGORIES) || [];
+}
+
 export function saveUsers(users) {
     setLS(KEY_USERS, users);
 }
@@ -46,6 +55,14 @@ export function saveProducts(products) {
 
 export function saveOrders(orders) {
     setLS(KEY_ORDERS, orders);
+}
+
+/**
+ * Resets memoized maps. Call this after bulk data changes.
+ */
+export function invalidateCaches() {
+    _sellersMapCache = null;
+    _usersMapCache = null;
 }
 
 
@@ -189,21 +206,131 @@ export function escapeHTML(text) {
 }
 
 /**
- * Returns seller's storeName by their id.
- * Used to show seller name in products and orders tables.
- * Falls back to 'Unknown Seller' if not found.
+ * Returns seller's storeName by their id — Optimized with Map cache.
  */
 export function getSellerName(sellerId) {
-    const seller = getSellers().find(s => s.id == sellerId);
+    if (!_sellersMapCache) {
+        const sellers = getSellers();
+        _sellersMapCache = new Map(sellers.map(s => [String(s.id), s]));
+    }
+    const seller = _sellersMapCache.get(String(sellerId));
     return escapeHTML(seller ? seller.storeName : 'Unknown Seller');
 }
 
 /**
- * Returns customer's name by their id.
- * Used to show customer name in orders table.
+ * Returns customer's name by their id — Optimized with Map cache.
  */
 export function getCustomerName(customerId) {
-    const user = getUsers().find(u => u.id == customerId);
+    if (!_usersMapCache) {
+        const users = getUsers();
+        _usersMapCache = new Map(users.map(u => [String(u.id), u]));
+    }
+    const user = _usersMapCache.get(String(customerId));
     return escapeHTML(user ? (user.name || user.fullName || 'Unknown') : 'Unknown Customer');
+}
+
+/**
+ * Utility for debouncing frequent events like search input.
+ */
+export function debounce(func, wait) {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+    };
+}
+
+/**
+ * Reusable table empty state renderer.
+ */
+export function renderTableEmptyState(colspan, message, icon = 'bi-search') {
+    return `
+        <tr>
+            <td colspan="${colspan}" class="empty-state">
+                <div class="empty-content py-5">
+                    <i class="bi ${icon} mb-3" style="font-size: 2rem; color: var(--text-muted); opacity: 0.5;"></i>
+                    <p class="empty-title mb-1">${message}</p>
+                    <p class="empty-sub small">Try adjusting your filters or search terms.</p>
+                </div>
+            </td>
+        </tr>`;
+}
+
+/**
+ * Renders a pagination component.
+ * @param {number} totalItems - Total count of filtered items
+ * @param {number} itemsPerPage - Number of items per page
+ * @param {number} currentPage - Current active page (1-based)
+ * @param {string} containerId - ID of the container element
+ * @param {Function} onPageChange - Callback function when page changes
+ */
+export function renderPagination(totalItems, itemsPerPage, currentPage, containerId, onPageChange) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        container.classList.add('d-none');
+        return;
+    }
+    container.classList.remove('d-none');
+    container.classList.add('pagination-container');
+
+    const startIdx = (currentPage - 1) * itemsPerPage + 1;
+    const endIdx = Math.min(currentPage * itemsPerPage, totalItems);
+
+    let html = `
+        <div class="pagination-info">
+            Showing <strong>${startIdx}</strong> to <strong>${endIdx}</strong> of <strong>${totalItems}</strong> entries
+        </div>
+        <div class="pagination-controls">
+            <button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} data-page="${currentPage - 1}">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+    `;
+
+    // Calculate range of pages to show (max 5 buttons)
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, startPage + 4);
+    if (endPage - startPage < 4) {
+        startPage = Math.max(1, endPage - 4);
+    }
+    // Correct startPage if it went below 1
+    startPage = Math.max(1, startPage);
+
+    if (startPage > 1) {
+        html += `<button class="page-btn" data-page="1">1</button>`;
+        if (startPage > 2) html += `<span class="pagination-dots">...</span>`;
+    }
+
+    for (let p = startPage; p <= endPage; p++) {
+        html += `<button class="page-btn ${p === currentPage ? 'active' : ''}" data-page="${p}">${p}</button>`;
+    }
+
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) html += `<span class="pagination-dots">...</span>`;
+        html += `<button class="page-btn" data-page="${totalPages}">${totalPages}</button>`;
+    }
+
+    html += `
+            <button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} data-page="${currentPage + 1}">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
+    `;
+
+    container.innerHTML = html;
+
+    // Bind events
+    container.querySelectorAll('.page-btn[data-page]').forEach(btn => {
+        btn.onclick = (e) => {
+            e.preventDefault();
+            const page = parseInt(btn.dataset.page);
+            if (page !== currentPage && page >= 1 && page <= totalPages) {
+                onPageChange(page);
+            }
+        };
+    });
 }
 

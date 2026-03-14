@@ -1,17 +1,26 @@
 /**
- * script.js  –  DEALPORT main entry point
- * type="module" in index.html
+ * CustomerHomePage.js – DEALPORT main entry point
+ * type="module" in CustomerHomePage.html
+ *
+ * Changes vs previous version:
+ *  – Fixed broken import path for ProductRenderer (was './JS/Core/ProductRenderer.js')
+ *  – Feature 1: wishlist drawer items navigate to product-details.html on click
+ *  – Feature 1: empty wishlist shows message without a button
+ *  – Feature 4: doSearch() hides/shows entire category <section> based on
+ *               data-category attribute (not just individual product cols)
+ *  – Feature 6: addToCart validates stockQuantity before adding from home page
  */
 
-import { loadProductsFromFolder }                          from '../Core/FileStorage.js';
-import { renderProductsByCategory, showSkeleton, showError } from './JS/Core/ProductRenderer.js';
-import { getCurrentUser, logoutUser, getCartCount }        from '../Core/Auth.js';
+import { loadProductsFromFolder }                              from '../Core/FileStorage.js';
+import { renderProductsByCategory, showSkeleton, showError }   from './ProductRenderer.js';
+import { getCurrentUser, logoutUser, getCartCount }            from '../Core/Auth.js';
 import {
-  getWishlist, addToWishlist, removeFromWishlist,
+  getWishlist, removeFromWishlist,
   toggleWishlist, isWishlisted, getWishlistCount,
 } from './Wishlist.js';
-import { getLS, setLS }  from '../Core/FileStorage.js';
-import { KEY_LOCATION }  from '../Core/Constants.js';
+import { addToCart, getCart }   from './Cart.js';
+import { getLS, setLS }         from '../Core/Storage.js';
+import { KEY_LOCATION }         from '../Core/Constants.js';
 import {
   getTestimonials, addTestimonial, hasUserTestimonial,
   starsHTML as reviewStarsHTML, formatDate,
@@ -56,10 +65,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       accountLabel.textContent = 'Account';
       accountDropdown.innerHTML = `
         <li><h6 class="dropdown-header">Hello, Guest</h6></li>
-        <li><a class="dropdown-item" href="login.html"><i class="bi bi-box-arrow-in-right me-2 text-success"></i>Login</a></li>
-        <li><a class="dropdown-item" href="register.html"><i class="bi bi-person-plus me-2 text-success"></i>Register</a></li>`;
+        <li><a class="dropdown-item" href="Login.html"><i class="bi bi-box-arrow-in-right me-2 text-success"></i>Login</a></li>
+        <li><a class="dropdown-item" href="Register.html"><i class="bi bi-person-plus me-2 text-success"></i>Register</a></li>`;
     } else {
-      const initials = user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+      const initials = user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
       accountLabel.textContent = user.name.split(' ')[0];
       accountDropdown.innerHTML = `
         <li>
@@ -97,12 +106,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   /* ══════════════════════════════════════════════════
-     3. CART BADGE from auth helper
+     3. CART BADGE
   ══════════════════════════════════════════════════ */
   const cartBadgeEl = document.getElementById('cartBadge');
+
   function refreshCartBadge() {
-    const count = getCartCount();
-    if (cartBadgeEl) cartBadgeEl.textContent = count;
+    if (cartBadgeEl) cartBadgeEl.textContent = getCartCount();
   }
   refreshCartBadge();
 
@@ -116,13 +125,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   /* ══════════════════════════════════════════════════
      4. WISHLIST DRAWER
+     Feature 1: clicking a product row navigates to product-details.html
+     Feature 1: empty state shows message without a button
   ══════════════════════════════════════════════════ */
-  const wishlistNavBtn  = document.getElementById('wishlistNavBtn');
-  const wishlistDrawer  = document.getElementById('wishlistDrawer');
-  const drawerBackdrop  = document.getElementById('drawerBackdrop');
-  const closeWishBtn    = document.getElementById('closeWishlistDrawer');
-  const drawerBody      = document.getElementById('wishlistDrawerBody');
-  const wishNavBadge    = document.querySelector('.wishlist-nav-badge');
+  const wishlistNavBtn = document.getElementById('wishlistNavBtn');
+  const wishlistDrawer = document.getElementById('wishlistDrawer');
+  const drawerBackdrop = document.getElementById('drawerBackdrop');
+  const closeWishBtn   = document.getElementById('closeWishlistDrawer');
+  const drawerBody     = document.getElementById('wishlistDrawerBody');
+  const wishNavBadge   = document.querySelector('.wishlist-nav-badge');
 
   function updateWishNavBadge() {
     const count = getWishlistCount();
@@ -151,27 +162,36 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function renderWishlistDrawer() {
     const list = getWishlist();
+
+    // Feature 1: empty → message only, no button
     if (list.length === 0) {
       drawerBody.innerHTML = `
         <div class="drawer-empty">
           <i class="bi bi-heart fs-1 text-muted"></i>
-          <p class="mt-3 text-muted">Your wishlist is empty.<br>Click ♡ on any product to save it.</p>
-          <a href="#" class="btn btn-add-cart mt-2" style="width:auto;padding:8px 20px" onclick="closeDrawer()">Browse Products</a>
+          <p class="mt-3 fw-700 text-muted">Your wishlist is empty.</p>
+          <p class="text-muted small">Add your favorite products to the wishlist so you can buy them later.</p>
         </div>`;
       return;
     }
+
+    // Feature 1: each row is a link to product-details.html
     drawerBody.innerHTML = list.map(p => {
       const img = p.image || `https://placehold.co/80x80/ecfdf5/16a34a?text=${encodeURIComponent(p.name)}`;
       return `
         <div class="drawer-product-row" id="drow-${p.id}">
-          <img src="${img}" alt="${p.name}"
-               onerror="this.src='https://placehold.co/80x80/ecfdf5/16a34a?text=No+Image'"/>
+          <!-- Feature 1: clicking image or name navigates to details page -->
+          <a href="product-details.html?id=${p.id}" class="drow-link" title="View product">
+            <img src="${img}" alt="${p.name}"
+                 onerror="this.src='https://placehold.co/80x80/ecfdf5/16a34a?text=No+Image'"/>
+          </a>
           <div class="drow-info">
-            <div class="drow-name">${p.name}</div>
+            <a href="product-details.html?id=${p.id}" class="drow-name text-decoration-none text-dark">${p.name}</a>
             <div class="drow-cat">${p.category || ''}</div>
             <div class="drow-price">$${parseFloat(p.price || 0).toFixed(2)}</div>
           </div>
-          <button class="drow-remove" data-id="${p.id}" title="Remove"><i class="bi bi-x-lg"></i></button>
+          <button class="drow-remove" data-id="${p.id}" title="Remove from wishlist">
+            <i class="bi bi-x-lg"></i>
+          </button>
         </div>`;
     }).join('');
 
@@ -181,15 +201,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById(`drow-${btn.dataset.id}`)?.remove();
         updateWishNavBadge();
         updateDropWishCount();
-        // update heart icons on page
         syncHeartIcons();
+        // Feature 1: if list becomes empty show message (no button)
         if (getWishlistCount() === 0) renderWishlistDrawer();
       });
     });
   }
 
   /* ══════════════════════════════════════════════════
-     5. HEART ICON SYNC (persist wishlist state on page)
+     5. HEART ICON SYNC
   ══════════════════════════════════════════════════ */
   function syncHeartIcons() {
     document.querySelectorAll('.btn-wishlist[data-id]').forEach(btn => {
@@ -203,11 +223,43 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   /* ══════════════════════════════════════════════════
      6. DELEGATED EVENTS – Cart & Wishlist
+     Feature 6: stock validation before addToCart from home page
   ══════════════════════════════════════════════════ */
   document.body.addEventListener('click', e => {
-    // Add to cart
+
+    // ── Add to Cart ──────────────────────────────────
     const cartBtn = e.target.closest('.btn-add-cart');
     if (cartBtn && !cartBtn.disabled) {
+      const card = cartBtn.closest('.product-card');
+      const productId = cartBtn.dataset.id || card?.dataset.id || String(Date.now());
+
+      // Feature 6: read stockQuantity from data attribute
+      const stockQtyRaw = cartBtn.dataset.stockQuantity || card?.dataset.stockQuantity || '';
+      const stockQty    = stockQtyRaw !== '' ? parseInt(stockQtyRaw) : null;
+
+      // Feature 6: check current cart quantity for this product
+      if (stockQty !== null) {
+        const cart        = getCart();
+        const cartItem    = cart.find(i => String(i.id) === String(productId));
+        const currentQty  = cartItem ? (cartItem.quantity || 0) : 0;
+
+        if (currentQty >= stockQty) {
+          alert('You have reached the maximum available stock for this product.');
+          return;
+        }
+      }
+
+      const product = {
+        id:       productId,
+        name:     cartBtn.dataset.name     || card?.querySelector('.product-name')?.textContent || 'Product',
+        price:    parseFloat(cartBtn.dataset.price)    || 0,
+        oldPrice: cartBtn.dataset.oldPrice ? parseFloat(cartBtn.dataset.oldPrice) : null,
+        category: cartBtn.dataset.category || card?.querySelector('.product-category')?.textContent || '',
+        image:    cartBtn.dataset.image    || card?.querySelector('.product-img')?.src || '',
+      };
+
+      addToCart(product, 1);
+
       const original = cartBtn.innerHTML;
       cartBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Added!';
       cartBtn.style.background = '#16a34a';
@@ -220,13 +272,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       }, 1800);
     }
 
-    // Wishlist toggle — reads product data from card
+    // ── Wishlist toggle ──────────────────────────────
     const wishBtn = e.target.closest('.btn-wishlist');
     if (wishBtn) {
-      const card = wishBtn.closest('.product-card');
+      const card     = wishBtn.closest('.product-card');
       const id       = card?.dataset.id  || wishBtn.dataset.id || String(Date.now());
       const name     = card?.querySelector('.product-name')?.textContent     || 'Product';
-      const price    = card?.querySelector('.price-now')?.textContent?.replace('$','') || '0';
+      const price    = card?.querySelector('.price-now')?.textContent?.replace('$', '') || '0';
       const category = card?.querySelector('.product-category')?.textContent || '';
       const image    = card?.querySelector('.product-img')?.src               || '';
 
@@ -244,21 +296,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* ══════════════════════════════════════════════════
      7. LOCATION POPUP (Leaflet + Geolocation API)
   ══════════════════════════════════════════════════ */
-  const locationBtn      = document.getElementById('locationBtn');
-  const locAddrText      = document.getElementById('locAddrText');
-  const detectBtn        = document.getElementById('detectLocationBtn');
-  const saveLocationBtn  = document.getElementById('saveLocationBtn');
-  const manualInput      = document.getElementById('manualAddressInput');
-  const detectedBox      = document.getElementById('detectedAddress');
-  const detectedText     = document.getElementById('detectedAddressText');
-  const mapPlaceholder   = document.getElementById('mapPlaceholder');
-  const leafletMapDiv    = document.getElementById('leafletMap');
+  const locationBtn    = document.getElementById('locationBtn');
+  const locAddrText    = document.getElementById('locAddrText');
+  const detectBtn      = document.getElementById('detectLocationBtn');
+  const saveLocationBtn = document.getElementById('saveLocationBtn');
+  const manualInput    = document.getElementById('manualAddressInput');
+  const detectedBox    = document.getElementById('detectedAddress');
+  const detectedText   = document.getElementById('detectedAddressText');
+  const mapPlaceholder = document.getElementById('mapPlaceholder');
+  const leafletMapDiv  = document.getElementById('leafletMap');
 
   let locationModal, leafletMap, leafletMarker;
-  let pendingLocation = null;   // { lat, lng, address }
+  let pendingLocation = null;
 
-  // Restore saved location label
   const savedLoc = getLS(KEY_LOCATION);
+  console.log(savedLoc);
   if (savedLoc?.address) {
     locAddrText.innerHTML = truncateAddr(savedLoc.address) + ' <i class="bi bi-chevron-down small"></i>';
   }
@@ -273,10 +325,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   detectBtn?.addEventListener('click', () => {
-    if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser.');
-      return;
-    }
+    if (!navigator.geolocation) { alert('Geolocation is not supported by your browser.'); return; }
     detectBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Detecting…';
     detectBtn.disabled = true;
 
@@ -284,8 +333,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       async pos => {
         const { latitude: lat, longitude: lng } = pos.coords;
         pendingLocation = { lat, lng, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` };
-
-        // Show Leaflet map
         mapPlaceholder.style.display = 'none';
         leafletMapDiv.style.display  = 'block';
 
@@ -300,14 +347,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (leafletMarker) leafletMarker.remove();
         leafletMarker = L.marker([lat, lng]).addTo(leafletMap);
-        // Invalidate size after display change
         setTimeout(() => leafletMap.invalidateSize(), 200);
 
-        // Reverse geocode with Nominatim (free, no key needed)
         try {
-          const res  = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
-          );
+          const res  = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
           const data = await res.json();
           const addr = data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
           pendingLocation.address = addr;
@@ -333,12 +376,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   saveLocationBtn?.addEventListener('click', () => {
     const manual = manualInput?.value.trim();
-    const loc = manual
-      ? { address: manual }
-      : pendingLocation;
-
+    const loc = manual ? { address: manual } : pendingLocation;
     if (!loc) { alert('Please detect or type your location first.'); return; }
-
     setLS(KEY_LOCATION, loc);
     locAddrText.innerHTML = truncateAddr(loc.address) + ' <i class="bi bi-chevron-down small"></i>';
     locationModal?.hide();
@@ -349,8 +388,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   ══════════════════════════════════════════════════ */
   const navbar = document.querySelector('.navbar-top');
   window.addEventListener('scroll', () => {
-    navbar.style.boxShadow = window.scrollY > 10
-      ? '0 4px 20px rgba(0,0,0,0.10)' : 'none';
+    navbar.style.boxShadow = window.scrollY > 10 ? '0 4px 20px rgba(0,0,0,0.10)' : 'none';
   });
 
   /* ══════════════════════════════════════════════════
@@ -371,42 +409,69 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   /* ══════════════════════════════════════════════════
-     10. SEARCH
+     10. SEARCH – Feature 4
+     Hides/shows ENTIRE category <section> when category filter or
+     text search is applied.  The section carries data-category so
+     category-level hiding is O(1) without looping inner cards.
   ══════════════════════════════════════════════════ */
   const searchInput = document.querySelector('.search-input');
   const searchBtn   = document.querySelector('.btn-search');
   const searchCat   = document.querySelector('.search-cat');
 
   function doSearch() {
-    const query    = searchInput?.value.trim().toLowerCase() || '';
+    const query    = (searchInput?.value || '').trim().toLowerCase();
     const category = searchCat?.value || 'All';
 
     document.querySelectorAll('.category-section').forEach(section => {
-      let visible = 0;
-      section.querySelectorAll('.product-card').forEach(card => {
-        const name  = card.querySelector('.product-name')?.textContent.toLowerCase() || '';
-        const cat   = card.querySelector('.product-category')?.textContent || '';
-        const col   = card.closest('[class*="col-"]');
-        const ok    = (!query || name.includes(query)) && (category === 'All' || cat === category);
-        col?.classList.toggle('d-none', !ok);
-        if (ok) visible++;
-      });
-      section.style.display = visible === 0 && query ? 'none' : '';
+      const sectionCategory = section.dataset.category || '';
+
+      // Feature 4: if a specific category is selected hide all non-matching sections entirely
+      if (category !== 'All' && sectionCategory !== category) {
+        section.style.display = 'none';
+        return;
+      }
+
+      // Text search: check product names inside this section
+      if (query) {
+        let visibleCount = 0;
+        section.querySelectorAll('.product-card').forEach(card => {
+          const name = (card.querySelector('.product-name')?.textContent || '').toLowerCase();
+          const col  = card.closest('[class*="col-"]');
+          if (name.includes(query)) {
+            col?.classList.remove('d-none');
+            visibleCount++;
+          } else {
+            col?.classList.add('d-none');
+          }
+        });
+        // Feature 4: hide entire section if no products match query
+        section.style.display = visibleCount === 0 ? 'none' : '';
+      } else {
+        // No text query: restore all hidden product columns
+        section.style.display = '';
+        section.querySelectorAll('[class*="col-"].d-none').forEach(c => c.classList.remove('d-none'));
+      }
     });
 
-    const nr = document.getElementById('no-results-msg');
-    const allHidden = [...document.querySelectorAll('.category-section')].every(s => s.style.display === 'none');
-    if (nr) nr.style.display = allHidden && query ? 'block' : 'none';
+    const noResults = document.getElementById('no-results-msg');
+    const allHidden = [...document.querySelectorAll('.category-section')]
+      .every(s => s.style.display === 'none');
+    if (noResults) noResults.style.display = allHidden && (query || category !== 'All') ? 'block' : 'none';
   }
 
   searchBtn?.addEventListener('click', doSearch);
   searchInput?.addEventListener('keypress', e => { if (e.key === 'Enter') doSearch(); });
   searchCat?.addEventListener('change', doSearch);
+
+  // Live clear: restore everything when input is emptied
   searchInput?.addEventListener('input', () => {
     if (!searchInput.value.trim()) {
+      const cat = searchCat?.value || 'All';
       document.querySelectorAll('.category-section').forEach(s => {
-        s.style.display = '';
-        s.querySelectorAll('[class*="col-"]').forEach(c => c.classList.remove('d-none'));
+        s.style.display = (cat === 'All' || s.dataset.category === cat) ? '' : 'none';
+        if (s.style.display !== 'none') {
+          s.querySelectorAll('[class*="col-"].d-none').forEach(c => c.classList.remove('d-none'));
+        }
       });
       const nr = document.getElementById('no-results-msg');
       if (nr) nr.style.display = 'none';
@@ -452,7 +517,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else {
         renderProductsByCategory(products, dynContainer);
         observeCards();
-        syncHeartIcons(); // mark already-wishlisted products
+        syncHeartIcons();
       }
     } catch (err) {
       showError(dynContainer, err.message);
@@ -481,7 +546,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     testiGrid.innerHTML = list.map((t, i) => {
       const isFeatured = t.featured || i < 3;
       const stars = reviewStarsHTML(t.rating);
-      const initials = t.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+      const initials = t.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
       const avatarImg = t.avatar
         ? `<img src="${t.avatar}" alt="${t.name}" class="testi-avatar"
                onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
@@ -509,7 +574,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   renderTestimonials();
 
-  // Show form or guest prompt
   const loggedUser = getCurrentUser();
   if (loggedUser) {
     testiLoggedIn?.classList.remove('d-none');
@@ -527,7 +591,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     testiGuest?.classList.remove('d-none');
   }
 
-  // Star picker
   let selectedRating = 0;
   starPicker?.querySelectorAll('.star-pick').forEach(star => {
     star.addEventListener('mouseenter', () => {
@@ -550,7 +613,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Submit testimonial
   submitTestiBtn?.addEventListener('click', () => {
     if (testiError) testiError.classList.add('d-none');
     const rating  = parseInt(testiRatingIn?.value || 0);
@@ -558,9 +620,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const user    = getCurrentUser();
     const showErr = msg => { if (testiError) { testiError.textContent = msg; testiError.classList.remove('d-none'); } };
 
-    if (!user)           return showErr('You must be logged in.');
-    if (rating < 1)      return showErr('Please select a star rating.');
-    if (!comment || comment.length < 10) return showErr('Comment must be at least 10 characters.');
+    if (!user)                                return showErr('You must be logged in.');
+    if (rating < 1)                           return showErr('Please select a star rating.');
+    if (!comment || comment.length < 10)      return showErr('Comment must be at least 10 characters.');
 
     addTestimonial({ userId: user.id, name: user.name, avatar: null, rating, comment });
     renderTestimonials();

@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="light">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Join Ecommerce - Create Your Account</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -13,69 +14,108 @@
 
   </style>
 </head>
+
 <body>
 
-  <div class="container-custom">
-    <div class="auth-card">
+  <div class="shell">
 
-      <div class="header">
-        <h1 class="logo">Ecommerce</h1>
-        <div class="step">Create your account & tell us what you like</div>
+    <!-- ── SIDEBAR ── -->
+    <aside class="sidebar">
+      <div class="brand">Ecommerce</div>
+      <div class="brand-tagline">Your personal shop</div>
+
+      <div class="steps">
+        <div class="step-item active" id="step1">
+          <div class="step-dot">1</div>
+          <div>
+            <div class="step-label">Account Details</div>
+            <div class="step-desc">Name, email & password</div>
+          </div>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item" id="step2">
+          <div class="step-dot">2</div>
+          <div>
+            <div class="step-label">Your Preferences</div>
+            <div class="step-desc">City & categories</div>
+          </div>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item" id="step3">
+          <div class="step-dot">3</div>
+          <div>
+            <div class="step-label">Your Interests</div>
+            <div class="step-desc">Personalise your feed</div>
+          </div>
+        </div>
       </div>
 
-      <div class="card-body">
+      <div class="sidebar-footer">
+        Secured with 256-bit SSL encryption<br>
+        © 2025 Ecommerce. All rights reserved.
+      </div>
+    </aside>
 
-        <form id="registerForm" class="needs-validation" novalidate>
+    <!-- ── MAIN ── -->
+    <main class="main">
 
-          <!-- Basic Info -->
-          <h5 class="section-title">Your Account</h5>
-          <div class="row g-4 mb-5">
-            <div class="col-md-6">
-              <div class="form-floating">
-                <input type="text" class="form-control" id="name" placeholder="Full name" required minlength="2">
-                <label for="name">Full name</label>
-                <div class="invalid-feedback">Name must be at least 2 characters.</div>
-              </div>
-            </div>
+      <form id="registerForm" novalidate>
 
-            <div class="col-md-6">
-              <div class="form-floating">
-                <input type="email" class="form-control" id="email" placeholder="Email address" required>
-                <label for="email">Email address</label>
-                <div class="invalid-feedback">Enter a valid email address.</div>
-              </div>
-            </div>
+        <!-- ── SECTION 1: Account ── -->
+        <div class="section-heading">
+          <div class="section-icon"><i class="bi bi-person-fill"></i></div>
+          <h5>Your Account</h5>
+        </div>
 
-            <div class="col-md-6">
-              <div class="form-floating position-relative">
-              <input type="password" class="form-control pe-5" id="password" placeholder="Password" required minlength="6">
-                <label for="password">Password</label>
-              <span class="input-group-text position-absolute top-50 end-0 translate-middle-y pe-3 border-0 bg-transparent" id="togglePassword">
-                  <i class="bi bi-eye fs-5 text-muted"></i>
-                </span>
-                <div class="invalid-feedback">Password must be at least 6 characters.</div>
-              </div>
-            </div>
-
-            <div class="col-12">
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="agreeTerms" required>
-                <label class="form-check-label small" for="agreeTerms">
-                I agree to the <a href="#" class="text-success text-decoration-none">Terms of Service & Privacy Policy</a>
-                </label>
-                <div class="invalid-feedback">You must agree before continuing.</div>
-              </div>
+        <div class="row g-3 mb-2">
+          <div class="col-md-6">
+            <div class="field-wrap">
+              <label for="name">Full Name</label>
+              <input type="text" id="name" placeholder="e.g. Ahmed Hassan" required minlength="2" />
+              <div class="invalid-msg">Name must be at least 2 characters.</div>
             </div>
           </div>
+          <div class="col-md-6">
+            <div class="field-wrap">
+              <label for="email">Email Address</label>
+              <input type="email" id="email" placeholder="you@example.com" required />
+              <div class="invalid-msg">Enter a valid email address.</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="field-wrap pw-wrap">
+              <label for="password">Password</label>
+              <input type="password" id="password" placeholder="Min. 6 characters" required minlength="6" />
+              <button type="button" class="pw-toggle" id="togglePassword">
+                <i class="bi bi-eye" id="eyeIcon"></i>
+              </button>
+              <div class="invalid-msg">Password must be at least 6 characters.</div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="terms-row">
+              <input type="checkbox" id="agreeTerms" required />
+              <label for="agreeTerms">
+                I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+                We'll never share your data with third parties.
+              </label>
+            </div>
+          </div>
+        </div>
 
-          <!-- Preferences -->
-          <h5 class="section-title">Tell us what you like</h5>
-          <div class="row g-4 mb-5">
+        <hr class="section-divider" />
 
-            <!-- City -->
-            <div class="col-md-6">
-              <label class="form-label">Your City</label>
-              <select class="form-select" id="city" name="city">
+        <!-- ── SECTION 2: Preferences ── -->
+        <div class="section-heading">
+          <div class="section-icon"><i class="bi bi-geo-alt-fill"></i></div>
+          <h5>Your Location & Categories</h5>
+        </div>
+
+        <div class="row g-3 mb-2">
+          <div class="col-md-5">
+            <div class="field-wrap select-wrap">
+              <label for="city">Your City</label>
+              <select id="city" name="city">
                 <option value="" disabled selected>Choose your city</option>
                 <option value="Alexandria">Alexandria</option>
                 <option value="Cairo">Cairo</option>
@@ -88,67 +128,77 @@
                 <option value="Aswan">Aswan</option>
                 <option value="Other">Other</option>
               </select>
-              <div class="hint">We'll show nearby products & offers</div>
-            </div>
-
-            <!-- Categories -->
-            <div class="col-md-6">
-              <label class="form-label">Product Categories You Like</label>
-              <select class="form-select" id="categories" name="categories" multiple>
-                <option value="electronics">Electronics & Gadgets</option>
-                <option value="fashion">Fashion & Clothing</option>
-                <option value="home">Home & Kitchen</option>
-                <option value="beauty">Beauty & Personal Care</option>
-                <option value="sports">Sports & Fitness</option>
-                <option value="books">Books & Stationery</option>
-                <option value="food">Food & Grocery</option>
-                <option value="toys">Toys & Games</option>
-                <option value="automotive">Automotive & Accessories</option>
-                <option value="other">Other</option>
-              </select>
-              <div class="hint">Select all that interest you (Ctrl/Cmd + click)</div>
-            </div>
-
-            <!-- Interests -->
-            <div class="col-12">
-              <label class="form-label">Your Interests & Hobbies</label>
-              <select class="form-select" id="interests" name="interests" multiple>
-                <option value="technology">Technology & Gadgets</option>
-                <option value="fashion">Fashion & Style</option>
-                <option value="cooking">Cooking & Food</option>
-                <option value="fitness">Fitness & Sports</option>
-                <option value="gaming">Gaming</option>
-                <option value="reading">Reading & Books</option>
-                <option value="travel">Travel & Adventure</option>
-                <option value="music">Music & Concerts</option>
-                <option value="movies">Movies & Series</option>
-                <option value="photography">Photography</option>
-                <option value="art">Art & Crafts</option>
-                <option value="other">Other</option>
-              </select>
-              <div class="hint">This helps us personalize your experience</div>
+              <p class="hint"><i class="bi bi-info-circle"></i> We'll show nearby products & offers</p>
             </div>
           </div>
 
-          <!-- Submit -->
-          <div class="text-center mt-5">
-            <button type="submit" class="btn btn-submit">
-              Create Account & Continue
-            </button>
+          <div class="col-12">
+            <div class="field-wrap">
+              <label>Product Categories You Like</label>
+              <div class="chip-grid" id="categoriesChips">
+                <div class="chip" data-value="electronics"><span class="chip-icon">💻</span> Electronics</div>
+                <div class="chip" data-value="fashion"><span class="chip-icon">👗</span> Fashion</div>
+                <div class="chip" data-value="home"><span class="chip-icon">🏠</span> Home & Kitchen</div>
+                <div class="chip" data-value="beauty"><span class="chip-icon">✨</span> Beauty</div>
+                <div class="chip" data-value="sports"><span class="chip-icon">🏋️</span> Sports</div>
+                <div class="chip" data-value="books"><span class="chip-icon">📚</span> Books</div>
+                <div class="chip" data-value="food"><span class="chip-icon">🛒</span> Food & Grocery</div>
+                <div class="chip" data-value="toys"><span class="chip-icon">🧸</span> Toys & Games</div>
+                <div class="chip" data-value="automotive"><span class="chip-icon">🚗</span> Automotive</div>
+                <div class="chip" data-value="other"><span class="chip-icon">➕</span> Other</div>
+              </div>
+              <p class="hint"><i class="bi bi-hand-index"></i> Tap to select multiple</p>
+              <input type="hidden" id="categories" name="categories" />
+            </div>
           </div>
-
-        </form>
-
-        <div class="signin-link">
-        Already have an account? <a href="login.html">Sign in</a>
         </div>
 
+        <hr class="section-divider" />
+
+        <!-- ── SECTION 3: Interests ── -->
+        <div class="section-heading">
+          <div class="section-icon"><i class="bi bi-stars"></i></div>
+          <h5>Your Interests & Hobbies</h5>
+        </div>
+
+        <div class="field-wrap">
+          <label>What are you into?</label>
+          <div class="chip-grid" id="interestsChips">
+            <div class="chip" data-value="technology"><span class="chip-icon">🤖</span> Technology</div>
+            <div class="chip" data-value="fashion"><span class="chip-icon">👠</span> Fashion</div>
+            <div class="chip" data-value="cooking"><span class="chip-icon">🍳</span> Cooking</div>
+            <div class="chip" data-value="fitness"><span class="chip-icon">🏃</span> Fitness</div>
+            <div class="chip" data-value="gaming"><span class="chip-icon">🎮</span> Gaming</div>
+            <div class="chip" data-value="reading"><span class="chip-icon">📖</span> Reading</div>
+            <div class="chip" data-value="travel"><span class="chip-icon">✈️</span> Travel</div>
+            <div class="chip" data-value="music"><span class="chip-icon">🎵</span> Music</div>
+            <div class="chip" data-value="movies"><span class="chip-icon">🎬</span> Movies</div>
+            <div class="chip" data-value="photography"><span class="chip-icon">📷</span> Photography</div>
+            <div class="chip" data-value="art"><span class="chip-icon">🎨</span> Art & Crafts</div>
+            <div class="chip" data-value="other"><span class="chip-icon">➕</span> Other</div>
+          </div>
+          <p class="hint"><i class="bi bi-magic"></i> Helps us personalise your feed</p>
+          <input type="hidden" id="interests" name="interests" />
+        </div>
+
+        <!-- ── Submit ── -->
+        <button type="submit" class="btn-submit">
+          <i class="bi bi-check-circle-fill"></i>
+          Create Account & Continue
+        </button>
+
+      </form>
+
+      <div class="signin-link">
+        Already have an account? <a href="login.html">Sign in</a>
       </div>
-    </div>
+
+    </main>
   </div>
 
   <script src="/Libraries/JQuery.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/JS/Customer/Register.js" type="module"></script>
 </body>
+
 </html>

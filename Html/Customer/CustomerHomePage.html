@@ -71,7 +71,7 @@
         </div>
 
         <!-- Cart -->
-        <a href="#" class="nav-icon-btn d-flex flex-column align-items-center position-relative text-decoration-none">
+        <a href="Cart.html" class="nav-icon-btn d-flex flex-column align-items-center position-relative text-decoration-none">
           <i class="bi bi-cart3"></i>
           <span class="cart-badge" id="cartBadge">0</span>
           <span>Cart</span>
@@ -327,401 +327,18 @@
 <div id="dynamic-categories"></div>
 
 <!-- ===== TRENDING PRODUCTS (kept as design anchor – hidden, replaced by API) ===== -->
-<section class="section-pad bg-page" style="display:none">
-  <div class="container-fluid px-3 px-lg-4">
-    <div class="section-header">
-      <div>
-        <h2 class="section-title">Trending Product</h2>
-        <p class="section-sub">Most popular picks this week</p>
-      </div>
-      <a href="#" class="btn btn-view-all">View All <i class="bi bi-arrow-right"></i></a>
-    </div>
 
-    <div class="row g-3">
-
-      <!-- Product Card 1 -->
-      <div class="col-6 col-md-4 col-lg-3">
-        <div class="product-card">
-          <div class="product-img-wrap">
-            <img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&q=80" alt="Serum" class="product-img"/>
-            <span class="badge-discount">20% OFF</span>
-            <button class="btn-wishlist"><i class="bi bi-heart"></i></button>
-          </div>
-          <div class="product-body">
-            <p class="product-category">Skincare</p>
-            <h5 class="product-name">Natural Glow Hydrating Serum</h5>
-            <div class="product-stars">
-              <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
-              <span>(349 reviews)</span>
-            </div>
-            <div class="product-price">
-              <span class="price-now">$29.99</span>
-              <span class="price-old">$37.99</span>
-            </div>
-            <div class="product-actions">
-              <button class="btn btn-add-cart"><i class="bi bi-cart-plus me-1"></i>Add to Cart</button>
-              <a href="#" class="btn-view">View Details</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Product Card 2 -->
-      <div class="col-6 col-md-4 col-lg-3">
-        <div class="product-card">
-          <div class="product-img-wrap">
-            <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&q=80" alt="Vase" class="product-img"/>
-            <button class="btn-wishlist"><i class="bi bi-heart"></i></button>
-          </div>
-          <div class="product-body">
-            <p class="product-category">Home Décor</p>
-            <h5 class="product-name">Modern Minimalist Vase</h5>
-            <div class="product-stars">
-              <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
-              <span>(142 reviews)</span>
-            </div>
-            <div class="product-price">
-              <span class="price-now">$40.99</span>
-            </div>
-            <div class="product-actions">
-              <button class="btn btn-add-cart"><i class="bi bi-cart-plus me-1"></i>Add to Cart</button>
-              <a href="#" class="btn-view">View Details</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Product Card 3 -->
-      <div class="col-6 col-md-4 col-lg-3">
-        <div class="product-card">
-          <div class="product-img-wrap">
-            <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80" alt="Smartwatch" class="product-img"/>
-            <span class="badge-discount">15% OFF</span>
-            <button class="btn-wishlist"><i class="bi bi-heart"></i></button>
-          </div>
-          <div class="product-body">
-            <p class="product-category">Electronics</p>
-            <h5 class="product-name">FitPro 3000 Smartwatch</h5>
-            <div class="product-stars">
-              <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-              <span>(203 reviews)</span>
-            </div>
-            <div class="product-price">
-              <span class="price-now">$119.99</span>
-              <span class="price-old">$139.99</span>
-            </div>
-            <div class="product-actions">
-              <button class="btn btn-add-cart"><i class="bi bi-cart-plus me-1"></i>Add to Cart</button>
-              <a href="#" class="btn-view">View Details</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Trending Collection banner (right) -->
-      <div class="col-6 col-md-12 col-lg-3">
-        <div class="trending-banner">
-          <h4>Trend Collection<br>for Men</h4>
-          <img src="https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=300&q=80" alt="Men fashion"/>
-          <a href="#" class="btn btn-add-cart mt-2 w-100">Shop Now</a>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
 <!-- /end hidden trending -->
 
 <!-- ===== START EXPLORING NOW (static icons kept for design; category nav is populated from API) ===== -->
-<section class="section-pad">
-  <div class="container-fluid px-3 px-lg-4">
-    <div class="section-header">
-      <div>
-        <h2 class="section-title">Start Exploring Now</h2>
-        <p class="section-sub">Browse by category and find what you love</p>
-      </div>
-      <a href="#" class="btn btn-view-all">View All <i class="bi bi-arrow-right"></i></a>
-    </div>
-
-    <div class="explore-scroll">
-      <div class="explore-card">
-        <div class="explore-icon" style="background:#fef3c7">🛒</div>
-        <span>Grocery</span>
-      </div>
-      <div class="explore-card">
-        <div class="explore-icon" style="background:#ede9fe">🏠</div>
-        <span>Home</span>
-      </div>
-      <div class="explore-card">
-        <div class="explore-icon" style="background:#fce7f3">👗</div>
-        <span>Fashion</span>
-      </div>
-      <div class="explore-card">
-        <div class="explore-icon" style="background:#dbeafe">📱</div>
-        <span>Electronic</span>
-      </div>
-      <div class="explore-card">
-        <div class="explore-icon" style="background:#fef2f2">🧸</div>
-        <span>Toys</span>
-      </div>
-      <div class="explore-card">
-        <div class="explore-icon" style="background:#d1fae5">🌿</div>
-        <span>Garden</span>
-      </div>
-      <div class="explore-card">
-        <div class="explore-icon" style="background:#fee2e2">💄</div>
-        <span>Beauty</span>
-      </div>
-      <div class="explore-card">
-        <div class="explore-icon" style="background:#e0f2fe">⚽</div>
-        <span>Sports</span>
-      </div>
-      <div class="explore-card">
-        <div class="explore-icon" style="background:#fef9c3">📚</div>
-        <span>Books</span>
-      </div>
-    </div>
-  </div>
-</section>
 
 <!-- ===== BEST SELLING PRODUCTS ===== -->
-<section class="section-pad bg-page">
-  <div class="container-fluid px-3 px-lg-4">
-    <div class="section-header">
-      <div>
-        <h2 class="section-title">Best Selling Product</h2>
-        <p class="section-sub">Our top picks loved by thousands</p>
-      </div>
-      <a href="#" class="btn btn-view-all">View All <i class="bi bi-arrow-right"></i></a>
-    </div>
 
-    <div class="swiper best-swiper">
-      <div class="swiper-wrapper">
-
-        <!-- Promo 1 -->
-        <div class="swiper-slide">
-          <div class="promo-card promo-dark">
-            <div class="promo-tag">Computer Accessories</div>
-            <img src="https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=300&q=80" alt="Computer"/>
-            <div class="promo-price-badge">$49</div>
-            <a href="#" class="btn btn-promo">OBI Shop Now</a>
-          </div>
-        </div>
-
-        <!-- Promo 2 -->
-        <div class="swiper-slide">
-          <div class="promo-card promo-light">
-            <div class="promo-tag">Men Fashion</div>
-            <img src="https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?w=300&q=80" alt="Men Fashion"/>
-            <div class="promo-price-badge">$200</div>
-            <a href="#" class="btn btn-promo-dark">New Arrival</a>
-          </div>
-        </div>
-
-        <!-- Promo 3 -->
-        <div class="swiper-slide">
-          <div class="promo-card promo-red">
-            <div class="promo-tag">Pomegranate Juice</div>
-            <img src="https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=300&q=80" alt="Juice"/>
-            <div class="promo-price-badge">$49</div>
-            <a href="#" class="btn btn-promo">Shop Now</a>
-          </div>
-        </div>
-
-        <!-- Promo 4 Dog Food -->
-        <div class="swiper-slide">
-          <div class="promo-card promo-blue">
-            <div class="promo-tag">Dog Food</div>
-            <h3 class="promo-headline">DOG FOOD MADE WITH LOVE</h3>
-            <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=300&q=80" alt="Dog"/>
-            <a href="#" class="btn btn-hero-primary mt-2">Shop Now</a>
-          </div>
-        </div>
-
-        <!-- Promo 5 -->
-        <div class="swiper-slide">
-          <div class="promo-card promo-dark2">
-            <div class="promo-tag">Security Cameras</div>
-            <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&q=80" alt="Camera"/>
-            <div class="promo-price-badge">$420</div>
-            <a href="#" class="btn btn-promo">View Now</a>
-          </div>
-        </div>
-
-        <!-- Promo 6 -->
-        <div class="swiper-slide">
-          <div class="promo-card promo-purple">
-            <div class="promo-tag">Gaming Gear</div>
-            <img src="https://images.unsplash.com/photo-1593118247619-e2d6f056869e?w=300&q=80" alt="Gaming"/>
-            <div class="promo-price-badge">$149</div>
-            <a href="#" class="btn btn-promo">Shop Now</a>
-          </div>
-        </div>
-
-      </div>
-      <div class="swiper-button-prev best-prev"><i class="bi bi-chevron-left"></i></div>
-      <div class="swiper-button-next best-next"><i class="bi bi-chevron-right"></i></div>
-    </div>
-  </div>
-</section>
 
 <!-- ===== LIMITED-TIME DEALS ===== -->
 <!-- Deals are now rendered by the API-driven #dynamic-categories section above -->
 <!-- Keeping the deals swiper section hidden as fallback UI -->
-<section class="section-pad" style="display:none">
-  <div class="container-fluid px-3 px-lg-4">
-    <div class="section-header">
-      <div>
-        <h2 class="section-title">Limited-Time Deal</h2>
-        <p class="section-sub">Hurry! Offers expire soon ⏱</p>
-      </div>
-      <a href="#" class="btn btn-view-all">View All <i class="bi bi-arrow-right"></i></a>
-    </div>
 
-    <div class="swiper deals-swiper">
-      <div class="swiper-wrapper">
-
-        <!-- Deal 1 -->
-        <div class="swiper-slide">
-          <div class="product-card">
-            <div class="product-img-wrap">
-              <img src="https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=400&q=80" alt="Samsung" class="product-img"/>
-              <span class="badge-discount">20% OFF</span>
-              <button class="btn-wishlist"><i class="bi bi-heart"></i></button>
-            </div>
-            <div class="product-body">
-              <p class="product-category">Smartphones</p>
-              <h5 class="product-name">Samsung Galaxy S24</h5>
-              <div class="product-stars">
-                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
-                <span>(342 reviews)</span>
-              </div>
-              <div class="product-price">
-                <span class="price-now">$789.99</span>
-                <span class="price-old">$1,100.49</span>
-              </div>
-              <div class="product-actions">
-                <button class="btn btn-add-cart w-100"><i class="bi bi-cart-plus me-1"></i>Add to Cart</button>
-              </div>
-              <a href="#" class="btn-view d-block mt-1">View Details</a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Deal 2 -->
-        <div class="swiper-slide">
-          <div class="product-card">
-            <div class="product-img-wrap">
-              <img src="https://images.unsplash.com/photo-1606220588913-b3aacb4d2f46?w=400&q=80" alt="Earbuds" class="product-img"/>
-              <span class="badge-discount">30% OFF</span>
-              <button class="btn-wishlist"><i class="bi bi-heart"></i></button>
-            </div>
-            <div class="product-body">
-              <p class="product-category">Audio</p>
-              <h5 class="product-name">Uii TWS 7002 Earbuds</h5>
-              <div class="product-stars">
-                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
-                <span>(92 reviews)</span>
-              </div>
-              <div class="product-price">
-                <span class="price-now">$1.49</span>
-                <span class="price-old">$5.00</span>
-              </div>
-              <div class="product-actions">
-                <button class="btn btn-add-cart w-100"><i class="bi bi-cart-plus me-1"></i>Add to Cart</button>
-              </div>
-              <a href="#" class="btn-view d-block mt-1">View Details</a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Deal 3 -->
-        <div class="swiper-slide">
-          <div class="product-card">
-            <div class="product-img-wrap">
-              <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&q=80" alt="Jacket" class="product-img"/>
-              <span class="badge-discount">50% OFF</span>
-              <button class="btn-wishlist"><i class="bi bi-heart"></i></button>
-            </div>
-            <div class="product-body">
-              <p class="product-category">Fashion</p>
-              <h5 class="product-name">Winter Fashion Jacket</h5>
-              <div class="product-stars">
-                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
-                <span>(348 reviews)</span>
-              </div>
-              <div class="product-price">
-                <span class="price-now">$250.99</span>
-                <span class="price-old">$502</span>
-              </div>
-              <div class="product-actions">
-                <button class="btn btn-add-cart w-100"><i class="bi bi-cart-plus me-1"></i>Add to Cart</button>
-              </div>
-              <a href="#" class="btn-view d-block mt-1">View Details</a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Deal 4 -->
-        <div class="swiper-slide">
-          <div class="product-card">
-            <div class="product-img-wrap">
-              <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80" alt="Sneakers" class="product-img"/>
-              <span class="badge-discount">35% OFF</span>
-              <button class="btn-wishlist"><i class="bi bi-heart"></i></button>
-            </div>
-            <div class="product-body">
-              <p class="product-category">Footwear</p>
-              <h5 class="product-name">New Balance 574 Sneakers</h5>
-              <div class="product-stars">
-                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                <span>(860 reviews)</span>
-              </div>
-              <div class="product-price">
-                <span class="price-now">$300</span>
-                <span class="price-old">$460</span>
-              </div>
-              <div class="product-actions">
-                <button class="btn btn-add-cart w-100"><i class="bi bi-cart-plus me-1"></i>Add to Cart</button>
-              </div>
-              <a href="#" class="btn-view d-block mt-1">View Details</a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Deal 5 -->
-        <div class="swiper-slide">
-          <div class="product-card">
-            <div class="product-img-wrap">
-              <img src="https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=400&q=80" alt="Perfume" class="product-img"/>
-              <span class="badge-discount">25% OFF</span>
-              <button class="btn-wishlist"><i class="bi bi-heart"></i></button>
-            </div>
-            <div class="product-body">
-              <p class="product-category">Beauty</p>
-              <h5 class="product-name">Luxury Perfume Set</h5>
-              <div class="product-stars">
-                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
-                <span>(127 reviews)</span>
-              </div>
-              <div class="product-price">
-                <span class="price-now">$49.99</span>
-                <span class="price-old">$66.00</span>
-              </div>
-              <div class="product-actions">
-                <button class="btn btn-add-cart w-100"><i class="bi bi-cart-plus me-1"></i>Add to Cart</button>
-              </div>
-              <a href="#" class="btn-view d-block mt-1">View Details</a>
-            </div>
-          </div>
-        </div>
-
-      </div>
-      <div class="swiper-button-prev deals-prev"><i class="bi bi-chevron-left"></i></div>
-      <div class="swiper-button-next deals-next"><i class="bi bi-chevron-right"></i></div>
-    </div>
-  </div>
-</section>
 
 <!-- ===== TESTIMONIALS (DYNAMIC) ===== -->
 <section class="section-pad bg-light-green" id="testimonialsSection">
@@ -788,86 +405,168 @@
 </section>
 
 <!-- ===== FOOTER ===== -->
-<footer class="site-footer">
+<!-- ===== BECOME A SELLER MODAL (from ContactUS.html) ===== -->
+<div class="modal fade" id="becomeSellerModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content seller-modal-content">
+      <div class="modal-header seller-modal-header">
+        <div>
+          <h5 class="modal-title fw-800">
+            <i class="bi bi-shop me-2"></i>Apply to Become a Seller
+          </h5>
+          <p class="text-muted small mb-0 mt-1">Join thousands of sellers on DEALPORT</p>
+        </div>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form id="becomeSellerForm" class="needs-validation" novalidate>
+        <div class="modal-body p-4">
+
+          <!-- Store Information -->
+          <div class="seller-form-section mb-4">
+            <div class="seller-section-label">
+              <i class="bi bi-shop-window me-2"></i>Store Information
+            </div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="profile-label">Store Name *</label>
+                <input type="text" class="form-control profile-input" id="storeName"
+                       placeholder="e.g. TechHub Store" required/>
+                <div class="invalid-feedback">Please enter your store name.</div>
+              </div>
+              <div class="col-md-6">
+                <label class="profile-label">City *</label>
+                <input type="text" class="form-control profile-input" id="storeCity"
+                       placeholder="e.g. Cairo" required/>
+                <div class="invalid-feedback">Please enter your city.</div>
+              </div>
+              <div class="col-12">
+                <label class="profile-label">Store Description *</label>
+                <textarea class="form-control profile-input" id="storeDescription"
+                          rows="3" placeholder="Describe what you sell and your brand story..." required></textarea>
+                <div class="invalid-feedback">Please describe your store.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Business Information -->
+          <div class="seller-form-section mb-4">
+            <div class="seller-section-label">
+              <i class="bi bi-briefcase me-2"></i>Business Information
+            </div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="profile-label">Business Category *</label>
+                <select class="form-select profile-input" id="storeCategory" required>
+                  <option value="" disabled selected>Select Category</option>
+                  <option>Electronics</option>
+                  <option>Fashion</option>
+                  <option>Home & Kitchen</option>
+                  <option>Beauty</option>
+                  <option>Sports</option>
+                  <option>Grocery</option>
+                  <option>Toys</option>
+                  <option>Automotive</option>
+                </select>
+                <div class="invalid-feedback">Please select a category.</div>
+              </div>
+              <div class="col-md-6">
+                <label class="profile-label">Phone Number *</label>
+                <input type="tel" class="form-control profile-input" id="storePhone"
+                       placeholder="+20 100 000 0000" required/>
+                <div class="invalid-feedback">Please enter a phone number.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payout Preferences -->
+          <div class="seller-form-section">
+            <div class="seller-section-label">
+              <i class="bi bi-credit-card me-2"></i>Payout Preferences
+            </div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="profile-label">Payment Method *</label>
+                <select class="form-select profile-input" id="paymentMethod" required>
+                  <option value="" disabled selected>Select method</option>
+                  <option>Bank Transfer</option>
+                  <option>Vodafone Cash</option>
+                  <option>InstaPay</option>
+                  <option>PayPal</option>
+                </select>
+                <div class="invalid-feedback">Please select a payment method.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer border-0 px-4 pb-4 gap-2">
+          <button class="btn btn-cancel flex-grow-1" type="button" data-bs-dismiss="modal">
+            Cancel
+          </button>
+          <button class="btn btn-save flex-grow-1" type="submit">
+            <i class="bi bi-send me-1"></i> Submit Application
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== FOOTER (minimised) ===== -->
+<footer class="site-footer-mini">
   <div class="container-fluid px-3 px-lg-4">
-    <div class="row g-4 py-5">
 
-      <!-- Company Info -->
-      <div class="col-md-6 col-lg-2">
-        <h6 class="footer-heading">Company Info</h6>
-        <ul class="footer-links">
-          <li><a href="#">About Us</a></li>
-          <li><a href="#">Careers</a></li>
-          <li><a href="#">Press Releases</a></li>
-          <li><a href="#">Sustainability Practices</a></li>
-        </ul>
-      </div>
+    <!-- Top row: Logo + Nav links + Social -->
+    <div class="footer-mini-top">
 
-      <!-- Customer Support -->
-      <div class="col-md-6 col-lg-2">
-        <h6 class="footer-heading">Customer Support</h6>
-        <ul class="footer-links">
-          <li><a href="ContactUS.html">Contact Us</a></li>
-          <li><a href="ContactUS.html#becomeSeller">Become a Seller</a></li>
-          <li><a href="#">Help Center (FAQs)</a></li>
-          <li><a href="#">Track My Order</a></li>
-          <li><a href="#">Return & Refund Policy</a></li>
-          <li><a href="#">Shipping Information</a></li>
-        </ul>
-      </div>
-
-      <!-- Center Logo -->
-      <div class="col-lg-4 text-center">
+      <!-- Logo + tagline -->
+      <div class="footer-mini-brand">
         <div class="footer-logo">
           <span class="logo-deal">DEAL</span><span class="logo-port"><i class="bi bi-shop"></i>RT</span>
         </div>
-        <p class="footer-tagline">Your one-stop shop for the best deals online. Quality products delivered to your door.</p>
-        <div class="newsletter-wrap mt-3">
-          <p class="fw-600 mb-2">Newsletter Signup</p>
-          <div class="input-group newsletter-group">
-            <input type="email" class="form-control" placeholder="Enter your email address"/>
-            <button class="btn btn-newsletter">Subscribe</button>
-          </div>
+        <p class="footer-mini-tagline">Your one-stop shop for the best deals.</p>
+      </div>
+
+      <!-- Quick links -->
+      <div class="footer-mini-links">
+        <a href="CustomerHomePage.html">Home</a>
+        <a href="profile.html">My Profile</a>
+        <a href="Cart.html">Cart</a>
+        <a href="#" data-bs-toggle="modal" data-bs-target="#becomeSellerModal">Become a Seller</a>
+        <a href="#">Help Center</a>
+        <a href="#">Returns Policy</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms & Conditions</a>
+      </div>
+
+      <!-- Newsletter -->
+      <div class="footer-mini-newsletter">
+        <p class="footer-mini-nl-label"><i class="bi bi-envelope me-1"></i>Newsletter</p>
+        <div class="input-group newsletter-group">
+          <input type="email" class="form-control" placeholder="Your email address"/>
+          <button class="btn btn-newsletter">Subscribe</button>
         </div>
       </div>
 
-      <!-- Explore -->
-      <div class="col-md-6 col-lg-2">
-        <h6 class="footer-heading">Explore</h6>
-        <ul class="footer-links">
-          <li><a href="#">Categories</a></li>
-          <li><a href="#">Best Sellers</a></li>
-          <li><a href="#">New Arrivals</a></li>
-          <li><a href="#">Deals & Promotions</a></li>
-        </ul>
-      </div>
-
-      <!-- Legal -->
-      <div class="col-md-6 col-lg-2">
-        <h6 class="footer-heading">Legal</h6>
-        <ul class="footer-links">
-          <li><a href="#">Terms & Conditions</a></li>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Cookie Policy</a></li>
-          <li><a href="#">Accessibility Statement</a></li>
-          <li><a href="#">Return & Refund Policy</a></li>
-        </ul>
-      </div>
-
     </div>
 
-    <!-- Footer Bottom -->
-    <div class="footer-bottom">
-      <p>© 2025 Dealport. All rights reserved.</p>
+    <!-- Bottom row: copyright + socials -->
+    <div class="footer-mini-bottom">
+      <p>© 2025 DEALPORT. All rights reserved.</p>
       <div class="social-icons">
-        <span class="me-2 text-muted small">Connect with us</span>
-        <a href="#" class="social-btn fb"><i class="bi bi-facebook"></i></a>
-        <a href="#" class="social-btn ig"><i class="bi bi-instagram"></i></a>
-        <a href="#" class="social-btn tw"><i class="bi bi-twitter-x"></i></a>
-        <a href="#" class="social-btn li"><i class="bi bi-linkedin"></i></a>
+        <a href="#" class="social-btn fb" title="Facebook"><i class="bi bi-facebook"></i></a>
+        <a href="#" class="social-btn ig" title="Instagram"><i class="bi bi-instagram"></i></a>
+        <a href="#" class="social-btn tw" title="X / Twitter"><i class="bi bi-twitter-x"></i></a>
+        <a href="#" class="social-btn li" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
       </div>
-      <p class="text-muted small">Trusted Seller Certifications by SSL Secure</p>
+      <p class="footer-mini-ssl">
+        <i class="bi bi-shield-check text-success me-1"></i>SSL Secure &amp; Trusted Sellers
+      </p>
     </div>
+
   </div>
 </footer>
 

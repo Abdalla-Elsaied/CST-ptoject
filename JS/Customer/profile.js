@@ -10,7 +10,7 @@ import {
 } from '../Core/Auth.js';
 
 import { getWishlist, removeFromWishlist } from './Wishlist.js';
-import { getLS } from '../Core/FileStorage.js';
+import { getLS } from '../Core/Storage.js';
 import { KEY_ORDERS } from '../Core/Constants.js';
 
 /* ── Guard: redirect if not logged in ───────────────── */
@@ -241,7 +241,7 @@ function renderWishlistTab() {
         <i class="bi bi-heart text-muted"></i>
         <h5>Your wishlist is empty</h5>
         <p class="small text-muted">Browse products and click the ♡ to save them here.</p>
-        <a href="index.html" class="btn btn-save mt-2">Start Shopping</a>
+        <a href="CustomerHomePage.html" class="btn btn-save mt-2">Start Shopping</a>
       </div>`;
     return;
   }

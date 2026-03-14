@@ -1,14 +1,21 @@
 /**
  * ProductRenderer.js
  * ─────────────────────────────────────────────────────────────────
- * Normalises raw API products, groups them by category,
- * and renders one section per category inside #dynamic-categories.
- * Works with any common field-name convention from MockAPI.
+ * Changes vs previous version:
+ *
+ *  Feature 2 – sellerId stored as data-seller-id on .product-card
+ *  Feature 3 – "View All" navigates to categoryProducts.html?category=X
+ *              (no inline expand — Show More button removed)
+ *  Feature 4 – doSearch() hides entire category <section> when no match
+ *              (already wired in CustomerHomePage.js; renderer just ensures
+ *               category sections carry the right data-category attribute)
+ *  Feature 5 – populateCategoryNav() sorts by product count desc,
+ *               shows top 4 in bar, rest in "More" dropdown,
+ *               each link navigates to categoryProducts.html?category=X
  */
 
-/* ── 1. Field normaliser helpers ─────────────────────────────── */
+/* ── Field normaliser helpers ─────────────────────────────────── */
 
-// Extracts image URL from flat field OR images[0].url array format
 function resolveImage(p) {
   if (Array.isArray(p.images) && p.images.length > 0) {
     const first = p.images[0];
@@ -17,7 +24,6 @@ function resolveImage(p) {
   return p.image || p.img || p.imageUrl || p.thumbnail || p.photo || p.avatar || '';
 }
 
-// Handles "in_stock"/"out_of_stock" string OR numeric stockQuantity OR boolean
 function resolveStock(p) {
   if (typeof p.stockStatus === 'string') {
     return p.stockStatus.toLowerCase() === 'in_stock';
@@ -27,7 +33,6 @@ function resolveStock(p) {
   return v !== undefined ? Boolean(v) : true;
 }
 
-// discountPrice = amount saved → compute % off; fallback to discount field
 function resolveDiscount(p) {
   if (p.discountPrice && p.price && parseFloat(p.price) > 0) {
     const pct = Math.round((parseFloat(p.discountPrice) / parseFloat(p.price)) * 100);
@@ -36,7 +41,6 @@ function resolveDiscount(p) {
   return parseInt(p.discount || p.discountPercent || p.sale || 0) || null;
 }
 
-// When discountPrice exists: original = price, sale = price - discountPrice
 function resolveCurrentPrice(p) {
   if (p.discountPrice && p.price) {
     const sale = parseFloat(p.price) - parseFloat(p.discountPrice);
@@ -50,53 +54,60 @@ function resolveOldPrice(p) {
   return parseFloat(p.oldPrice || p.old_price || p.originalPrice || 0) || null;
 }
 
-/* ── 1. Field normaliser ─────────────────────────────────────── */
+/* ── Field normaliser ────────────────────────────────────────── */
 function normalise(p) {
   return {
-    id:          p.id          || p.ID          || Math.random(),
-    name:        p.name        || p.title       || p.productName || p.product_name || 'Untitled Product',
-    category:    p.category    || p.Category    || p.type        || p.Type         || 'Other',
-    price:       resolveCurrentPrice(p),
-    oldPrice:    resolveOldPrice(p),
-    image:       resolveImage(p),
-    rating:      parseFloat(p.rating || p.rate || p.stars || 0),
-    reviews:     parseInt(p.reviews  || p.reviewCount || p.numReviews || 0),
-    discount:    resolveDiscount(p),
-    description: p.description || p.desc || p.details || '',
-    stock:       resolveStock(p),
-    tag:         p.tag || p.badge || null,
+    id:            p.id           || p.ID           || Math.random(),
+    sellerId:      p.sellerId     || p.seller_id    || p.userId || null,  // Feature 2
+    name:          p.name         || p.title        || p.productName || p.product_name || 'Untitled Product',
+    category:      p.category     || p.Category     || p.type   || p.Type || 'Other',
+    price:         resolveCurrentPrice(p),
+    oldPrice:      resolveOldPrice(p),
+    image:         resolveImage(p),
+    rating:        parseFloat(p.rating || p.rate || p.stars || 0),
+    reviews:       parseInt(p.reviews  || p.reviewCount || p.numReviews || 0),
+    discount:      resolveDiscount(p),
+    description:   p.description  || p.desc || p.details || '',
+    stock:         resolveStock(p),
+    stockQuantity: typeof p.stockQuantity === 'number' ? p.stockQuantity : null,
+    tag:           p.tag || p.badge || null,
   };
 }
 
-/* ── 2. Star HTML helper ─────────────────────────────────────── */
+/* ── Star HTML ───────────────────────────────────────────────── */
 function starsHTML(rating) {
   const full  = Math.floor(rating);
   const half  = rating % 1 >= 0.4 ? 1 : 0;
   const empty = 5 - full - half;
   return (
-    '<i class="bi bi-star-fill"></i>'.repeat(full)  +
-    '<i class="bi bi-star-half"></i>'.repeat(half)  +
+    '<i class="bi bi-star-fill"></i>'.repeat(full) +
+    '<i class="bi bi-star-half"></i>'.repeat(half) +
     '<i class="bi bi-star"></i>'.repeat(empty)
   );
 }
 
-/* ── 3. Single product-card HTML ─────────────────────────────── */
+/* ── Single product card HTML ────────────────────────────────── */
 function productCardHTML(p) {
+  console.log(p);
   const discountBadge = p.discount
     ? `<span class="badge-discount">${p.discount}% OFF</span>` : '';
   const tagBadge = !p.discount && p.tag
-    ? `<span class="badge-tag badge-tag--${p.tag.toLowerCase().replace(/\s+/g,'-')}">${p.tag}</span>` : '';
-  const oldPriceHTML  = p.oldPrice && p.oldPrice !== p.price
+    ? `<span class="badge-tag badge-tag--${p.tag.toLowerCase().replace(/\s+/g, '-')}">${p.tag}</span>` : '';
+  const oldPriceHTML = p.oldPrice && p.oldPrice !== p.price
     ? `<span class="price-old">$${p.oldPrice.toFixed(2)}</span>` : '';
-  const reviewText    = p.reviews ? `(${p.reviews} reviews)` : '';
-  const imgSrc        = p.image
+  const reviewText = p.reviews ? `(${p.reviews} reviews)` : '';
+  const imgSrc = p.image
     ? p.image
     : `https://placehold.co/400x300/ecfdf5/16a34a?text=${encodeURIComponent(p.name)}`;
-  const outOfStock    = !p.stock;
+  const outOfStock = !p.stock;
 
+  // Feature 2: data-seller-id on product card; stockQuantity for stock validation
   return `
     <div class="col-6 col-md-4 col-lg-3">
-      <div class="product-card" data-id="${p.id}">
+      <div class="product-card"
+           data-id="${p.id}"
+           data-seller-id="${p.sellerId || ''}"
+           data-stock-quantity="${p.stockQuantity !== null ? p.stockQuantity : ''}">
         <div class="product-img-wrap">
           <img src="${imgSrc}"
                alt="${p.name}"
@@ -123,6 +134,12 @@ function productCardHTML(p) {
           <div class="product-actions">
             <button class="btn btn-add-cart${outOfStock ? ' btn-out-of-stock' : ''}"
                     data-id="${p.id}"
+                    data-name="${p.name.replace(/"/g, '&quot;')}"
+                    data-price="${p.price}"
+                    data-old-price="${p.oldPrice || ''}"
+                    data-category="${p.category}"
+                    data-image="${imgSrc}"
+                    data-stock-quantity="${p.stockQuantity !== null ? p.stockQuantity : ''}"
                     ${outOfStock ? 'disabled' : ''}>
               <i class="bi bi-cart-plus me-1"></i>
               ${outOfStock ? 'Out of Stock' : 'Add to Cart'}
@@ -134,43 +151,44 @@ function productCardHTML(p) {
     </div>`;
 }
 
-/* ── 4. Category section HTML ────────────────────────────────── */
+/* ── Category section HTML ───────────────────────────────────── */
+// Feature 3: View All → categoryProducts.html?category=X (no inline expand)
+// Feature 4: data-category on <section> so search can hide entire section
 function categorySectionHTML(category, products, sectionIndex) {
   const bgClass = sectionIndex % 2 === 0 ? '' : 'bg-page';
-  const cards   = products.map(productCardHTML).join('');
+  // Show only first 4 products as preview
+  const preview = products.slice(0, 4);
+  const cards   = preview.map(productCardHTML).join('');
   const catId   = `cat-${category.replace(/\s+/g, '-').toLowerCase()}`;
+  const catEncoded = encodeURIComponent(category);
 
   return `
-    <section class="section-pad ${bgClass} category-section" id="${catId}">
+    <section class="section-pad ${bgClass} category-section"
+             id="${catId}"
+             data-category="${category}">
       <div class="container-fluid px-3 px-lg-4">
 
-        <!-- Section header -->
         <div class="section-header">
           <div>
             <h2 class="section-title">${category}</h2>
             <p class="section-sub">${products.length} product${products.length !== 1 ? 's' : ''} available</p>
           </div>
-          <a href="#" class="btn btn-view-all">View All <i class="bi bi-arrow-right"></i></a>
+          <!-- Feature 3: navigate to category page, never expand inline -->
+          <a href="categoryProducts.html?category=${catEncoded}"
+             class="btn btn-view-all">
+            View All <i class="bi bi-arrow-right"></i>
+          </a>
         </div>
 
-        <!-- Product grid -->
         <div class="row g-3 products-grid" id="${catId}-grid">
           ${cards}
         </div>
-
-        <!-- Show-more (hidden when ≤4 products) -->
-        ${products.length > 4 ? `
-        <div class="text-center mt-4 show-more-wrap">
-          <button class="btn btn-show-more" data-target="${catId}-grid">
-            Show More <i class="bi bi-chevron-down ms-1"></i>
-          </button>
-        </div>` : ''}
 
       </div>
     </section>`;
 }
 
-/* ── 5. Loading skeleton ─────────────────────────────────────── */
+/* ── Loading skeleton ────────────────────────────────────────── */
 export function showSkeleton(container) {
   container.innerHTML = `
     <section class="section-pad">
@@ -197,7 +215,7 @@ export function showSkeleton(container) {
     </section>`;
 }
 
-/* ── 6. Error state ──────────────────────────────────────────── */
+/* ── Error state ─────────────────────────────────────────────── */
 export function showError(container, message) {
   container.innerHTML = `
     <section class="section-pad">
@@ -214,17 +232,16 @@ export function showError(container, message) {
     </section>`;
 }
 
-/* ── 7. Main render function ─────────────────────────────────── */
+/* ── Main render function ────────────────────────────────────── */
 export function renderProductsByCategory(products, container) {
   if (!products || products.length === 0) {
     showError(container, 'No products were returned from the server.');
     return;
   }
 
-  // Normalise all products
   const normalised = products.map(normalise);
 
-  // Group by category (preserve insertion order)
+  // Feature 5: sort categories by product count descending
   const groups = {};
   for (const p of normalised) {
     const cat = p.category || 'Other';
@@ -232,83 +249,60 @@ export function renderProductsByCategory(products, container) {
     groups[cat].push(p);
   }
 
-  // Build HTML for every category
-  const html = Object.entries(groups)
-    .map(([cat, items], idx) => categorySectionHTML(cat, items, idx))
+  // Sort category keys by count desc
+  const sortedCategories = Object.keys(groups).sort(
+    (a, b) => groups[b].length - groups[a].length
+  );
+
+  // Build HTML in popularity order
+  const html = sortedCategories
+    .map((cat, idx) => categorySectionHTML(cat, groups[cat], idx))
     .join('');
 
   container.innerHTML = html;
 
-  // Populate the search <select> with real categories
+  // Populate search <select> with sorted categories
   const select = document.querySelector('.search-cat');
   if (select) {
-    const existing = ['All', ...Object.keys(groups)];
-    select.innerHTML = existing
+    select.innerHTML = ['All', ...sortedCategories]
       .map(c => `<option value="${c}">${c}</option>`)
       .join('');
   }
 
-  // Populate category nav bar with real categories
-  populateCategoryNav(Object.keys(groups));
-
-  // Wire "Show More" buttons
-  container.querySelectorAll('.btn-show-more').forEach(btn => {
-    btn.addEventListener('click', function () {
-      const gridId = this.dataset.target;
-      const grid   = document.getElementById(gridId);
-      const hidden = grid.querySelectorAll('.col-6.d-none');
-      if (hidden.length) {
-        hidden.forEach(c => c.classList.remove('d-none'));
-        this.textContent = 'Show Less';
-        this.innerHTML   = 'Show Less <i class="bi bi-chevron-up ms-1"></i>';
-      } else {
-        // hide cards beyond first 4
-        const all = grid.querySelectorAll('.col-6');
-        all.forEach((c, i) => { if (i >= 4) c.classList.add('d-none'); });
-        this.innerHTML = 'Show More <i class="bi bi-chevron-down ms-1"></i>';
-        // scroll back to section
-        document.getElementById(gridId.replace('-grid', '')).scrollIntoView({ behavior: 'smooth' });
-      }
-    });
-    // Hide cards beyond 4 on initial load
-    const grid = document.getElementById(btn.dataset.target);
-    grid.querySelectorAll('.col-6').forEach((c, i) => {
-      if (i >= 4) c.classList.add('d-none');
-    });
-  });
+  // Feature 5: populate category nav sorted by count
+  populateCategoryNav(sortedCategories);
 }
 
-/* ── 8. Category nav population ─────────────────────────────── */
-function populateCategoryNav(categories) {
+/* ── Category nav – Feature 5 ───────────────────────────────── */
+// Top 4 categories (by product count) shown directly; rest in "More" dropdown.
+// Every link navigates to categoryProducts.html?category=X
+function populateCategoryNav(sortedCategories) {
   const scroll = document.querySelector('.cat-scroll');
   if (!scroll) return;
 
-  // Keep the "More" dropdown, replace the static links
-  const dropdown = scroll.querySelector('.dropdown');
-  const moreLinks = categories.slice(8); // extras go into "More"
+  const top4 = sortedCategories.slice(0, 4);
+  const more = sortedCategories.slice(4);
 
-  // Build category links
-  const links = categories.slice(0, 8).map(cat => {
-    const id = `cat-${cat.replace(/\s+/g, '-').toLowerCase()}`;
-    return `<a href="#${id}" class="cat-link">${cat}</a>`;
+  const links = top4.map(cat => {
+    const enc = encodeURIComponent(cat);
+    return `<a href="categoryProducts.html?category=${enc}" class="cat-link">${cat}</a>`;
   }).join('');
 
-  // Build "More" dropdown items
-  const moreItems = moreLinks.map(cat => {
-    const id = `cat-${cat.replace(/\s+/g, '-').toLowerCase()}`;
-    return `<li><a class="dropdown-item" href="#${id}">${cat}</a></li>`;
-  }).join('');
+  const moreItems = more.length
+    ? more.map(cat => {
+        const enc = encodeURIComponent(cat);
+        return `<li><a class="dropdown-item" href="categoryProducts.html?category=${enc}">${cat}</a></li>`;
+      }).join('')
+    : '<li><a class="dropdown-item text-muted" href="#">No more categories</a></li>';
 
-  if (dropdown) {
-    dropdown.querySelector('.dropdown-menu').innerHTML = moreItems ||
-      '<li><a class="dropdown-item" href="#">No more categories</a></li>';
-    scroll.innerHTML = links;
-    scroll.appendChild(dropdown);
-  } else {
-    scroll.innerHTML = links;
-  }
+  scroll.innerHTML = `
+    ${links}
+    <div class="dropdown d-inline-block">
+      <a href="#" class="cat-link dropdown-toggle" data-bs-toggle="dropdown">More</a>
+      <ul class="dropdown-menu">${moreItems}</ul>
+    </div>`;
 
-  // Active highlight on scroll
+  // Active highlight on click (for anchor-only nav)
   scroll.querySelectorAll('.cat-link:not(.dropdown-toggle)').forEach(link => {
     link.addEventListener('click', () => {
       scroll.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));

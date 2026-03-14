@@ -81,6 +81,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update pending badges (Seller Requests, Category Suggestions)
     updateSidebarBadges();
 
+    // Init Theme Toggle
+    initTheme();
+
     // Load the last active section, or default to dashboard
     const lastSection = sessionStorage.getItem('adminActiveSection') || 'dashboard';
     activateSection(lastSection);
@@ -126,7 +129,7 @@ function initSidebar() {
  * Saves the active section to sessionStorage so it persists on refresh.
  * @param {string} section - one of: dashboard, sellers, customers, products, orders, analytics
  */
-function activateSection(section) {
+window.activateSection = function(section) {
     // Hide all sections
     document.querySelectorAll('.admin-section').forEach(el => {
         el.style.display = 'none';
@@ -188,4 +191,71 @@ function updateSidebarBadges() {
 
     setBadge(reqBadge, pendingRequests);
     setBadge(catBadge, pendingCategories);
+
+    // Update notifications bell
+    updateNotificationsBell(pendingRequests + pendingCategories);
+}
+
+/**
+ * Updates the notifications bell in the topbar.
+ */
+function updateNotificationsBell(totalCount) {
+    const bell = document.getElementById('notificationsBell');
+    const badge = document.getElementById('notificationsBadge');
+    
+    if (!bell || !badge) return;
+
+    if (totalCount > 0) {
+        badge.classList.remove('d-none');
+        bell.title = `${totalCount} pending notification${totalCount > 1 ? 's' : ''}`;
+    } else {
+        badge.classList.add('d-none');
+        bell.title = 'No notifications';
+    }
+
+    // Add click handler to show notifications dropdown
+    bell.onclick = () => {
+        // For now, just navigate to requests if there are pending items
+        if (totalCount > 0) {
+            const requestsLink = document.querySelector('[data-section="requests"]');
+            if (requestsLink) requestsLink.click();
+        }
+    };
+}
+
+// ─── THEME MANAGEMENT ────────────────────────────────────────
+
+function initTheme() {
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    if (!themeToggle || !themeIcon) return;
+
+    // Load saved theme or default to light
+    const savedTheme = localStorage.getItem('adminTheme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeUI(savedTheme);
+
+    themeToggle.onclick = () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('adminTheme', newTheme);
+        updateThemeUI(newTheme);
+
+        // Refresh current section to update things like Chart.js colors
+        const currentSection = sessionStorage.getItem('adminActiveSection') || 'dashboard';
+        window.activateSection(currentSection);
+    };
+}
+
+function updateThemeUI(theme) {
+    const themeIcon = document.getElementById('themeIcon');
+    if (!themeIcon) return;
+    
+    if (theme === 'dark') {
+        themeIcon.className = 'bi bi-moon-stars';
+    } else {
+        themeIcon.className = 'bi bi-sun';
+    }
 }

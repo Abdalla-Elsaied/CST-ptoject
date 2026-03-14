@@ -2,7 +2,7 @@
  * Wishlist.js
  * Persists liked products in localStorage under KEY_WISHLIST.
  */
-import { getLS, setLS } from '../Core/FileStorage.js';
+import { getLS, setLS } from '../Core/Storage.js';
 import { KEY_WISHLIST } from '../Core/Constants.js';
 
 export function getWishlist() {
