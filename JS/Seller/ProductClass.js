@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await saveProductToDisk(product, imageFiles);
 
             showLoading(false);
-            showMessage('Product saved successfully!', 'success');
+            showMessage('Product saved successfully! Please wait for admin approval.', 'success');
 
             form.reset();
             previewContainer.innerHTML = '';

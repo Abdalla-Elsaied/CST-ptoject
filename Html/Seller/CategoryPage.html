@@ -69,6 +69,10 @@
       </section>
 
       <section class="card-panel category-panel">
+        <div class="category-notice" id="categoryNotice" aria-live="polite">
+          <span class="category-notice-text"></span>
+          <button class="category-notice-btn" type="button" id="categoryNoticeOk">OK</button>
+        </div>
         <div class="panel-header category-panel-head">
           <div class="category-filters">
             <button class="chip active" data-filter="all">All</button>
@@ -95,6 +99,7 @@
             <tbody id="categoryTable"></tbody>
           </table>
         </div>
+        <div class="pagination" id="pagination"></div>
       </section>
     </main>
 
@@ -109,8 +114,6 @@
           <label>
             Visibility
             <select id="categoryVisibilityInput">
-              <option value="active">Active</option>
-              <option value="hidden">Hidden</option>
               <option value="draft">Draft</option>
             </select>
           </label>
