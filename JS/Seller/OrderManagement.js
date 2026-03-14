@@ -521,9 +521,7 @@ function searchOrder(v){
 }
 
 function openModal(){
-  editingOrderId = null;
-  setModalMode('add');
-  renderProductPicker();
+  clearOrderForm();
   document.getElementById('modal').style.display = 'flex';
 }
 
@@ -702,7 +700,8 @@ function saveOrder(){
     }
   }
 
-  const payment = document.getElementById('payment').value;
+  const paymentRaw = document.getElementById('payment')?.value;
+  const payment = paymentRaw === 'Paid' ? 'Paid' : (paymentRaw === 'Unpaid' ? 'Unpaid' : 'Paid');
   const status = document.getElementById('status').value;
 
   const products = collectSelectedProducts();
