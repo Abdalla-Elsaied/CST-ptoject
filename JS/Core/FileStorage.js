@@ -171,24 +171,4 @@ export async function deleteProductFromDisk(productId) {
   return true;
 }
 
-export function getLS(key) {
-  try {
-    const val = localStorage.getItem(key);
-    return val ? JSON.parse(val) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function setLS(key, value) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {}
-}
-
-export function removeLS(key) {
-  try {
-    localStorage.removeItem(key);
-  } catch {}
-}
 

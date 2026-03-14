@@ -19,7 +19,7 @@ import {
   toggleWishlist, isWishlisted, getWishlistCount,
 } from './Wishlist.js';
 import { addToCart, getCart }   from './Cart.js';
-import { getLS, setLS }         from '../Core/FileStorage.js';
+import { getLS, setLS }         from '../Core/Storage.js';
 import { KEY_LOCATION }         from '../Core/Constants.js';
 import {
   getTestimonials, addTestimonial, hasUserTestimonial,

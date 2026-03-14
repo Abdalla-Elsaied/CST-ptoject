@@ -1,7 +1,7 @@
 
 import { saveProductToDisk } from '../Core/FileStorage.js';
 import { KEY_CATEGORIES } from '../Core/Constants.js';
-import { getCurrentUser } from '../Core/Auth.js';
+import { getCurrentUser, ROLES } from '../Core/Auth.js';
 
 const THEME_STORAGE_KEY = 'seller_theme';
 
@@ -139,6 +139,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const currentUser = getCurrentUser();
         const sellerId = currentUser?.id ?? null;
+
+        if (currentUser.role != ROLES.SELLER){
+            console.error("only seller can add products")
+            return;
+        }
+            
 
         const product = {
             name: formData.get('productName')?.trim() || '(no name)',

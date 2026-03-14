@@ -10,7 +10,7 @@ import {
 } from '../Core/Auth.js';
 
 import { getWishlist, removeFromWishlist } from './Wishlist.js';
-import { getLS } from '../Core/FileStorage.js';
+import { getLS } from '../Core/Storage.js';
 import { KEY_ORDERS } from '../Core/Constants.js';
 
 /* ── Guard: redirect if not logged in ───────────────── */

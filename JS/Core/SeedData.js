@@ -42,9 +42,7 @@ export function seedAdmin() {
         users.push(newSeller);
         users.push(newSeller2003);
         setLS(KEY_USERS, users);
-        console.log('Admin user seeded: admin@cst.com / password123');
-        console.log('Seller user seeded: seller@cst.com / password1233');
-        console.log('Seller2003 user seeded: seller3@cst.com / password1233');
+        console.log('default Users had been Seeded successfully ');
     }
 }
 

@@ -6,7 +6,7 @@
  *   - Per-product reviews     (stored under KEY_PRODUCT_REVIEWS)
  */
 
-import { getLS, setLS } from '../Core/FileStorage.js';
+import { getLS, setLS } from '../Core/Storage.js';
 import { seedTestimonials } from '../Core/SeedData.js'; // ← seed moved here
 
 export const KEY_TESTIMONIALS    = 'ls_testimonials';
