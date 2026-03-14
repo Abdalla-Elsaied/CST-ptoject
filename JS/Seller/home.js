@@ -45,6 +45,60 @@ $(function () {
     return [];
   }
 
+  function isSellerItem(item, sellerProductIds) {
+    if (!item) return false;
+    if (String(item?.sellerId ?? '') === sellerId) return true;
+    const id = item?.id ?? item?.productId ?? item?.product_id ?? '';
+    return sellerProductIds.has(String(id));
+  }
+
+  function getSellerItems(order, sellerProductIds) {
+    const items = getOrderItems(order);
+    if (!items.length) return [];
+    return items.filter((item) => isSellerItem(item, sellerProductIds));
+  }
+
+  function isMixedOrder(order, sellerProductIds) {
+    const items = getOrderItems(order);
+    if (!items.length) return false;
+    const sellerItems = getSellerItems(order, sellerProductIds);
+    return sellerItems.length > 0 && sellerItems.length !== items.length;
+  }
+
+  function normalizeStatus(rawStatus) {
+    const statusRaw = String(rawStatus ?? '').toLowerCase();
+    if (statusRaw === 'delivered') return 'Delivered';
+    if (statusRaw === 'shipped') return 'Shipped';
+    if (statusRaw === 'cancelled' || statusRaw === 'canceled') return 'Cancelled';
+    return 'Pending';
+  }
+
+  function normalizePayment(rawPayment, rawMethod) {
+    const paymentRaw = String(rawPayment ?? '').trim();
+    const paymentLower = paymentRaw.toLowerCase();
+    if (paymentLower === 'paid') return 'Paid';
+    if (paymentLower === 'unpaid') return 'Unpaid';
+    const method = String(rawMethod ?? '').trim().toLowerCase();
+    if (!method) return 'Unpaid';
+    return method === 'cash' ? 'Unpaid' : 'Paid';
+  }
+
+  function getSellerStatus(order, sellerProductIds) {
+    if (isMixedOrder(order, sellerProductIds)) {
+      const value = order?.sellerStatus?.[sellerId];
+      if (value) return normalizeStatus(value);
+    }
+    return normalizeStatus(order?.status);
+  }
+
+  function getSellerPayment(order, sellerProductIds) {
+    if (isMixedOrder(order, sellerProductIds)) {
+      const value = order?.sellerPayment?.[sellerId];
+      if (value != null) return normalizePayment(value, order?.paymentMethod);
+    }
+    return normalizePayment(order?.payment, order?.paymentMethod);
+  }
+
   function orderBelongsToSeller(order, sellerProductIds) {
     if (!order || !sellerId) return false;
     if (String(order?.sellerId ?? '') === sellerId) return true;
@@ -255,9 +309,9 @@ $(function () {
     try {
       const parsed = JSON.parse(localStorage.getItem('ls_orders'));
       if (!Array.isArray(parsed) || parsed.length === 0) return [];
-      const normalized = normalizeDashboardOrders(parsed);
-      localStorage.setItem('ls_orders', JSON.stringify(normalized));
       const sellerProductIds = getSellerProductIds();
+      const normalized = normalizeDashboardOrders(parsed, sellerProductIds);
+      localStorage.setItem('ls_orders', JSON.stringify(normalized));
       return normalized.filter((order) => orderBelongsToSeller(order, sellerProductIds));
     } catch (_err) {
       return [];
@@ -282,24 +336,18 @@ $(function () {
     return Number.isFinite(total) && total > 0 ? total : 0;
   }
 
-  function normalizeDashboardOrder(order, idx) {
+  function normalizeDashboardOrder(order, idx, sellerProductIds) {
     const createdAtRaw = order?.createdAt ?? order?.date ?? Date.now();
     const createdAtDate = new Date(createdAtRaw);
     const createdAt = Number.isNaN(createdAtDate.getTime())
       ? new Date().toISOString()
       : createdAtDate.toISOString();
 
-    const paymentRaw = String(order?.payment ?? '').toLowerCase();
-    const payment = paymentRaw === 'paid' ? 'Paid' : 'Unpaid';
-
-    const statusRaw = String(order?.status ?? '').toLowerCase();
-    let status = 'Pending';
-    if (statusRaw === 'delivered') status = 'Delivered';
-    else if (statusRaw === 'shipped') status = 'Shipped';
-    else if (statusRaw === 'cancelled' || statusRaw === 'canceled') status = 'Cancelled';
+    const payment = getSellerPayment(order, sellerProductIds);
+    const status = getSellerStatus(order, sellerProductIds);
 
     const id = String(order?.id ?? order?.orderId ?? `ORD-${idx + 1}`);
-    const safePrice = Number(getSafeOrderAmount(order).toFixed(2));
+    const safePrice = Number(getSafeOrderAmount(order, sellerProductIds).toFixed(2));
 
     return {
       ...order,
@@ -311,11 +359,17 @@ $(function () {
     };
   }
 
-  function normalizeDashboardOrders(rawOrders) {
-    return rawOrders.map((order, idx) => normalizeDashboardOrder(order, idx));
+  function normalizeDashboardOrders(rawOrders, sellerProductIds) {
+    return rawOrders.map((order, idx) => normalizeDashboardOrder(order, idx, sellerProductIds));
   }
 
-  function getSafeOrderAmount(order) {
+  function getSafeOrderAmount(order, sellerProductIds) {
+    if (isMixedOrder(order, sellerProductIds)) {
+      const sellerSubtotal = order?.sellerSubtotal?.[sellerId];
+      const parsed = Number(sellerSubtotal);
+      if (Number.isFinite(parsed) && parsed >= 0) return parsed;
+    }
+
     const rawAmount = Number(order?.price ?? order?.total ?? order?.totalPrice);
     const itemsTotal = getOrderItemsTotal(order);
 
@@ -362,6 +416,7 @@ $(function () {
 
     const totals = [0, 0, 0, 0, 0, 0, 0];
     const orders = loadDashboardOrders();
+    const sellerProductIds = getSellerProductIds();
 
     orders.forEach((order) => {
       const dt = new Date(order?.createdAt || order?.date || 0);
@@ -372,7 +427,7 @@ $(function () {
       const status = String(order?.status ?? '').toLowerCase();
       if (payment !== 'paid' || status !== 'delivered') return;
 
-      const amount = getSafeOrderAmount(order);
+      const amount = getSafeOrderAmount(order, sellerProductIds);
       if (!Number.isFinite(amount) || amount <= 0) return;
 
       const dayIndex = mapDayToReportIndex(dt.getDay());
@@ -395,6 +450,7 @@ $(function () {
 
     const totals = [0, 0, 0, 0, 0, 0, 0];
     const orders = loadDashboardOrders();
+    const sellerProductIds = getSellerProductIds();
 
     orders.forEach((order) => {
       const dt = new Date(order?.createdAt || order?.date || 0);
@@ -404,7 +460,7 @@ $(function () {
       const status = String(order?.status ?? '').toLowerCase();
       if (status !== 'cancelled' && status !== 'canceled') return;
 
-      const amount = getSafeOrderAmount(order);
+      const amount = getSafeOrderAmount(order, sellerProductIds);
       if (!Number.isFinite(amount) || amount <= 0) return;
 
       const dayIndex = mapDayToReportIndex(dt.getDay());
@@ -603,10 +659,11 @@ $(function () {
     if (!metricEl) return;
 
     const orders = loadDashboardOrders();
+    const sellerProductIds = getSellerProductIds();
     const canceledTotal = orders.reduce((sum, order) => {
       const status = String(order?.status ?? '').toLowerCase();
       if (status !== 'cancelled' && status !== 'canceled') return sum;
-      const amount = getSafeOrderAmount(order);
+      const amount = getSafeOrderAmount(order, sellerProductIds);
       return Number.isFinite(amount) ? sum + amount : sum;
     }, 0);
 
@@ -785,9 +842,12 @@ $(function () {
     `).join('');
   }
 
-  function extractOrderItems(order) {
-    if (Array.isArray(order?.products) && order.products.length) return order.products;
-    if (Array.isArray(order?.items) && order.items.length) return order.items;
+  function extractOrderItems(order, sellerProductIds) {
+    const items = getOrderItems(order);
+    if (items.length) {
+      if (!sellerProductIds) return items;
+      return items.filter((item) => isSellerItem(item, sellerProductIds));
+    }
     if (order?.product) return [{ name: order.product, qty: 1 }];
     return [];
   }
@@ -797,6 +857,7 @@ $(function () {
     if (!tbody) return;
 
     const rawOrders = loadDashboardOrders();
+    const sellerProductIds = getSellerProductIds();
     const products = loadDashboardProducts().map((p, idx) => normalizeDashboardProduct(p, idx));
     const productById = new Map(products.map((p) => [String(p.id), p]));
     const productByName = new Map(products.map((p) => [p.name.toLowerCase(), p]));
@@ -804,7 +865,7 @@ $(function () {
     const sold = new Map();
 
     rawOrders.forEach((order) => {
-      extractOrderItems(order).forEach((item) => {
+      extractOrderItems(order, sellerProductIds).forEach((item) => {
         const itemId = String(item?.id ?? item?.productId ?? item?.product_id ?? '').trim();
         const itemName = String(item?.name ?? item?.productName ?? item?.product ?? item?.title ?? '').trim();
         const qtyRaw = Number(item?.qty ?? item?.quantity ?? 1);
@@ -879,6 +940,7 @@ $(function () {
     if (!listEl) return;
 
     const rawOrders = loadDashboardOrders();
+    const sellerProductIds = getSellerProductIds();
     const products = loadDashboardProducts().map((p, idx) => normalizeDashboardProduct(p, idx));
     const productById = new Map(products.map((p) => [String(p.id), p]));
     const productByName = new Map(products.map((p) => [p.name.toLowerCase(), p]));
@@ -889,7 +951,7 @@ $(function () {
       const status = String(order?.status ?? '').toLowerCase();
       if (status === 'cancelled' || status === 'canceled') return;
 
-      extractOrderItems(order).forEach((item) => {
+      extractOrderItems(order, sellerProductIds).forEach((item) => {
         const itemId = String(item?.id ?? item?.productId ?? item?.product_id ?? '').trim();
         const itemName = String(item?.name ?? item?.productName ?? item?.product ?? item?.title ?? '').trim();
         const qtyRaw = Number(item?.qty ?? item?.quantity ?? 1);
@@ -1090,6 +1152,7 @@ $(function () {
       previousStart.setDate(previousStart.getDate() - 7);
       const previousEnd = new Date(currentStart);
 
+      const sellerProductIds = getSellerProductIds();
       let currentSales = 0;
       let previousSales = 0;
 
@@ -1100,7 +1163,7 @@ $(function () {
         const paid = payment === 'paid';
         if (!delivered || !paid) return;
 
-        const amount = getSafeOrderAmount(order);
+        const amount = getSafeOrderAmount(order, sellerProductIds);
         if (!Number.isFinite(amount) || amount <= 0) return;
 
         const orderDate = new Date(order?.createdAt ?? order?.date ?? 0);
