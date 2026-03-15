@@ -39,9 +39,9 @@ body {
   background: var(--page-bg);
   color: var(--text-primary);
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   transition: background .3s, color .3s;
-  overflow-x: hidden;
 }
 
 a { text-decoration: none; }
@@ -208,7 +208,8 @@ img { max-width: 100%; }
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   min-width: 0;
   transition: margin-left .3s;
 }
@@ -252,8 +253,17 @@ img { max-width: 100%; }
 .search-icon {
   position: absolute;
   left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   color: var(--text-sec);
   font-size: .95rem;
+  pointer-events: none;
+  z-index: 1;
+  transition: color .18s;
+}
+
+.search-bar:focus-within .search-icon {
+  color: var(--green);
 }
 
 .search-input {
@@ -344,6 +354,8 @@ img { max-width: 100%; }
   flex: 1;
   max-width: 100%;
   overflow-x: hidden;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .embedded-page-wrap {
@@ -734,6 +746,8 @@ canvas {
   color: var(--text-sec);
   border: none;
   padding: 10px 14px;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 .dash-table tbody td {
@@ -744,7 +758,19 @@ canvas {
 }
 
 .dash-table tbody tr:hover {
-  background: rgba(34,197,94,.04);
+  background: rgba(34,197,94,.06);
+}
+
+.dash-table tbody tr:nth-child(even) {
+  background: rgba(0,0,0,.018);
+}
+
+.dash-table tbody tr:nth-child(even):hover {
+  background: rgba(34,197,94,.06);
+}
+
+.dash-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .status-dot {

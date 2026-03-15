@@ -35,6 +35,7 @@ const expirationStartInput = form?.querySelector('input[name="expirationStart"]'
 const messageEl = document.getElementById('pageMessage');
 const loadingEl = document.getElementById('pageLoading');
 const loadingTextEl = document.getElementById('pageLoadingText');
+const colorInputs = document.querySelectorAll('input[name="colors"]');
 let messageTimer = null;
 
 const showLoading = (isLoading, text) => {
@@ -69,8 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
     loadProductById(queryId);
 });
 
-let currentProduct = null; 
-let existingImages = [];    
+let currentProduct = null;
+let existingImages = [];
 
 function setSelectValue(selectElement, value) {
     if (!selectElement) return;
@@ -112,7 +113,7 @@ function loadCategories() {
 async function loadProductById(id) {
     try {
         showLoading(true, 'Loading product...');
-        const products = await loadProductsFromFolder(); 
+        const products = await loadProductsFromFolder();
         const product = products.find(p => String(p.id) === String(id));
 
         if (!product) {
@@ -144,9 +145,12 @@ async function loadProductById(id) {
         setSelectValue(categorySelect, product.category);
         setSelectValue(tagSelect, product.tag);
 
-        const checkboxes = form.querySelectorAll('input[name="colors"]');
-        const selectedColors = Array.isArray(product.colors) ? product.colors : [];
-        checkboxes.forEach(cb => cb.checked = selectedColors.includes(cb.value));
+        const selectedColors = normalizeColors(product.colors);
+        colorInputs.forEach(input => {
+            const isChecked = selectedColors.includes(input.value.toLowerCase());
+            input.checked = isChecked;
+        });
+        syncColorSelection();
 
         existingImages = product.images || [];
         refreshPreview();
@@ -159,6 +163,39 @@ async function loadProductById(id) {
         showMessage('Failed to load product.', 'error');
     }
 }
+
+function normalizeColors(raw) {
+    if (Array.isArray(raw)) {
+        return raw
+            .map(item => {
+                if (typeof item === 'string') return item.trim().toLowerCase();
+                if (item && typeof item === 'object') {
+                    const value = item.value || item.color || item.name;
+                    return typeof value === 'string' ? value.trim().toLowerCase() : '';
+                }
+                return '';
+            })
+            .filter(Boolean);
+    }
+    if (typeof raw === 'string') {
+        return raw
+            .split(',')
+            .map(part => part.trim().toLowerCase())
+            .filter(Boolean);
+    }
+    return [];
+}
+
+function syncColorSelection() {
+    colorInputs.forEach(input => {
+        const label = input.closest('.color');
+        if (label) label.classList.toggle('selected', input.checked);
+    });
+}
+
+colorInputs.forEach(input => {
+    input.addEventListener('change', syncColorSelection);
+});
 
 searchButton.addEventListener('click', () => {
     const id = searchInput.value.trim();
@@ -173,7 +210,7 @@ function refreshPreview() {
         div.style.margin = '8px';
 
         const image = document.createElement('img');
-        image.src = img.url; 
+        image.src = img.url;
         image.style.maxWidth = '140px';
         image.style.borderRadius = '6px';
         div.appendChild(image);
@@ -215,8 +252,12 @@ form.addEventListener('submit', async (e) => {
         return;
     }
 
+    const selectedColors = Array.from(colorInputs)
+        .filter(input => input.checked)
+        .map(input => input.value);
+
     const productData = {
-        ...currentProduct, 
+        ...currentProduct,
         name: formData.get('productName').trim(),
         description: formData.get('description').trim(),
         price: Number(formData.get('price')) || 0,
@@ -228,14 +269,14 @@ form.addEventListener('submit', async (e) => {
         stockStatus: formData.get('stockStatus'),
         category: categorySelect ? categorySelect.value : null,
         tag: tagSelect ? tagSelect.value : null,
-        colors: formData.getAll('colors'),
+        colors: selectedColors,
         images: existingImages,
         sellerId: currentProduct?.sellerId ?? sellerId
     };
 
     try {
         showLoading(true, 'Updating product...');
-        await saveProductToDisk(productData, imageFiles); 
+        await saveProductToDisk(productData, imageFiles);
         showLoading(false);
         showMessage('Product updated successfully!', 'success');
         setTimeout(() => {

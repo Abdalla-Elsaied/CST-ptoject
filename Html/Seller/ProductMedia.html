@@ -42,7 +42,10 @@
   </div>
 
   <div class="toolbar">
+  <div class="search-wrap">
+    <i class="fa-solid fa-magnifying-glass search-icon-inner"></i>
     <input id="searchInput" class="search" placeholder="Search product..." oninput="searchProducts(this.value)">
+  </div>
     <div class="tabs">
       <button class="tab active" onclick="setFilter('all', this)">All</button>
       <button class="tab" onclick="setFilter('with-media', this)">With Media</button>
@@ -51,7 +54,7 @@
   </div>
 
   <div class="table-wrap">
-    <table>
+    <table class="media-table">
       <thead>
         <tr>
           <th>No</th>

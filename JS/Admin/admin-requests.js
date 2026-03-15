@@ -10,28 +10,23 @@ import {
     rejectCustomerSellerRequest
 } from '../Core/Auth.js';
 
-import { getLS, setLS } from '../Core/Storage.js';
-import { KEY_APPROVAL, KEY_SELLER_OUTCOMES } from '../Core/Constants.js';
-
 import {
     showToast,
     showConfirm,
-    escapeHTML
+    escapeHTML,
+    getCustomerName,
+    getCustomerEmail
 } from './admin-helpers.js';
 
 import { logAdminAction } from './admin-profile.js';
-
-function saveRejectedOutcome(userId, storeName) {
-    const outcomes = getLS(KEY_SELLER_OUTCOMES) || [];
-    outcomes.push({ userId, storeName, status: 'rejected', at: new Date().toISOString() });
-    setLS(KEY_SELLER_OUTCOMES, outcomes);
-}
+import { initUsers } from '../Core/Storage.js';
 
 /**
  * Main entry point for the seller requests section.
  * Called every time the user clicks "Seller Requests" in the sidebar.
  */
-export function renderRequests() {
+export async function renderRequests() {
+    await initUsers(); 
     renderRequestsTable();
     bindRequestsEvents();
 }
@@ -59,37 +54,58 @@ export function renderRequestsTable() {
 
     if (requests.length === 0) {
         tbody.innerHTML = `
-            <tr>
-                <td colspan="7" class="empty-state">
-                    <i class="bi bi-check-circle fs-1 text-success d-block mb-2"></i>
-                    <strong>All caught up!</strong> No pending seller applications.
-                </td>
-            </tr>`;
+            <tr><td colspan="9">
+                <div style="text-align:center;padding:48px 24px;display:flex;flex-direction:column;align-items:center;gap:8px;">
+                    <i class="bi bi-check-circle" style="font-size:2.5rem;color:var(--text-muted);opacity:0.35;"></i>
+                    <p style="font-weight:700;font-size:14px;color:var(--text-primary);margin:0;">All caught up!</p>
+                    <p style="font-size:12px;color:var(--text-muted);margin:0;">No pending seller applications.</p>
+                </div>
+            </td></tr>`;
         return;
     }
 
-    tbody.innerHTML = requests.map(req => `
+    tbody.innerHTML = requests.map(req => {
+        const customerName  = getCustomerName(req.userId);
+        const customerEmail = getCustomerEmail(req.userId);
+        const initial       = customerName.charAt(0).toUpperCase();
+        const dateStr       = req.createdAt
+            ? new Date(req.createdAt).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+            : '—';
+        const descPreview   = req.description
+            ? escapeHTML(req.description.slice(0, 45)) + (req.description.length > 45 ? '…' : '')
+            : '—';
+
+        return `
         <tr>
-            <td>
-                <input type="checkbox" class="request-check-item" value="${escapeHTML(req.id)}">
+            <td style="width:40px;padding:0 8px;">
+                <input type="checkbox" class="form-check-input request-check-item" value="${escapeHTML(req.id)}">
             </td>
             <td><strong>${escapeHTML(req.storeName)}</strong></td>
-            <td>${escapeHTML(req.city)}</td>
-            <td>${escapeHTML(req.category)}</td>
-            <td>${escapeHTML(req.phone)}</td>
-            <td>${escapeHTML(req.paymentMethod)}</td>
-            <td class="text-center">
-                <div class="d-flex gap-2 justify-content-center">
-                    <button class="btn-action btn-edit" data-id="${req.id}" data-action="approve">
-                        <i class="bi bi-check-lg"></i> Approve
-                    </button>
-                    <button class="btn-action btn-delete" data-id="${req.id}" data-action="reject">
-                        <i class="bi bi-x-lg"></i> Reject
-                    </button>
+            <td>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="table-avatar customer-avatar" style="width:32px;height:32px;font-size:11px;">${initial}</span>
+                    <div>
+                        <div class="fw-semibold" style="font-size:12px;">${escapeHTML(customerName)}</div>
+                        <div style="font-size:11px;color:var(--text-muted);">${escapeHTML(customerEmail)}</div>
+                    </div>
                 </div>
             </td>
-        </tr>
-    `).join('');
+            <td>${escapeHTML(req.city)}</td>
+            <td>${escapeHTML(req.category)}</td>
+            <td>${escapeHTML(req.paymentMethod)}</td>
+            <td>
+                <span title="${escapeHTML(req.description || '')}" style="cursor:help;border-bottom:1px dashed var(--border);font-size:12px;color:var(--text-muted);">
+                    ${descPreview}
+                </span>
+            </td>
+            <td><small style="color:var(--text-muted);">${dateStr}</small></td>
+            <td class="text-center">
+                <div class="d-flex gap-1 justify-content-center flex-nowrap">
+                    <button class="btn-action btn-success" data-id="${req.id}" data-action="approve" title="Approve"><i class="bi bi-check-lg"></i></button>
+                    <button class="btn-action btn-delete" data-id="${req.id}" data-action="reject" title="Reject"><i class="bi bi-x-lg"></i></button>
+                </div>
+            </td>
+        </tr>`; }).join('');
 }
 
 /**
@@ -105,9 +121,22 @@ function bindRequestsEvents() {
         };
     }
 
-    // Action buttons (Approve/Reject)
+    // Individual checkbox → update selectAll indeterminate state
     const tbody = document.getElementById('requestsTableBody');
     if (tbody) {
+        tbody.addEventListener('change', (e) => {
+            if (e.target.classList.contains('request-check-item')) {
+                const all     = document.querySelectorAll('.request-check-item');
+                const checked = document.querySelectorAll('.request-check-item:checked');
+                const sa      = document.getElementById('selectAllRequests');
+                if (sa) {
+                    sa.indeterminate = checked.length > 0 && checked.length < all.length;
+                    sa.checked       = checked.length === all.length && all.length > 0;
+                }
+            }
+        });
+
+        // Action buttons (Approve/Reject)
         tbody.onclick = (e) => {
             const btn = e.target.closest('[data-action]');
             if (!btn) return;
@@ -117,26 +146,37 @@ function bindRequestsEvents() {
 
             if (action === 'approve') {
                 showConfirm(`Approve this seller application?`, () => {
-                    const requests = getAllCustomerToApproved();
-                    const req = requests.find(r => r.id === id);
+                    // 1. Get request data FIRST before it gets deleted
+                    const allRequests = getAllCustomerToApproved();
+                    const req = allRequests.find(r => r.id === id);
+
+                    // 2. Now accept (removes request from list)
                     acceptCustomerSellerRequest(id);
+
+                    // 3. Log with data we captured before deletion
                     if (req) {
-                        logAdminAction('approved_seller', req.storeName || req.fullName || 'Unknown', id);
+                        logAdminAction('approved_seller', req.storeName || req.fullName || 'Unknown Store', id);
                     }
                     showToast('Seller request approved!', 'success');
                     renderRequests();
+                    if (window.updateSidebarBadges) window.updateSidebarBadges();
                 });
             } else if (action === 'reject') {
-                const requests = getAllCustomerToApproved();
-                const req = requests.find(r => r.id === id);
                 showConfirm(`Reject and delete this application?`, () => {
-                    if (req?.userId) saveRejectedOutcome(req.userId, req.storeName || '');
+                    // 1. Get data FIRST
+                    const allRequests = getAllCustomerToApproved();
+                    const req = allRequests.find(r => r.id === id);
+
+                    // 2. Reject
                     rejectCustomerSellerRequest(id);
+
+                    // 3. Log
                     if (req) {
-                        logAdminAction('rejected_seller', req.storeName || req.fullName || 'Unknown', id);
+                        logAdminAction('rejected_seller', req.storeName || req.fullName || 'Unknown Store', id);
                     }
                     showToast('Application rejected.', 'error');
                     renderRequests();
+                    if (window.updateSidebarBadges) window.updateSidebarBadges();
                 });
             }
         };
@@ -145,21 +185,35 @@ function bindRequestsEvents() {
     // Bulk actions
     const bulkApprove = document.getElementById('bulkApproveBtn');
     if (bulkApprove) {
-        bulkApprove.onclick = () => {
+        bulkApprove.onclick = async () => {
             const selected = Array.from(document.querySelectorAll('.request-check-item:checked')).map(c => c.value);
-            if (selected.length === 0) return showToast('Please select at least one request', 'warning');
+            if (selected.length === 0) return showToast('Please select at least one request.', 'warning');
 
-            showConfirm(`Approve ${selected.length} selected applications?`, () => {
-                const requests = getAllCustomerToApproved();
-                selected.forEach(id => {
-                    const req = requests.find(r => r.id === id);
-                    acceptCustomerSellerRequest(id);
-                    if (req) {
-                        logAdminAction('approved_seller', req.storeName || req.fullName || 'Unknown', id);
+            showConfirm(`Approve ${selected.length} selected application(s)?`, async () => {
+                let succeeded = 0;
+                let failed    = 0;
+
+                for (const id of selected) {
+                    try {
+                        const allReqs = getAllCustomerToApproved();
+                        const req     = allReqs.find(r => r.id === id);
+                        acceptCustomerSellerRequest(id);
+                        if (req) logAdminAction('approved_seller', req.storeName || 'Unknown', id);
+                        succeeded++;
+                    } catch (err) {
+                        console.error(`[REQUESTS] Failed to approve ${id}:`, err);
+                        failed++;
                     }
-                });
-                showToast('Selected applications approved!', 'success');
+                }
+
+                if (failed > 0) {
+                    showToast(`${succeeded} approved, ${failed} failed.`, 'warning');
+                } else {
+                    showToast(`${succeeded} application(s) approved!`, 'success');
+                }
+
                 renderRequests();
+                if (window.updateSidebarBadges) window.updateSidebarBadges();
             });
         };
     }
@@ -171,17 +225,10 @@ function bindRequestsEvents() {
             if (selected.length === 0) return showToast('Please select at least one request', 'warning');
 
             showConfirm(`Reject and delete ${selected.length} selected applications?`, () => {
-                const requests = getAllCustomerToApproved();
-                selected.forEach(id => {
-                    const req = requests.find(r => r.id === id);
-                    if (req?.userId) saveRejectedOutcome(req.userId, req.storeName || '');
-                    rejectCustomerSellerRequest(id);
-                    if (req) {
-                        logAdminAction('rejected_seller', req.storeName || req.fullName || 'Unknown', id);
-                    }
-                });
+                selected.forEach(id => rejectCustomerSellerRequest(id));
                 showToast('Selected applications rejected.', 'error');
                 renderRequests();
+                if (window.updateSidebarBadges) window.updateSidebarBadges();
             });
         };
     }

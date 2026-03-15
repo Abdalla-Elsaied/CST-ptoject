@@ -1,231 +1,247 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DEALPORT – Discover the Latest Deals</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <link rel="stylesheet" href="../../CSS/Customer/CustomerHomePage.css"/>
-  <link rel="stylesheet" href="../../CSS/Customer/profile.css"/>
-  <link rel="stylesheet" href="../../CSS/Customer/SellerRequestNotifications.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="../../CSS/Customer/CustomerHomePage.css" />
+  <link rel="stylesheet" href="../../CSS/Customer/profile.css" />
+  <link rel="stylesheet" href="../../CSS/Customer/SellerRequestNotifications.css" />
 </head>
+
 <body>
 
-<!-- ===== TOP NAVBAR ===== -->
-<header class="navbar-top sticky-top">
-  <div class="container-fluid px-3 px-lg-4">
-    <div class="d-flex align-items-center gap-3 gap-lg-4 py-2">
+  <!-- ===== TOP NAVBAR ===== -->
+  <header class="navbar-top sticky-top">
+    <div class="container-fluid px-3 px-lg-4">
+      <div class="d-flex align-items-center gap-3 gap-lg-4 py-2">
 
-      <!-- Logo -->
-      <a href="CustomerHomePage.html" class="logo-brand text-decoration-none flex-shrink-0">
-        <span class="logo-deal">DEAL</span><span class="logo-port"><i class="bi bi-shop"></i>RT</span>
-      </a>
-
-      <!-- Location -->
-      <button class="location-selector d-none d-md-flex align-items-center gap-1 flex-shrink-0 border-0 bg-transparent"
-              id="locationBtn" title="Set delivery location">
-        <i class="bi bi-geo-alt-fill text-success fs-5"></i>
-        <div class="text-start">
-          <div class="loc-label">Deliver to</div>
-          <div class="loc-addr" id="locAddrText">Set location <i class="bi bi-chevron-down small"></i></div>
-        </div>
-      </button>
-
-      <!-- Search Bar -->
-      <div class="search-wrapper flex-grow-1">
-        <div class="input-group search-group">
-          <select class="form-select search-cat d-none d-lg-block">
-            <option>All</option>
-          </select>
-          <input type="text" class="form-control search-input" placeholder="What you're looking for..."/>
-          <button class="btn btn-search" type="button"><i class="bi bi-search"></i> <span class="d-none d-sm-inline">Search</span></button>
-        </div>
-      </div>
-
-      <!-- Right Icons -->
-      <div class="nav-icons d-flex align-items-center gap-2 gap-lg-3 flex-shrink-0">
-
-        <!-- Wishlist -->
-        <button class="nav-icon-btn d-none d-md-flex flex-column align-items-center border-0 bg-transparent position-relative"
-                id="wishlistNavBtn" title="Wishlist">
-          <i class="bi bi-heart"></i>
-          <span class="wishlist-nav-badge d-none">0</span>
-          <span>Wishlist</span>
-        </button>
-
-        <!-- Account dropdown -->
-        <div class="dropdown">
-          <button class="nav-icon-btn d-none d-md-flex flex-column align-items-center border-0 bg-transparent"
-                  id="accountNavBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Account">
-            <i class="bi bi-person"></i>
-            <span id="accountNavLabel">Account</span>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end account-dropdown" id="accountDropdownMenu">
-            <!-- Populated by JS -->
-          </ul>
-        </div>
-
-        <!-- Cart -->
-        <a href="Cart.html" class="nav-icon-btn d-flex flex-column align-items-center position-relative text-decoration-none">
-          <i class="bi bi-cart3"></i>
-          <span class="cart-badge" id="cartBadge">0</span>
-          <span>Cart</span>
+        <!-- Logo -->
+        <a href="CustomerHomePage.html" class="logo-brand text-decoration-none flex-shrink-0">
+          <span class="logo-deal">DEAL</span><span class="logo-port"><i class="bi bi-shop"></i>RT</span>
         </a>
 
-        <button class="btn btn-sm d-md-none border-0" id="mobileMenuBtn">
-          <i class="bi bi-list fs-4"></i>
+        <!-- Location -->
+        <button
+          class="location-selector d-none d-md-flex align-items-center gap-1 flex-shrink-0 border-0 bg-transparent"
+          id="locationBtn" title="Set delivery location">
+          <i class="bi bi-geo-alt-fill text-success fs-5"></i>
+          <div class="text-start">
+            <div class="loc-label">Deliver to</div>
+            <div class="loc-addr" id="locAddrText">Set location <i class="bi bi-chevron-down small"></i></div>
+          </div>
         </button>
-      </div>
-    </div>
-  </div>
-</header>
 
-<!-- ===== LOCATION POPUP ===== -->
-<div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content location-modal-content">
-      <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title fw-800" id="locationModalLabel">
-          <i class="bi bi-geo-alt-fill text-success me-2"></i>Set Delivery Location
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body pt-2">
-        <p class="text-muted small mb-3">We'll use your location to show relevant products and delivery options.</p>
-
-        <!-- Map placeholder -->
-        <div id="locationMap" class="location-map-wrap">
-          <div class="map-placeholder" id="mapPlaceholder">
-            <i class="bi bi-map fs-1 text-success"></i>
-            <p class="mt-2 text-muted small">Click the button below to detect your location</p>
+        <!-- Search Bar -->
+        <div class="search-wrapper flex-grow-1">
+          <div class="input-group search-group">
+            <select class="form-select search-cat d-none d-lg-block">
+              <option>All</option>
+            </select>
+            <input type="text" class="form-control search-input" placeholder="What you're looking for..." />
+            <button class="btn btn-search" type="button"><i class="bi bi-search"></i> <span
+                class="d-none d-sm-inline">Search</span></button>
           </div>
-          <div id="leafletMap" style="display:none; height:260px; border-radius:12px; overflow:hidden;"></div>
         </div>
 
-        <!-- Detected address display -->
-        <div id="detectedAddress" class="detected-address-box d-none mt-3">
-          <i class="bi bi-pin-map-fill text-success me-2"></i>
-          <span id="detectedAddressText">–</span>
-        </div>
+        <!-- Right Icons -->
+        <div class="nav-icons d-flex align-items-center gap-2 gap-lg-3 flex-shrink-0">
 
-        <!-- Manual input -->
-        <div class="mt-3">
-          <label class="form-label fw-600 small">Or type your address manually</label>
-          <input type="text" class="form-control" id="manualAddressInput" placeholder="e.g. 123 Main St, Cairo"/>
-        </div>
-
-        <div class="d-flex gap-2 mt-3">
-          <button class="btn btn-outline-success flex-grow-1" id="detectLocationBtn">
-            <i class="bi bi-crosshair me-1"></i> Detect My Location
+          <!-- Wishlist -->
+          <button
+            class="nav-icon-btn d-none d-md-flex flex-column align-items-center border-0 bg-transparent position-relative"
+            id="wishlistNavBtn" title="Wishlist">
+            <i class="bi bi-heart"></i>
+            <span class="wishlist-nav-badge d-none">0</span>
+            <span>Wishlist</span>
           </button>
-          <button class="btn btn-success flex-grow-1" id="saveLocationBtn">
-            <i class="bi bi-check-lg me-1"></i> Save Location
+
+          <!-- Account dropdown -->
+          <div class="dropdown">
+            <button class="nav-icon-btn d-none d-md-flex flex-column align-items-center border-0 bg-transparent"
+              id="accountNavBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Account">
+              <i class="bi bi-person"></i>
+              <span id="accountNavLabel">Account</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end account-dropdown" id="accountDropdownMenu">
+              <!-- Populated by JS -->
+            </ul>
+          </div>
+
+          <!-- Cart -->
+          <a href="Cart.html"
+            class="nav-icon-btn d-flex flex-column align-items-center position-relative text-decoration-none">
+            <i class="bi bi-cart3"></i>
+            <span class="cart-badge" id="cartBadge">0</span>
+            <span>Cart</span>
+          </a>
+
+          <button class="btn btn-sm d-md-none border-0" id="mobileMenuBtn">
+            <i class="bi bi-list fs-4"></i>
           </button>
         </div>
       </div>
     </div>
-  </div>
-</div>
+  </header>
 
-<!-- ===== WISHLIST DRAWER ===== -->
-<div class="wishlist-drawer" id="wishlistDrawer">
-  <div class="wishlist-drawer-header">
-    <h5 class="mb-0 fw-800"><i class="bi bi-heart-fill text-danger me-2"></i>My Wishlist</h5>
-    <button class="btn-close-drawer" id="closeWishlistDrawer"><i class="bi bi-x-lg"></i></button>
-  </div>
-  <div class="wishlist-drawer-body" id="wishlistDrawerBody">
-    <!-- populated by JS -->
-  </div>
-</div>
-<div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <!-- ===== LOCATION POPUP ===== -->
+  <div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content location-modal-content">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-800" id="locationModalLabel">
+            <i class="bi bi-geo-alt-fill text-success me-2"></i>Set Delivery Location
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body pt-2">
+          <p class="text-muted small mb-3">We'll use your location to show relevant products and delivery options.</p>
 
-<!-- ===== CATEGORY MENU BAR ===== -->
-<nav class="category-nav">
-  <div class="container-fluid px-3 px-lg-4">
-    <div class="cat-scroll">
-      <a href="#" class="cat-link active">Men</a>
-      <a href="#" class="cat-link">Women</a>
-      <a href="#" class="cat-link">Baby</a>
-      <a href="#" class="cat-link">Grocery & Essentials</a>
-      <a href="#" class="cat-link">Electronics</a>
-      <a href="#" class="cat-link">Beauty</a>
-      <a href="#" class="cat-link">Accessories</a>
-      <a href="#" class="cat-link">Shoes</a>
-      <a href="#" class="cat-link">Outdoor</a>
-      <a href="#" class="cat-link">Industrial Equipment</a>
-      <div class="dropdown d-inline-block">
-        <a href="#" class="cat-link dropdown-toggle" data-bs-toggle="dropdown">More</a>
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item" href="#">Sports</a></li>
-          <li><a class="dropdown-item" href="#">Books</a></li>
-          <li><a class="dropdown-item" href="#">Automotive</a></li>
-          <li><a class="dropdown-item" href="#">Garden & Patio</a></li>
-        </ul>
+          <!-- Map placeholder -->
+          <div id="locationMap" class="location-map-wrap">
+            <div class="map-placeholder" id="mapPlaceholder">
+              <i class="bi bi-map fs-1 text-success"></i>
+              <p class="mt-2 text-muted small">Click the button below to detect your location</p>
+            </div>
+            <div id="leafletMap" style="display:none; height:260px; border-radius:12px; overflow:hidden;"></div>
+          </div>
+
+          <!-- Detected address display -->
+          <div id="detectedAddress" class="detected-address-box d-none mt-3">
+            <i class="bi bi-pin-map-fill text-success me-2"></i>
+            <span id="detectedAddressText">–</span>
+          </div>
+
+          <!-- Manual input -->
+          <div class="mt-3">
+            <label class="form-label fw-600 small">Or type your address manually</label>
+            <input type="text" class="form-control" id="manualAddressInput" placeholder="e.g. 123 Main St, Cairo" />
+          </div>
+
+          <div class="d-flex gap-2 mt-3">
+            <button class="btn btn-outline-success flex-grow-1" id="detectLocationBtn">
+              <i class="bi bi-crosshair me-1"></i> Detect My Location
+            </button>
+            <button class="btn btn-success flex-grow-1" id="saveLocationBtn">
+              <i class="bi bi-check-lg me-1"></i> Save Location
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-</nav>
 
-<!-- ===== HERO BANNER ===== -->
-<section class="hero-section">
-  <div class="swiper hero-swiper">
-    <div class="swiper-wrapper">
+  <!-- ===== WISHLIST DRAWER ===== -->
+  <div class="wishlist-drawer" id="wishlistDrawer">
+    <div class="wishlist-drawer-header">
+      <h5 class="mb-0 fw-800"><i class="bi bi-heart-fill text-danger me-2"></i>My Wishlist</h5>
+      <button class="btn-close-drawer" id="closeWishlistDrawer"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="wishlist-drawer-body" id="wishlistDrawerBody">
+      <!-- populated by JS -->
+    </div>
+  </div>
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
 
-      <!-- Slide 1 -->
-      <div class="swiper-slide">
-        <div class="hero-slide slide-1">
-          <div class="container-fluid px-3 px-lg-4 h-100">
-            <div class="row h-100 align-items-center">
-              <div class="col-lg-5 hero-content">
-                <span class="hero-badge">🔥 Hot Deals</span>
-                <h1 class="hero-title">Discover the<br><span>Latest Deals –</span><br>Up to <span class="deal-pct">50% Off!</span></h1>
-                <p class="hero-sub">Shop thousands of products with incredible discounts. Free delivery on orders over $49.</p>
-                <div class="d-flex gap-3 flex-wrap">
-                  <a href="#" class="btn btn-hero-primary">Shop Now <i class="bi bi-arrow-right ms-1"></i></a>
-                  <a href="#" class="btn btn-hero-outline">View Deals</a>
+  <!-- ===== CATEGORY MENU BAR ===== -->
+  <nav class="category-nav">
+    <div class="container-fluid px-3 px-lg-4">
+      <div class="cat-scroll">
+        <a href="#" class="cat-link active">Men</a>
+        <a href="#" class="cat-link">Women</a>
+        <a href="#" class="cat-link">Baby</a>
+        <a href="#" class="cat-link">Grocery & Essentials</a>
+        <a href="#" class="cat-link">Electronics</a>
+        <a href="#" class="cat-link">Beauty</a>
+        <a href="#" class="cat-link">Accessories</a>
+        <a href="#" class="cat-link">Shoes</a>
+        <a href="#" class="cat-link">Outdoor</a>
+        <a href="#" class="cat-link">Industrial Equipment</a>
+        <div class="dropdown d-inline-block">
+          <a href="#" class="cat-link dropdown-toggle" data-bs-toggle="dropdown">More</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#">Sports</a></li>
+            <li><a class="dropdown-item" href="#">Books</a></li>
+            <li><a class="dropdown-item" href="#">Automotive</a></li>
+            <li><a class="dropdown-item" href="#">Garden & Patio</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== HERO BANNER ===== -->
+  <section class="hero-section">
+    <div class="swiper hero-swiper">
+      <div class="swiper-wrapper">
+
+        <!-- Slide 1 -->
+        <div class="swiper-slide">
+          <div class="hero-slide slide-1">
+            <div class="container-fluid px-3 px-lg-4 h-100">
+              <div class="row h-100 align-items-center">
+                <div class="col-lg-5 hero-content">
+                  <span class="hero-badge">🔥 Hot Deals</span>
+                  <h1 class="hero-title">Discover the<br><span>Latest Deals –</span><br>Up to <span class="deal-pct">50%
+                      Off!</span></h1>
+                  <p class="hero-sub">Shop thousands of products with incredible discounts. Free delivery on orders over
+                    $49.</p>
+                  <div class="d-flex gap-3 flex-wrap">
+                    <a href="#" class="btn btn-hero-primary">Shop Now <i class="bi bi-arrow-right ms-1"></i></a>
+                    <a href="#" class="btn btn-hero-outline">View Deals</a>
+                  </div>
                 </div>
-              </div>
-              <div class="col-lg-7 hero-img-col d-none d-lg-block">
-                <div class="hero-img-wrap">
-                  <div class="hero-float-card">
-                    <i class="bi bi-truck text-success"></i> Free Delivery
+                <div class="col-lg-7 hero-img-col d-none d-lg-block">
+                  <div class="hero-img-wrap">
+                    <div class="hero-float-card">
+                      <i class="bi bi-truck text-success"></i> Free Delivery
+                    </div>
+                    <div class="hero-float-card card-2">
+                      <i class="bi bi-shield-check text-success"></i> Secure Payment
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=700&q=80" alt="Fashion"
+                      class="hero-main-img" />
                   </div>
-                  <div class="hero-float-card card-2">
-                    <i class="bi bi-shield-check text-success"></i> Secure Payment
-                  </div>
-                  <img src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=700&q=80" alt="Fashion" class="hero-main-img"/>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Slide 2 -->
-      <div class="swiper-slide">
-        <div class="hero-slide slide-2">
-          <div class="container-fluid px-3 px-lg-4 h-100">
-            <div class="row h-100 align-items-center">
-              <div class="col-lg-5 hero-content">
-                <span class="hero-badge">⚡ Flash Sale</span>
-                <h1 class="hero-title">Tech Deals<br><span>Going Fast –</span><br>Save up to <span class="deal-pct">40%!</span></h1>
-                <p class="hero-sub">Latest gadgets, electronics, and accessories at unbeatable prices.</p>
-                <a href="#" class="btn btn-hero-primary">Shop Electronics <i class="bi bi-arrow-right ms-1"></i></a>
-              </div>
-              <div class="col-lg-7 hero-img-col d-none d-lg-block">
-                <img src="https://images.unsplash.com/photo-1498049794561-7780e7231661?w=700&q=80" alt="Electronics" class="hero-main-img"/>
+        <!-- Slide 2 -->
+        <div class="swiper-slide">
+          <div class="hero-slide slide-2">
+            <div class="container-fluid px-3 px-lg-4 h-100">
+              <div class="row h-100 align-items-center">
+                <div class="col-lg-5 hero-content">
+                  <span class="hero-badge">⚡ Flash Sale</span>
+                  <h1 class="hero-title">Tech Deals<br><span>Going Fast –</span><br>Save up to <span
+                      class="deal-pct">40%!</span></h1>
+                  <p class="hero-sub">Latest gadgets, electronics, and accessories at unbeatable prices.</p>
+                  <a href="#" class="btn btn-hero-primary">Shop Electronics <i class="bi bi-arrow-right ms-1"></i></a>
+                </div>
+                <div class="col-lg-7 hero-img-col d-none d-lg-block">
+                  <img src="https://images.unsplash.com/photo-1498049794561-7780e7231661?w=700&q=80" alt="Electronics"
+                    class="hero-main-img" />
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
+      </div>
+      <div class="swiper-button-prev hero-prev"><i class="bi bi-chevron-left"></i></div>
+      <div class="swiper-button-next hero-next"><i class="bi bi-chevron-right"></i></div>
+      <div class="swiper-pagination hero-pagination"></div>
     </div>
     <div class="swiper-button-prev hero-prev"><i class="bi bi-chevron-left"></i></div>
     <div class="swiper-button-next hero-next"><i class="bi bi-chevron-right"></i></div>
@@ -248,7 +264,6 @@
             <a href="NewArrivals.html" class="btn btn-feat">Shop Now <i class="bi bi-arrow-right"></i></a>
           </div>
         </div>
-      </div>
 
       <!-- Top right -->
       <div class="col-md-8">
@@ -270,25 +285,26 @@
                 <a href="categoryProducts.html?category=Men%20Essentials" class="btn btn-feat-sm">View All</a>
               </div>
             </div>
-          </div>
-          <div class="col-6 col-lg-3">
-            <div class="feat-card feat-sm" style="background-image:url('https://images.unsplash.com/photo-1602810316693-3667c854239a?w=400&q=80')">
-              <div class="feat-overlay"></div>
-              <div class="feat-content">
-                <h4>Denim<br>Collection</h4>
-                <a href="#" class="btn btn-feat-sm">View All</a>
+            <div class="col-6 col-lg-3">
+              <div class="feat-card feat-sm"
+                style="background-image:url('https://images.unsplash.com/photo-1602810316693-3667c854239a?w=400&q=80')">
+                <div class="feat-overlay"></div>
+                <div class="feat-content">
+                  <h4>Denim<br>Collection</h4>
+                  <a href="#" class="btn btn-feat-sm">View All</a>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="col-6 col-lg-3">
-            <div class="feat-card feat-sm" style="background-image:url('https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=400&q=80')">
-              <div class="feat-overlay"></div>
-              <div class="feat-content">
-                <h4>Philips<br>Appliances</h4>
-                <a href="#" class="btn btn-feat-sm">View All</a>
+            <div class="col-6 col-lg-3">
+              <div class="feat-card feat-sm"
+                style="background-image:url('https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=400&q=80')">
+                <div class="feat-overlay"></div>
+                <div class="feat-content">
+                  <h4>Philips<br>Appliances</h4>
+                  <a href="#" class="btn btn-feat-sm">View All</a>
+                </div>
               </div>
             </div>
-          </div>
 
           <!-- Bottom row -->
           <div class="col-6">
@@ -310,263 +326,232 @@
             </div>
           </div>
         </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== DYNAMIC PRODUCT CATEGORIES (API) ===== -->
+  <!-- No-results message -->
+  <div id="no-results-msg" class="container-fluid px-3 px-lg-4 py-5 text-center" style="display:none">
+    <i class="bi bi-search fs-1 text-muted"></i>
+    <h5 class="mt-3 text-muted">No products found matching your search.</h5>
+    <p class="text-muted small">Try a different keyword or browse all categories.</p>
+  </div>
+
+  <!-- Each category section is injected here by ProductRenderer.js -->
+  <div id="dynamic-categories"></div>
+
+  <!-- ===== TRENDING PRODUCTS (kept as design anchor – hidden, replaced by API) ===== -->
+
+  <!-- /end hidden trending -->
+
+  <!-- ===== START EXPLORING NOW (static icons kept for design; category nav is populated from API) ===== -->
+
+  <!-- ===== BEST SELLING PRODUCTS ===== -->
+
+
+  <!-- ===== LIMITED-TIME DEALS ===== -->
+  <!-- Deals are now rendered by the API-driven #dynamic-categories section above -->
+  <!-- Keeping the deals swiper section hidden as fallback UI -->
+
+
+  <!-- ===== TESTIMONIALS (DYNAMIC) ===== -->
+  <section class="section-pad bg-light-green" id="testimonialsSection">
+    <div class="container-fluid px-3 px-lg-4">
+
+      <div class="text-center mb-4">
+        <h2 class="section-title">Our Happy Customers</h2>
+        <p class="section-sub">"Don't just take our word for it — here's what our community says."</p>
       </div>
 
-    </div>
-  </div>
-</section>
+      <!-- Live testimonials grid -->
+      <div class="row g-3" id="testimonialsGrid">
+        <!-- Populated by JS from localStorage -->
+      </div>
 
-<!-- ===== DYNAMIC PRODUCT CATEGORIES (API) ===== -->
-<!-- No-results message -->
-<div id="no-results-msg" class="container-fluid px-3 px-lg-4 py-5 text-center" style="display:none">
-  <i class="bi bi-search fs-1 text-muted"></i>
-  <h5 class="mt-3 text-muted">No products found matching your search.</h5>
-  <p class="text-muted small">Try a different keyword or browse all categories.</p>
-</div>
+      <!-- Add Testimonial Form (shown only to logged-in users) -->
+      <div class="testi-form-wrap mt-5" id="testiFormWrap">
+        <!-- Logged-in: form -->
+        <div id="testiFormLoggedIn" class="d-none">
+          <div class="testi-form-card">
+            <h5 class="mb-1 fw-800"><i class="bi bi-chat-quote-fill text-success me-2"></i>Share Your Experience</h5>
+            <p class="text-muted small mb-4">Your review helps thousands of shoppers make better decisions.</p>
 
-<!-- Each category section is injected here by ProductRenderer.js -->
-<div id="dynamic-categories"></div>
-
-<!-- ===== TRENDING PRODUCTS (kept as design anchor – hidden, replaced by API) ===== -->
-
-<!-- /end hidden trending -->
-
-<!-- ===== START EXPLORING NOW (static icons kept for design; category nav is populated from API) ===== -->
-
-<!-- ===== BEST SELLING PRODUCTS ===== -->
-
-
-<!-- ===== LIMITED-TIME DEALS ===== -->
-<!-- Deals are now rendered by the API-driven #dynamic-categories section above -->
-<!-- Keeping the deals swiper section hidden as fallback UI -->
-
-
-<!-- ===== TESTIMONIALS (DYNAMIC) ===== -->
-<section class="section-pad bg-light-green" id="testimonialsSection">
-  <div class="container-fluid px-3 px-lg-4">
-
-    <div class="text-center mb-4">
-      <h2 class="section-title">Our Happy Customers</h2>
-      <p class="section-sub">"Don't just take our word for it — here's what our community says."</p>
-    </div>
-
-    <!-- Live testimonials grid -->
-    <div class="row g-3" id="testimonialsGrid">
-      <!-- Populated by JS from localStorage -->
-    </div>
-
-    <!-- Add Testimonial Form (shown only to logged-in users) -->
-    <div class="testi-form-wrap mt-5" id="testiFormWrap">
-      <!-- Logged-in: form -->
-      <div id="testiFormLoggedIn" class="d-none">
-        <div class="testi-form-card">
-          <h5 class="mb-1 fw-800"><i class="bi bi-chat-quote-fill text-success me-2"></i>Share Your Experience</h5>
-          <p class="text-muted small mb-4">Your review helps thousands of shoppers make better decisions.</p>
-
-          <!-- Star rating picker -->
-          <div class="mb-3">
-            <label class="profile-label mb-2">Your Rating</label>
-            <div class="star-picker" id="starPicker">
-              <i class="bi bi-star star-pick" data-val="1"></i>
-              <i class="bi bi-star star-pick" data-val="2"></i>
-              <i class="bi bi-star star-pick" data-val="3"></i>
-              <i class="bi bi-star star-pick" data-val="4"></i>
-              <i class="bi bi-star star-pick" data-val="5"></i>
+            <!-- Star rating picker -->
+            <div class="mb-3">
+              <label class="profile-label mb-2">Your Rating</label>
+              <div class="star-picker" id="starPicker">
+                <i class="bi bi-star star-pick" data-val="1"></i>
+                <i class="bi bi-star star-pick" data-val="2"></i>
+                <i class="bi bi-star star-pick" data-val="3"></i>
+                <i class="bi bi-star star-pick" data-val="4"></i>
+                <i class="bi bi-star star-pick" data-val="5"></i>
+              </div>
+              <input type="hidden" id="testiRating" value="0" />
             </div>
-            <input type="hidden" id="testiRating" value="0"/>
+
+            <div class="mb-3">
+              <label class="profile-label">Your Comment</label>
+              <textarea class="form-control profile-input" id="testiComment" rows="3"
+                placeholder="What did you love about shopping at Dealport?"></textarea>
+            </div>
+
+            <div id="testiError" class="alert alert-danger d-none py-2 small mb-3"></div>
+
+            <button class="btn btn-save" id="submitTestiBtn">
+              <i class="bi bi-send me-1"></i> Post Review
+            </button>
           </div>
+        </div>
 
-          <div class="mb-3">
-            <label class="profile-label">Your Comment</label>
-            <textarea class="form-control profile-input" id="testiComment" rows="3"
-                      placeholder="What did you love about shopping at Dealport?"></textarea>
-          </div>
-
-          <div id="testiError" class="alert alert-danger d-none py-2 small mb-3"></div>
-
-          <button class="btn btn-save" id="submitTestiBtn">
-            <i class="bi bi-send me-1"></i> Post Review
-          </button>
+        <!-- Guest: login prompt -->
+        <div id="testiFormGuest" class="testi-login-prompt">
+          <i class="bi bi-lock-fill text-muted fs-2 mb-2 d-block"></i>
+          <p class="mb-2"><strong>Want to leave a review?</strong></p>
+          <p class="text-muted small mb-3">Sign in to share your experience with the Dealport community.</p>
+          <a href="login.html" class="btn btn-save px-4">Sign In to Review</a>
         </div>
       </div>
 
-      <!-- Guest: login prompt -->
-      <div id="testiFormGuest" class="testi-login-prompt">
-        <i class="bi bi-lock-fill text-muted fs-2 mb-2 d-block"></i>
-        <p class="mb-2"><strong>Want to leave a review?</strong></p>
-        <p class="text-muted small mb-3">Sign in to share your experience with the Dealport community.</p>
-        <a href="login.html" class="btn btn-save px-4">Sign In to Review</a>
+      <div class="text-center mt-4">
+        <a href="#" class="btn btn-cta-main">GET STARTED <i class="bi bi-arrow-right ms-1"></i></a>
       </div>
     </div>
+  </section>
 
-    <div class="text-center mt-4">
-      <a href="#" class="btn btn-cta-main">GET STARTED <i class="bi bi-arrow-right ms-1"></i></a>
-    </div>
-  </div>
-</section>
-
-<!-- ===== FOOTER ===== -->
-<!-- ===== BECOME A SELLER MODAL (from ContactUS.html) ===== -->
-<div class="modal fade" id="becomeSellerModal" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content seller-modal-content">
-      <div class="modal-header seller-modal-header">
-        <div>
-          <h5 class="modal-title fw-800">
-            <i class="bi bi-shop me-2"></i>Apply to Become a Seller
-          </h5>
-          <p class="text-muted small mb-0 mt-1">Join thousands of sellers on DEALPORT</p>
+  <!-- ===== BECOME A SELLER MODAL ===== -->
+  <div class="modal fade" id="becomeSellerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-shop"></i> Apply to Become a Seller</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-
-      <form id="becomeSellerForm" class="needs-validation" novalidate>
-        <div class="modal-body p-4">
-
-          <!-- Store Information -->
-          <div class="seller-form-section mb-4">
-            <div class="seller-section-label">
-              <i class="bi bi-shop-window me-2"></i>Store Information
-            </div>
-            <div class="row g-3">
+        <form id="becomeSellerForm" class="needs-validation" novalidate>
+          <div class="modal-body">
+            <h6 class="mb-3 fw-bold">Store Information</h6>
+            <div class="row g-3 mb-4">
               <div class="col-md-6">
-                <label class="profile-label">Store Name *</label>
-                <input type="text" class="form-control profile-input" id="storeName"
-                       placeholder="e.g. TechHub Store" required/>
-                <div class="invalid-feedback">Please enter your store name.</div>
+                <label class="form-label">Store Name *</label>
+                <input type="text" class="form-control" id="storeName" required />
+                <div class="invalid-feedback">Please enter store name.</div>
               </div>
               <div class="col-md-6">
-                <label class="profile-label">City *</label>
-                <input type="text" class="form-control profile-input" id="storeCity"
-                       placeholder="e.g. Cairo" required/>
+                <label class="form-label">City *</label>
+                <input type="text" class="form-control" id="storeCity" required />
                 <div class="invalid-feedback">Please enter your city.</div>
               </div>
               <div class="col-12">
-                <label class="profile-label">Store Description *</label>
-                <textarea class="form-control profile-input" id="storeDescription"
-                          rows="3" placeholder="Describe what you sell and your brand story..." required></textarea>
+                <label class="form-label">Store Description *</label>
+                <textarea class="form-control" id="storeDescription" rows="3" required></textarea>
                 <div class="invalid-feedback">Please describe your store.</div>
               </div>
             </div>
-          </div>
-
-          <!-- Business Information -->
-          <div class="seller-form-section mb-4">
-            <div class="seller-section-label">
-              <i class="bi bi-briefcase me-2"></i>Business Information
-            </div>
-            <div class="row g-3">
+            <h6 class="mb-3 fw-bold">Business Information</h6>
+            <div class="row g-3 mb-4">
               <div class="col-md-6">
-                <label class="profile-label">Business Category *</label>
-                <select class="form-select profile-input" id="storeCategory" required>
-                  <option value="" disabled selected>Select Category</option>
+                <label class="form-label">Business Category *</label>
+                <select class="form-select" id="storeCategory" required>
+                  <option selected disabled value="">Select Category</option>
                   <option>Electronics</option>
                   <option>Fashion</option>
                   <option>Home & Kitchen</option>
                   <option>Beauty</option>
                   <option>Sports</option>
-                  <option>Grocery</option>
-                  <option>Toys</option>
-                  <option>Automotive</option>
                 </select>
-                <div class="invalid-feedback">Please select a category.</div>
+                <div class="invalid-feedback">Please choose category.</div>
               </div>
               <div class="col-md-6">
-                <label class="profile-label">Phone Number *</label>
-                <input type="tel" class="form-control profile-input" id="storePhone"
-                       placeholder="+20 100 000 0000" required/>
-                <div class="invalid-feedback">Please enter a phone number.</div>
+                <label class="form-label">Phone Number *</label>
+                <input type="tel" class="form-control" id="storePhone" required />
+                <div class="invalid-feedback">Enter phone number.</div>
               </div>
             </div>
-          </div>
-
-          <!-- Payout Preferences -->
-          <div class="seller-form-section">
-            <div class="seller-section-label">
-              <i class="bi bi-credit-card me-2"></i>Payout Preferences
-            </div>
+            <h6 class="mb-3 fw-bold">Payout Preferences</h6>
             <div class="row g-3">
               <div class="col-md-6">
-                <label class="profile-label">Payment Method *</label>
-                <select class="form-select profile-input" id="paymentMethod" required>
+                <label class="form-label">Payment Method *</label>
+                <select class="form-select" id="paymentMethod" required>
                   <option value="" disabled selected>Select method</option>
                   <option>Bank Transfer</option>
                   <option>Vodafone Cash</option>
                   <option>InstaPay</option>
                   <option>PayPal</option>
                 </select>
-                <div class="invalid-feedback">Please select a payment method.</div>
+                <div class="invalid-feedback">Select payment method.</div>
               </div>
             </div>
           </div>
-
-        </div>
-
-        <div class="modal-footer border-0 px-4 pb-4 gap-2">
-          <button class="btn btn-cancel flex-grow-1" type="button" data-bs-dismiss="modal">
-            Cancel
-          </button>
-          <button class="btn btn-save flex-grow-1" type="submit">
-            <i class="bi bi-send me-1"></i> Submit Application
-          </button>
-        </div>
-      </form>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+            <button class="btn btn-success" type="submit">Submit Application</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
-</div>
 
+  <!-- ===== FOOTER (minimised) ===== -->
+  <footer class="site-footer-mini">
+    <div class="container-fluid px-3 px-lg-4">
 
-<!-- ===== FOOTER (minimised) ===== -->
-<footer class="site-footer-mini">
-  <div class="container-fluid px-3 px-lg-4">
+      <!-- Top row: Logo + Nav links + Social -->
+      <div class="footer-mini-top">
 
-    <!-- Top row: Logo + Nav links + Social -->
-    <div class="footer-mini-top">
-
-      <!-- Logo + tagline -->
-      <div class="footer-mini-brand">
-        <div class="footer-logo">
-          <span class="logo-deal">DEAL</span><span class="logo-port"><i class="bi bi-shop"></i>RT</span>
+        <!-- Logo + tagline -->
+        <div class="footer-mini-brand">
+          <div class="footer-logo">
+            <span class="logo-deal">DEAL</span><span class="logo-port"><i class="bi bi-shop"></i>RT</span>
+          </div>
+          <p class="footer-mini-tagline">Your one-stop shop for the best deals.</p>
         </div>
-        <p class="footer-mini-tagline">Your one-stop shop for the best deals.</p>
+
+        <!-- Quick links -->
+        <div class="footer-mini-links">
+          <a href="CustomerHomePage.html">Home</a>
+          <a href="profile.html">My Profile</a>
+          <a href="Cart.html">Cart</a>
+          <a href="#" data-bs-toggle="modal" data-bs-target="#becomeSellerModal">Become a Seller</a>
+          <a href="#">Help Center</a>
+          <a href="#">Returns Policy</a>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms & Conditions</a>
+        </div>
+
+        <!-- Newsletter -->
+        <div class="footer-mini-newsletter">
+          <p class="footer-mini-nl-label"><i class="bi bi-envelope me-1"></i>Newsletter</p>
+          <div class="input-group newsletter-group">
+            <input type="email" class="form-control" placeholder="Your email address" />
+            <button class="btn btn-newsletter">Subscribe</button>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Quick links -->
-      <div class="footer-mini-links">
-        <a href="CustomerHomePage.html">Home</a>
-        <a href="profile.html">My Profile</a>
-        <a href="Cart.html">Cart</a>
-        <a href="#" data-bs-toggle="modal" data-bs-target="#becomeSellerModal">Become a Seller</a>
-        <a href="#">Help Center</a>
-        <a href="#">Returns Policy</a>
-        <a href="#">Privacy Policy</a>
-        <a href="#">Terms & Conditions</a>
-      </div>
-
-      <!-- Newsletter -->
-      <div class="footer-mini-newsletter">
-        <p class="footer-mini-nl-label"><i class="bi bi-envelope me-1"></i>Newsletter</p>
-        <div class="input-group newsletter-group">
-          <input type="email" class="form-control" placeholder="Your email address"/>
-          <button class="btn btn-newsletter">Subscribe</button>
+      <!-- Bottom row: copyright + socials -->
+      <div class="footer-mini-bottom">
+        <p>© 2025 DEALPORT. All rights reserved.</p>
+        <div class="social-icons">
+          <a href="#" class="social-btn fb" title="Facebook"><i class="bi bi-facebook"></i></a>
+          <a href="#" class="social-btn ig" title="Instagram"><i class="bi bi-instagram"></i></a>
+          <a href="#" class="social-btn tw" title="X / Twitter"><i class="bi bi-twitter-x"></i></a>
+          <a href="#" class="social-btn li" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
         </div>
+        <p class="footer-mini-ssl">
+          <i class="bi bi-shield-check text-success me-1"></i>SSL Secure &amp; Trusted Sellers
+        </p>
       </div>
 
     </div>
+  </footer>
 
-    <!-- Bottom row: copyright + socials -->
-    <div class="footer-mini-bottom">
-      <p>© 2025 DEALPORT. All rights reserved.</p>
-      <div class="social-icons">
-        <a href="#" class="social-btn fb" title="Facebook"><i class="bi bi-facebook"></i></a>
-        <a href="#" class="social-btn ig" title="Instagram"><i class="bi bi-instagram"></i></a>
-        <a href="#" class="social-btn tw" title="X / Twitter"><i class="bi bi-twitter-x"></i></a>
-        <a href="#" class="social-btn li" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
-      </div>
-      <p class="footer-mini-ssl">
-        <i class="bi bi-shield-check text-success me-1"></i>SSL Secure &amp; Trusted Sellers
-      </p>
-    </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="../../JS/Customer/SellerRequestNotifications.js"></script>
+  <script type="module" src="../../JS/Customer/CustomerHomePage.js"></script>
 
   </div>
 </footer>
@@ -582,11 +567,16 @@
   import { addCustomerToSeller, getCurrentUser } from '../../JS/Core/Auth.js';
 
   document.addEventListener('DOMContentLoaded', () => {
-    const form        = document.getElementById('becomeSellerForm');
-    const modalEl     = document.getElementById('becomeSellerModal');
+    const form    = document.getElementById('becomeSellerForm');
+    const modalEl = document.getElementById('becomeSellerModal');
     if (!form || !modalEl) return;
 
-    /* Reset validation state every time the modal opens fresh */
+    // Auto-open if URL has #becomeSeller
+    if (window.location.hash === '#becomeSeller') {
+      new bootstrap.Modal(modalEl).show();
+    }
+
+    // Reset form every time modal opens
     modalEl.addEventListener('show.bs.modal', () => {
       form.reset();
       form.classList.remove('was-validated');
@@ -597,15 +587,11 @@
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       e.stopPropagation();
-
-      /* Trigger Bootstrap's visual validation feedback */
       form.classList.add('was-validated');
+      if (!form.checkValidity()) return;
 
-      if (!form.checkValidity()) return; /* stop – fields highlighted by Bootstrap */
-
-      /* Extra: validate phone is numeric + reasonable length */
       const phoneVal = document.getElementById('storePhone').value.trim();
-      if (!/^[\d\s\+\-\(\)]{6,20}$/.test(phoneVal)) {
+      if (!/^(\+20|0)(10|11|12|15)[0-9]{8}$/.test(phoneVal)) {
         document.getElementById('storePhone').setCustomValidity('invalid');
         form.classList.add('was-validated');
         return;
@@ -613,17 +599,6 @@
         document.getElementById('storePhone').setCustomValidity('');
       }
 
-      /* Collect data */
-      const sellerRequest = {
-        storeName:     document.getElementById('storeName').value.trim(),
-        city:          document.getElementById('storeCity').value.trim(),
-        description:   document.getElementById('storeDescription').value.trim(),
-        category:      document.getElementById('storeCategory').value,
-        phone:         phoneVal,
-        paymentMethod: document.getElementById('paymentMethod').value,
-      };
-
-      /* Auth check */
       const currentUser = getCurrentUser();
       if (!currentUser) {
         alert('You must be logged in to apply as a seller.');
@@ -632,10 +607,17 @@
         return;
       }
 
-      const result = addCustomerToSeller(currentUser.id, sellerRequest);
+      const result = addCustomerToSeller(currentUser.id, {
+        storeName:     document.getElementById('storeName').value.trim(),
+        city:          document.getElementById('storeCity').value.trim(),
+        description:   document.getElementById('storeDescription').value.trim(),
+        category:      document.getElementById('storeCategory').value,
+        phone:         phoneVal,
+        paymentMethod: document.getElementById('paymentMethod').value,
+        userEmail:     currentUser.email
+      });
 
       if (!result.success) {
-        /* Show inline error instead of alert */
         let errBox = document.getElementById('sellerFormError');
         if (!errBox) {
           errBox = document.createElement('div');
@@ -648,11 +630,9 @@
         return;
       }
 
-      /* Success */
       form.reset();
       form.classList.remove('was-validated');
       bootstrap.Modal.getInstance(modalEl)?.hide();
-      /* Brief success toast */
       const toast = document.createElement('div');
       toast.className = 'profile-toast';
       toast.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Application submitted! We\'ll review it soon.';
@@ -660,11 +640,10 @@
       setTimeout(() => toast.remove(), 4000);
     });
 
-    /* Clear custom validity on phone input so error clears on new typing */
     document.getElementById('storePhone')?.addEventListener('input', function () {
       this.setCustomValidity('');
     });
   });
-</script>
+  </script>
 </body>
 </html>

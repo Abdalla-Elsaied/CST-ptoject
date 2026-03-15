@@ -87,7 +87,7 @@ function renderNotification() {
           <strong>Application not approved</strong>
           <span>Your seller application was not approved. You can apply again with updated information.</span>
         </div>
-        <a href="ContactUS.html" class="seller-notif-link">Apply Again</a>
+        <a href="CustomerHomePage.html#becomeSeller" class="seller-notif-link">Apply Again</a>
         <button class="seller-notif-dismiss" aria-label="Dismiss" data-dismiss="seller-rejected">&times;</button>
       </div>`;
   } else {

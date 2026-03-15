@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Console | CST E-Commerce Marketplace</title>
+    <title>Admin Console | DealART E-Commerce Marketplace</title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
@@ -27,47 +27,61 @@
 
         <!-- Logo -->
         <div class="sidebar-logo">
-            <span class="logo-icon"><i class="bi bi-cart3"></i></span>
-            <span class="logo-text">CST Marketplace</span>
+            <span class="logo-text">
+                <span class="logo-deal">DEAL</span><span class="logo-port"><i class="bi bi-shop"></i>RT</span>
+            </span>
         </div>
 
-        <!-- Navigation links — data-section maps to section IDs and sectionRenderers -->
+        <!-- Navigation -->
         <nav class="sidebar-nav">
+
             <div class="sidebar-section-label">Core</div>
-            <a href="#" class="nav-link" data-section="dashboard">
+
+            <a href="#" class="nav-link" data-section="dashboard" data-tooltip="Overview">
                 <span class="nav-icon"><i class="bi bi-grid-1x2"></i></span> Overview
             </a>
-            <a href="#" class="nav-link" data-section="analytics">
+            <a href="#" class="nav-link" data-section="analytics" data-tooltip="Analytics">
                 <span class="nav-icon"><i class="bi bi-graph-up-arrow"></i></span> Analytics
             </a>
-            <a href="../Customer/CustomerHomePage.html" class="nav-link" target="_blank" rel="noopener">
+            <a href="../Customer/CustomerHomePage.html" class="nav-link" target="_blank" rel="noopener"
+                data-tooltip="Live Store">
                 <span class="nav-icon"><i class="bi bi-box-arrow-up-right"></i></span> View Storefront
             </a>
 
             <div class="sidebar-section-label">Management</div>
-            <a href="#" class="nav-link" data-section="sellers">
+
+            <a href="#" class="nav-link" data-section="sellers" data-tooltip="Sellers">
                 <span class="nav-icon"><i class="bi bi-shop"></i></span> Sellers
             </a>
-            <a href="#" class="nav-link" data-section="requests">
+            <a href="#" class="nav-link" data-section="requests" data-tooltip="Seller Requests">
                 <span class="nav-icon"><i class="bi bi-person-check"></i></span> Seller Requests
                 <span class="nav-badge d-none" id="requestsBadge">0</span>
             </a>
-            <a href="#" class="nav-link" data-section="categories">
-                <span class="nav-icon"><i class="bi bi-tags"></i></span> Category Suggestions
+            <a href="#" class="nav-link" data-section="categories" data-tooltip="Categories">
+                <span class="nav-icon"><i class="bi bi-tags"></i></span> Categories
                 <span class="nav-badge d-none" id="categoriesBadge">0</span>
             </a>
-            <a href="#" class="nav-link" data-section="customers">
-                <span class="nav-icon"><i class="bi bi-people"></i></span> Users
-            </a>
-            <a href="#" class="nav-link" data-section="products">
+            <a href="#" class="nav-link" data-section="products" data-tooltip="Products">
                 <span class="nav-icon"><i class="bi bi-box-seam"></i></span> Products
             </a>
-            <a href="#" class="nav-link" data-section="orders">
+            <a href="#" class="nav-link" data-section="orders" data-tooltip="Orders">
                 <span class="nav-icon"><i class="bi bi-receipt"></i></span> Orders
             </a>
+            <a href="#" class="nav-link" data-section="reviews" data-tooltip="Reviews">
+                <span class="nav-icon"><i class="bi bi-star"></i></span> Reviews
+            </a>
+            <a href="#" class="nav-link" data-section="customers" data-tooltip="Users">
+                <span class="nav-icon"><i class="bi bi-people"></i></span> Users
+            </a>
+
         </nav>
 
-        <!-- User profile at bottom -->
+        <!-- Collapse toggle (desktop) -->
+        <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+
+        <!-- Admin profile card at bottom -->
         <div class="sidebar-user">
             <div class="sidebar-user-avatar" id="sidebarUserAvatar">A</div>
             <div class="sidebar-user-info">
@@ -78,51 +92,76 @@
 
     </aside>
 
+
     <!-- ── MAIN CONTENT ─────────────────────────────────────── -->
     <main id="adminMain">
 
-        <!-- Top navbar -->
+        <!-- ── TOP NAVBAR ─────────────────────────────────── -->
         <header class="admin-topbar">
-            <!-- Hamburger button (mobile only) -->
+
+            <!-- Hamburger (mobile only) -->
             <button id="sidebarToggle" class="hamburger-btn" aria-label="Toggle sidebar">
                 &#9776;
             </button>
 
+            <!-- FIX: Welcome row — single line with separator -->
             <div class="topbar-left">
-                <span class="topbar-title">Welcome back, <strong id="adminUserName">Admin</strong></span>
-                <span class="topbar-date" id="topbarDate"></span>
+                <div class="topbar-welcome-row">
+                    <span class="topbar-title">
+                        Welcome back, <strong id="adminUserName">Admin</strong>
+                    </span>
+                    <span class="topbar-separator" aria-hidden="true"></span>
+                    <span class="topbar-date" id="topbarDate"></span>
+                </div>
             </div>
 
             <div class="topbar-right">
+                <!-- Theme toggle -->
                 <button class="topbar-icon-btn" id="themeToggle" title="Toggle Dark/Light Mode">
                     <i class="bi bi-sun" id="themeIcon"></i>
                 </button>
+
+                <!-- Notifications bell -->
                 <button class="topbar-icon-btn" id="notificationsBell" title="Notifications">
                     <i class="bi bi-bell"></i>
                     <span class="badge-dot d-none" id="notificationsBadge"></span>
                 </button>
-                <!-- Profile dropdown will be inserted here by admin-profile.js -->
-                <button id="logoutBtn" class="btn-logout"><i class="bi bi-box-arrow-right"></i> Logout</button>
+
+                <!-- Profile dropdown — inserted by admin-profile.js -->
+                <div id="profileDropdownContainer"></div>
+
+                <!-- Logout -->
+                <button id="logoutBtn" class="btn-logout">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </button>
             </div>
+
         </header>
 
-        <!-- ── DASHBOARD SECTION ──────────────────────────── -->
+
+        <!-- ══════════════════════════════════════════════════
+             SECTIONS — each managed by its own JS module
+        ══════════════════════════════════════════════════ -->
+
+        <!-- ── DASHBOARD ──────────────────────────────────── -->
         <section id="dashboardSection" class="admin-section">
             <div class="section-header">
-                <h2 class="section-title">Overview</h2>
-                <p class="section-subtitle">Marketplace performance at a glance.</p>
+                <div>
+                    <h2 class="section-title">Overview</h2>
+                    <p class="section-subtitle">Marketplace performance at a glance.</p>
+                </div>
             </div>
 
-            <!-- Action alerts banner -->
+            <!-- Action alerts banner — filled by admin-dashboard.js -->
             <div id="actionAlerts"></div>
 
-            <!-- KPI cards row — filled by admin-dashboard.js -->
+            <!-- KPI stat cards — filled by admin-dashboard.js -->
             <div class="kpi-row" id="kpiRow"></div>
 
-            <!-- Recent activity tables -->
+            <!-- Recent tables row -->
             <div class="row g-3">
-                <div class="col-lg-6">
-                    <div class="data-card">
+                <div class="col-lg-6 col-12">
+                    <div class="data-card h-100">
                         <div class="data-card-header">Recent Sellers</div>
                         <div class="table-responsive">
                             <table class="table table-sm table-hover mb-0">
@@ -141,8 +180,8 @@
                     </div>
                 </div>
 
-                <div class="col-lg-6">
-                    <div class="data-card">
+                <div class="col-lg-6 col-12">
+                    <div class="data-card h-100">
                         <div class="data-card-header">Recent Orders</div>
                         <div class="table-responsive">
                             <table class="table table-sm table-hover mb-0">
@@ -151,7 +190,7 @@
                                         <th>Order ID</th>
                                         <th>Customer</th>
                                         <th>Seller</th>
-                                        <th>Total</th>
+                                        <th class="text-end">Total</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
@@ -163,7 +202,8 @@
             </div>
         </section>
 
-        <!-- ── SELLERS SECTION ────────────────────────────── -->
+
+        <!-- ── SELLERS ────────────────────────────────────── -->
         <section id="sellersSection" class="admin-section" style="display:none">
             <div class="section-header">
                 <div>
@@ -175,13 +215,11 @@
                 </button>
             </div>
 
-            <!-- Search bar -->
             <div class="filter-bar">
                 <input type="text" id="sellerSearchInput" class="filter-input"
                     placeholder="Search by name, store, or city...">
             </div>
 
-            <!-- Table -->
             <div class="data-card">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -203,7 +241,8 @@
             </div>
         </section>
 
-        <!-- ── SELLER REQUESTS SECTION ──────────────────────── -->
+
+        <!-- ── SELLER REQUESTS ────────────────────────────── -->
         <section id="requestsSection" class="admin-section" style="display:none">
             <div class="section-header">
                 <div>
@@ -220,14 +259,16 @@
                 </div>
             </div>
 
-            <!-- Table -->
             <div class="data-card">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
-                                <th style="width: 40px;"><input type="checkbox" id="selectAllRequests"></th>
+                                <th style="width:40px">
+                                    <input type="checkbox" id="selectAllRequests">
+                                </th>
                                 <th>Store Name</th>
+                                <th>User</th>
                                 <th>City</th>
                                 <th>Category</th>
                                 <th>Phone</th>
@@ -241,22 +282,26 @@
             </div>
         </section>
 
-        <!-- ── CATEGORY REQUESTS SECTION ──────────────────────── -->
+
+        <!-- ── CATEGORIES ─────────────────────────────────── -->
         <section id="categoriesSection" class="admin-section" style="display:none">
             <div class="section-header">
                 <div>
                     <h2 class="section-title">Category Management</h2>
                     <p class="section-subtitle" id="categoryRequestsCount">Loading...</p>
                 </div>
+                <button class="btn-primary-green" onclick="openAddCategoryModal()">
+                    <i class="bi bi-plus-lg"></i> Add New Category
+                </button>
             </div>
 
-            <!-- Tabs -->
+            <!-- Tab buttons -->
             <div class="filter-bar">
                 <button id="catTabSuggestions" type="button" class="btn-outline-green cat-tab active">
-                    Suggestions
+                    <i class="bi bi-inbox"></i> Suggestions
                 </button>
                 <button id="catTabAll" type="button" class="btn-outline-green cat-tab">
-                    All Categories
+                    <i class="bi bi-collection"></i> All Categories
                 </button>
             </div>
 
@@ -296,7 +341,8 @@
             </div>
         </section>
 
-        <!-- ── CUSTOMERS SECTION ─────────────────────────── -->
+
+        <!-- ── USERS / CUSTOMERS ──────────────────────────── -->
         <section id="customersSection" class="admin-section" style="display:none">
             <div class="section-header">
                 <div>
@@ -304,16 +350,17 @@
                     <p class="section-subtitle" id="customersCount">Loading...</p>
                 </div>
                 <div class="d-flex gap-2">
-                    <button class="btn-outline-green" id="bulkActionsBtn" style="display: none;">
+                    <button class="btn-outline-green" id="bulkActionsBtn" style="display:none">
                         <i class="bi bi-check2-square"></i> Bulk Actions
                     </button>
-                    <button class="btn-primary-green" onclick="window.open('../Customer/register.html', '_blank')">
+                    <button class="btn-primary-green"
+                        onclick="window.open('../Customer/register.html', '_blank')">
                         <i class="bi bi-person-plus"></i> Add User
                     </button>
                 </div>
             </div>
 
-            <!-- Search and filters -->
+            <!-- Filters -->
             <div class="filter-bar">
                 <input type="text" id="customerSearchInput" class="filter-input"
                     placeholder="Search by name, email, or role...">
@@ -335,37 +382,40 @@
                 <div class="data-card-header">
                     <span>User Management</span>
                     <div class="header-actions">
-                        <button class="btn-outline-green btn-sm" onclick="exportUsersData()">
-                            <i class="bi bi-download"></i> Export
+                        <button id="deduplicateUsersBtn" class="btn-outline-green btn-sm"
+                            title="Remove duplicate users from database"
+                            style="display:none">
+                            <i class="bi bi-database-check"></i> Clean Duplicates
                         </button>
+
                     </div>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0 users-table">
                         <thead>
                             <tr>
-                                <th style="width: 40px;">
+                                <th>
                                     <input type="checkbox" id="selectAllUsers" class="form-check-input">
                                 </th>
-                                <th style="width: 50px;">#</th>
-                                <th style="width: 200px;">User</th>
-                                <th style="width: 180px;">Contact</th>
-                                <th style="width: 100px;">Role</th>
-                                <th style="width: 100px;">Status</th>
-                                <th style="width: 120px;">Joined</th>
-                                <th style="width: 80px;">Orders</th>
-                                <th style="width: 160px;" class="text-center">Actions</th>
+                                <th>#</th>
+                                <th>User</th>
+                                <th>Contact</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Joined</th>
+                                <th>Orders</th>
+                                <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="customersTableBody"></tbody>
                     </table>
                 </div>
-                <!-- Pagination -->
                 <div id="customersPagination" class="d-none"></div>
             </div>
         </section>
 
-        <!-- ── PRODUCTS SECTION ───────────────────────────── -->
+
+        <!-- ── PRODUCTS ───────────────────────────────────── -->
         <section id="productsSection" class="admin-section" style="display:none">
             <div class="section-header">
                 <div>
@@ -374,15 +424,12 @@
                 </div>
             </div>
 
-            <!-- Filters -->
             <div class="filter-bar">
-                <input type="text" id="productSearchInput" class="filter-input" placeholder="Search products...">
-
+                <input type="text" id="productSearchInput" class="filter-input"
+                    placeholder="Search products...">
                 <select id="productCategoryFilter" class="filter-select">
                     <option value="All">All Categories</option>
-                    <!-- Populated dynamically from ls_categories + product data -->
                 </select>
-
                 <select id="productStatusFilter" class="filter-select">
                     <option value="All">All Status</option>
                     <option value="Active">Active</option>
@@ -390,7 +437,6 @@
                 </select>
             </div>
 
-            <!-- Table -->
             <div class="data-card">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -410,12 +456,12 @@
                         <tbody id="productsTableBody"></tbody>
                     </table>
                 </div>
-                <!-- Pagination -->
                 <div id="productsPagination" class="d-none"></div>
             </div>
         </section>
 
-        <!-- ── ORDERS SECTION ─────────────────────────────── -->
+
+        <!-- ── ORDERS ─────────────────────────────────────── -->
         <section id="ordersSection" class="admin-section" style="display:none">
             <div class="section-header">
                 <div>
@@ -424,11 +470,9 @@
                 </div>
             </div>
 
-            <!-- Filters -->
             <div class="filter-bar flex-wrap">
                 <input type="text" id="orderSearchInput" class="filter-input"
                     placeholder="Search by order ID or customer...">
-
                 <select id="orderStatusFilter" class="filter-select">
                     <option value="All">All Statuses</option>
                     <option>Pending</option>
@@ -437,12 +481,12 @@
                     <option>Delivered</option>
                     <option>Cancelled</option>
                 </select>
-
-                <input type="date" id="orderDateFrom" class="filter-input" style="max-width:160px">
-                <input type="date" id="orderDateTo" class="filter-input" style="max-width:160px">
+                <input type="date" id="orderDateFrom" class="filter-input date-input"
+                    title="From date">
+                <input type="date" id="orderDateTo" class="filter-input date-input"
+                    title="To date">
             </div>
 
-            <!-- Table -->
             <div class="data-card">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -463,39 +507,98 @@
                         <tbody id="ordersTableBody"></tbody>
                     </table>
                 </div>
-                <!-- Pagination -->
                 <div id="ordersPagination" class="d-none"></div>
             </div>
         </section>
 
-        <!-- ── ANALYTICS SECTION ──────────────────────────── -->
+
+        <!-- ── ANALYTICS ──────────────────────────────────── -->
         <section id="analyticsSection" class="admin-section" style="display:none">
             <div class="section-header">
-                <h2 class="section-title">Sales & Analytics</h2>
-                <p class="section-subtitle">Marketplace-wide statistics and trends.</p>
+                <div>
+                    <h2 class="section-title">Sales & Analytics</h2>
+                    <p class="section-subtitle">Marketplace-wide statistics and trends.</p>
+                </div>
             </div>
 
-            <!-- 2x2 chart grid -->
             <div class="row g-3">
-                <div class="col-lg-6">
+                <div class="col-lg-6 col-12">
                     <div class="chart-card">
                         <canvas id="userDistributionChart"></canvas>
                     </div>
                 </div>
-                <div class="col-lg-6">
+                <div class="col-lg-6 col-12">
                     <div class="chart-card">
                         <canvas id="ordersByStatusChart"></canvas>
                     </div>
                 </div>
-                <div class="col-lg-6">
+                <div class="col-lg-6 col-12">
                     <div class="chart-card">
                         <canvas id="topSellersChart"></canvas>
                     </div>
                 </div>
-                <div class="col-lg-6">
+                <div class="col-lg-6 col-12">
                     <div class="chart-card">
                         <canvas id="dailyOrdersChart"></canvas>
                     </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ── REVIEWS ────────────────────────────────────── -->
+        <section id="reviewsSection" class="admin-section" style="display:none">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Customer Reviews</h2>
+                    <p class="section-subtitle">Manage testimonials and product feedback.</p>
+                </div>
+            </div>
+
+            <!-- Tab buttons -->
+            <div class="filter-bar">
+                <button id="revTabTestimonials" type="button" class="btn-outline-green rev-tab active">
+                    <i class="bi bi-chat-quote"></i> Home Testimonials
+                </button>
+                <button id="revTabProduct" type="button" class="btn-outline-green rev-tab">
+                    <i class="bi bi-star"></i> Product Reviews
+                </button>
+            </div>
+
+            <!-- Testimonials table -->
+            <div class="data-card mt-3" id="testimonialsCard">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Rating</th>
+                                <th>Comment</th>
+                                <th>Date</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="testimonialsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Product reviews table -->
+            <div class="data-card mt-3" id="productReviewsCard" style="display:none">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>User</th>
+                                <th>Rating</th>
+                                <th>Comment</th>
+                                <th>Date</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productReviewsTableBody"></tbody>
+                    </table>
                 </div>
             </div>
         </section>
@@ -505,18 +608,21 @@
 
     <!-- ══════════════════════════════════════════════════════
          MODALS
-    ═══════════════════════════════════════════════════════ -->
+    ══════════════════════════════════════════════════════ -->
 
-    <!-- Reset Password Modal — used for both customers and sellers -->
-    <div class="modal fade" id="resetPasswordModal" tabindex="-1">
+    <!-- Reset Password Modal -->
+    <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-sm">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Reset Password</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title" id="resetPasswordModalLabel">
+                        <i class="bi bi-key"></i> Reset Password
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Hidden fields — set by openResetPasswordModal() in admin-customers.js -->
                     <input type="hidden" id="resetPasswordUserId">
                     <input type="hidden" id="resetPasswordUserType">
                     <div class="mb-3">
@@ -529,28 +635,32 @@
                         <input type="password" class="form-control" id="resetPasswordConfirm"
                             placeholder="Repeat new password">
                     </div>
-                    <!-- Error message shown if passwords don't match -->
-                    <p id="resetPasswordError" style="color:var(--danger);font-size:13px;min-height:18px;margin:0"></p>
+                    <p id="resetPasswordError"
+                        style="color:var(--danger);font-size:13px;min-height:18px;margin:0"></p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <!-- Calls saveResetPassword() from admin-customers.js -->
-                    <button type="button" class="btn-primary-green" onclick="saveResetPassword()">Save</button>
+                    <button type="button" class="btn btn-secondary btn-sm"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn-primary-green"
+                        onclick="saveResetPassword()">Save</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Edit Seller Modal -->
-    <div class="modal fade" id="editSellerModal" tabindex="-1">
+    <div class="modal fade" id="editSellerModal" tabindex="-1" aria-labelledby="editSellerModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Edit Seller</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title" id="editSellerModalLabel">
+                        <i class="bi bi-pencil"></i> Edit Seller
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Hidden ID field — used to identify which seller to update -->
                     <input type="hidden" id="editSellerId">
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -584,149 +694,235 @@
                         </div>
                         <div class="col-12">
                             <label class="form-label">Description</label>
-                            <textarea class="form-control" id="editSellerDescription" rows="3"></textarea>
+                            <textarea class="form-control" id="editSellerDescription"
+                                rows="3"></textarea>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <!-- Calls saveSellerEdit() from admin-sellers.js -->
-                    <button type="button" class="btn-primary-green" onclick="saveSellerEdit()">Save Changes</button>
+                    <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn-primary-green"
+                        onclick="saveSellerEdit()">Save Changes</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Edit Category Modal (for Edit & Approve flow) -->
-    <div class="modal fade" id="editCategoryModal" tabindex="-1">
+    <!-- Edit Category Modal -->
+    <div class="modal fade" id="editCategoryModal" tabindex="-1" aria-labelledby="editCategoryModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Edit & Approve Category</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title" id="editCategoryModalLabel">
+                        <i class="bi bi-tags"></i> Edit Category
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="editCategoryId">
                     <div class="mb-3">
                         <label class="form-label">Category Name</label>
-                        <input type="text" class="form-control" id="editCategoryName" placeholder="e.g. Women Fashion">
+                        <input type="text" class="form-control" id="editCategoryName"
+                            placeholder="e.g. Women Fashion">
                     </div>
                     <div class="mb-2">
-                        <label class="form-label">Description (optional)</label>
-                        <textarea class="form-control" id="editCategoryDesc" rows="3" placeholder="Short description"></textarea>
+                        <label class="form-label">Description <span
+                                class="text-muted small">(optional)</span></label>
+                        <textarea class="form-control" id="editCategoryDesc" rows="3"
+                            placeholder="Short description"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn-primary-green" onclick="if(window.saveEditCategoryAndApprove)window.saveEditCategoryAndApprove()">
-                        <i class="bi bi-check-lg"></i> Save & Approve
+                    <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn-primary-green"
+                        onclick="if(window.saveEditCategoryAndApprove)window.saveEditCategoryAndApprove()">
+                        <i class="bi bi-check-lg"></i> Save Changes
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Confirm Action Modal — reusable for all delete/deactivate confirmations -->
-    <div class="modal fade" id="confirmModal" tabindex="-1">
+    <!-- Add Category Modal -->
+    <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCategoryModalLabel">
+                        <i class="bi bi-plus-circle"></i> Add New Category
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Category Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="addCategoryName"
+                            placeholder="e.g. Luxury Goods">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="addCategoryDesc" rows="3"
+                            placeholder="Enter category description..."></textarea>
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="addCategoryActive" checked>
+                        <label class="form-check-label" for="addCategoryActive">Set as Active immediately</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn-primary-green" onclick="submitAddCategory()">
+                        <i class="bi bi-plus-lg"></i> Create Category
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Action Modal (reusable) -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-sm">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Are you sure?</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title" id="confirmModalLabel">
+                        <i class="bi bi-exclamation-triangle text-warning"></i> Are you sure?
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Message set dynamically by showConfirm() in admin-helpers.js -->
                     <p id="confirmMessage" class="mb-0"></p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <!-- onConfirm callback set dynamically by showConfirm() -->
-                    <button type="button" class="btn btn-danger btn-sm" id="confirmActionBtn">Confirm</button>
+                    <button type="button" class="btn btn-secondary btn-sm"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger btn-sm"
+                        id="confirmActionBtn">Confirm</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Order Detail Modal -->
-    <div class="modal fade" id="orderDetailModal" tabindex="-1">
+    <div class="modal fade" id="orderDetailModal" tabindex="-1" aria-labelledby="orderDetailModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="orderDetailTitle">Order Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="orderDetailBody">
                     <!-- Filled by admin-orders.js -->
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary btn-sm"
+                        data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
     </div>
 
-
     <!-- Add Seller Modal -->
-    <div class="modal fade" id="addSellerModal" tabindex="-1">
+    <div class="modal fade" id="addSellerModal" tabindex="-1" aria-labelledby="addSellerModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-person-plus"></i> Onboard New Seller</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title" id="addSellerModalLabel">
+                        <i class="bi bi-person-plus"></i> Onboard New Seller
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <form id="addSellerForm" class="needs-validation" novalidate>
                     <div class="modal-body">
-                        <!-- Vendor Information -->
-                        <h6 class="mb-3" style="color: var(--green-dark); font-weight: 600;">Vendor Information</h6>
+
+                        <h6 class="section-heading mb-3">
+                            <i class="bi bi-person"></i> Vendor Information
+                        </h6>
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
-                                <label class="form-label">Full Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="addSellerFullName" required>
+                                <label class="form-label">
+                                    Full Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="addSellerFullName"
+                                    required>
                                 <div class="invalid-feedback">Please enter full name.</div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Email Address <span class="text-danger">*</span></label>
-                                <input type="email" class="form-control" id="addSellerEmail" required>
+                                <label class="form-label">
+                                    Email Address <span class="text-danger">*</span>
+                                </label>
+                                <input type="email" class="form-control" id="addSellerEmail"
+                                    required>
                                 <div class="invalid-feedback">Please enter a valid email.</div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Password <span class="text-danger">*</span></label>
-                                <input type="password" class="form-control" id="addSellerPassword" minlength="6"
-                                    required>
-                                <div class="invalid-feedback">Password must be at least 6 characters.</div>
+                                <label class="form-label">
+                                    Password <span class="text-danger">*</span>
+                                </label>
+                                <input type="password" class="form-control" id="addSellerPassword"
+                                    minlength="6" required>
+                                <div class="invalid-feedback">Password must be at least 6
+                                    characters.</div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Phone Number <span class="text-danger">*</span></label>
-                                <input type="tel" class="form-control" id="addSellerPhone" required>
+                                <label class="form-label">
+                                    Phone Number <span class="text-danger">*</span>
+                                </label>
+                                <input type="tel" class="form-control" id="addSellerPhone"
+                                    required>
                                 <div class="invalid-feedback">Please enter phone number.</div>
                             </div>
                         </div>
 
-                        <!-- Store Profile -->
-                        <h6 class="mb-3" style="color: var(--green-dark); font-weight: 600;">Store Profile</h6>
+                        <h6 class="section-heading mb-3">
+                            <i class="bi bi-shop"></i> Store Profile
+                        </h6>
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
-                                <label class="form-label">Store Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="addSellerStoreName" required>
+                                <label class="form-label">
+                                    Store Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="addSellerStoreName"
+                                    required>
                                 <div class="invalid-feedback">Please enter store name.</div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">City <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="addSellerCity" required>
+                                <label class="form-label">
+                                    City <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="addSellerCity"
+                                    required>
                                 <div class="invalid-feedback">Please enter city.</div>
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Store Description <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="addSellerDescription" rows="3" required></textarea>
+                                <label class="form-label">
+                                    Store Description <span class="text-danger">*</span>
+                                </label>
+                                <textarea class="form-control" id="addSellerDescription" rows="3"
+                                    required></textarea>
                                 <div class="invalid-feedback">Please add a description.</div>
                             </div>
                         </div>
 
-                        <!-- Payout Preferences -->
-                        <h6 class="mb-3" style="color: var(--green-dark); font-weight: 600;">Payout Preferences</h6>
-                        <div class="row g-3">
+                        <h6 class="section-heading mb-3">
+                            <i class="bi bi-credit-card"></i> Payout Preferences
+                        </h6>
+                        <div class="row g-3 mb-4">
                             <div class="col-md-6">
-                                <label class="form-label">Payment Method <span class="text-danger">*</span></label>
+                                <label class="form-label">
+                                    Payment Method <span class="text-danger">*</span>
+                                </label>
                                 <select class="form-select" id="addSellerPayment" required>
                                     <option value="" selected disabled>Select a method...</option>
                                     <option>Bank Transfer</option>
@@ -734,12 +930,33 @@
                                     <option>InstaPay</option>
                                     <option>PayPal</option>
                                 </select>
-                                <div class="invalid-feedback">Please select a payment method.</div>
+                                <div class="invalid-feedback">Please select a payment method.
+                                </div>
                             </div>
                         </div>
+
+                        <h6 class="section-heading mb-3">
+                            <i class="bi bi-shield-check"></i> Approval Settings
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox"
+                                        id="addSellerPreApprove">
+                                    <label class="form-check-label" for="addSellerPreApprove">
+                                        <strong>Pre-approve this seller</strong>
+                                        <div class="text-muted small">Seller can login and start
+                                            selling immediately without requiring manual
+                                            approval.</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn-primary-green">
                             <i class="bi bi-check-lg"></i> Submit Registration
                         </button>
@@ -752,12 +969,17 @@
 
     <!-- ══════════════════════════════════════════════════════
          SCRIPTS — ORDER IS CRITICAL, DO NOT CHANGE
-    ═══════════════════════════════════════════════════════ -->
+    ══════════════════════════════════════════════════════ -->
 
-    <!-- 1. jQuery (optional) -->
+    <!-- 1. jQuery (optional utility) -->
     <script src="../../Libraries/JQuery.js"></script>
+    <script type="module">
+        import {initUsers} from "../../JS/Core/Storage.js"
 
-    <!-- 2. Bootstrap JS -->
+        await initUsers() 
+    </script>
+
+    <!-- 2. Bootstrap JS bundle (includes Popper) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
         crossorigin="anonymous"></script>
@@ -765,20 +987,21 @@
     <!-- 3. Chart.js (required by admin-analytics.js) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- 4. Shared helpers — MUST load before all section files -->
-    <script src="../../JS/Admin/admin-helpers.js" type="module"></script>
-
-    <!-- 5. Section files — order between these doesn't matter -->
-    <script src="../../JS/Admin/admin-profile.js" type="module"></script>
-    <script src="../../JS/Admin/admin-dashboard.js" type="module"></script>
-    <script src="../../JS/Admin/admin-sellers.js" type="module"></script>
-    <script src="../../JS/Admin/admin-requests.js" type="module"></script>
+    <!-- 4. Admin section modules — loaded as ES modules -->
+    <script src="../../JS/Admin/admin-helpers.js"    type="module"></script>
+    <script src="../../JS/Admin/admin-profile.js"    type="module"></script>
+    <script src="../../JS/Admin/admin-dashboard.js"  type="module"></script>
+    <script src="../../JS/Admin/admin-sellers.js"    type="module"></script>
+    <script src="../../JS/Admin/admin-requests.js"   type="module"></script>
     <script src="../../JS/Admin/admin-categories.js" type="module"></script>
-    <script src="../../JS/Admin/admin-customers.js" type="module"></script>
-    <script src="../../JS/Admin/admin-products.js" type="module"></script>
-    <script src="../../JS/Admin/admin-orders.js" type="module"></script>
-    <script src="../../JS/Admin/admin-analytics.js" type="module"></script>
-    <script src="../../JS/Admin/admin-panel.js" type="module"></script>
+    <script src="../../JS/Admin/admin-customers.js"  type="module"></script>
+    <script src="../../JS/Admin/admin-products.js"   type="module"></script>
+    <script src="../../JS/Admin/admin-orders.js"     type="module"></script>
+    <script src="../../JS/Admin/admin-reviews.js"    type="module"></script>
+    <script src="../../JS/Admin/admin-analytics.js"  type="module"></script>
+
+    <!-- 5. Main controller — MUST be last -->
+    <script src="../../JS/Admin/admin-panel.js"      type="module"></script>
 
 </body>
 

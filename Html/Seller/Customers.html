@@ -39,9 +39,7 @@
             View all registered customers and their details.
           </p>
         </div>
-        <div class="customers-actions">
-          <button class="btn-filter-light" id="exportCustomersBtn">Export</button>
-        </div>
+
       </div>
 
       <section class="customers-stats">
@@ -72,7 +70,10 @@
           <div class="customers-filters">
             <div class="filter-field">
               <label for="customerSearchInput">Search</label>
-              <input type="text" id="customerSearchInput" placeholder="Search by name or email..." />
+              <div class="search-field-wrap">
+                <i class="bi bi-search search-field-icon"></i>
+                <input type="text" id="customerSearchInput" placeholder="Search by name or email..." />
+              </div>
             </div>
             <div class="filter-field">
               <label for="roleFilter">Role</label>

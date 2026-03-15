@@ -6,7 +6,7 @@
  *              and existing cart quantity
  */
 
-import { loadProductsFromFolder }       from '../Core/FileStorage.js';
+import { loadProductsFromFolder } from '../Core/FileStorage.js';
 import { getCurrentUser }               from '../Core/Auth.js';
 import { toggleWishlist, isWishlisted } from './Wishlist.js';
 import {
@@ -82,7 +82,9 @@ function renderAccountMenu() {
     dropdown.innerHTML = `
       <li>
         <div class="dropdown-user-header">
-          <div class="dropdown-user-avatar">${initials}</div>
+          ${user.photoUrl 
+            ? `<img src="${user.photoUrl}" class="dropdown-user-avatar" style="border-radius:50%;object-fit:cover;"/>`
+            : `<div class="dropdown-user-avatar">${initials}</div>`}
           <div>
             <div class="dropdown-user-name">${user.name}</div>
             <div class="dropdown-user-email">${user.email}</div>
@@ -534,7 +536,7 @@ function renderReviewForm(pid) {
     if (rating < 1)                      return showErr('Please select a star rating.');
     if (!comment || comment.length < 10) return showErr('Review must be at least 10 characters.');
 
-    addProductReview(pid, { userId: user.id, name: user.name, avatar: null, rating, title, comment });
+    addProductReview(pid, { userId: user.id, name: user.name, avatar: user.photoUrl || null, rating, title, comment });
     renderReviewsSummary(pid);
     renderReviewsList(pid);
     wrap.innerHTML = `

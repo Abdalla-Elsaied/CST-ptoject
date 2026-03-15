@@ -5,35 +5,55 @@
  */
 import { getLS, setLS } from '../Core/Storage.js';
 import { KEY_ORDERS } from '../Core/Constants.js';
+import { getOrderDate } from './admin-helpers.js';
 
 // Memory cache
 let _ordersCache = null;
 
 /**
  * Loads orders from LocalStorage.
+ * Returns a Promise for consistency with fetchProducts().
  */
-export function fetchOrders() {
-    if (!_ordersCache) {
-        _ordersCache = getLS(KEY_ORDERS) || [];
-    }
+export async function fetchOrders() {
+    // Always read fresh from localStorage — cache was causing new orders to be invisible
+    _ordersCache = getLS(KEY_ORDERS) || [];
     return _ordersCache;
 }
+
+/**
+ * Invalidates the orders cache so next fetchOrders() reads fresh data.
+ */
+export function invalidateOrdersCache() {
+    _ordersCache = null;
+}
+
+// Invalidate cache when orders are updated from another tab
+window.addEventListener('storage', (e) => {
+    if (e.key === KEY_ORDERS) {
+        _ordersCache = null;
+        console.log('[ORDERS] Cache invalidated — new order detected');
+    }
+});
 
 /**
  * Returns filtered and paginated orders.
  */
 export function getFilteredOrders(filters) {
-    const orders = fetchOrders();
+    // Read fresh from localStorage every time
+    const orders = getLS(KEY_ORDERS) || [];
     const { search, status, dateFrom, dateTo, page, limit } = filters;
 
     const filtered = orders.filter(o => {
         const orderId = String(o.id || '');
-        const customerId = String(o.customerId || '');
-        const matchSearch = !search || orderId.includes(search) || customerId.includes(search);
-        const matchStatus = status === 'All' || o.status === status;
+        // Support both customerId and userId field names
+        const customerId = String(o.customerId || o.userId || '');
+        const customerName = String(o.userName || '');
+        const matchSearch = !search || orderId.includes(search) || customerId.includes(search) || customerName.toLowerCase().includes(search.toLowerCase());
+        // Case-insensitive status match
+        const matchStatus = status === 'All' || (o.status || '').toLowerCase() === status.toLowerCase();
 
         let matchDate = true;
-        const orderDateStr = o.createdAt || o.orderDate;
+        const orderDateStr = getOrderDate(o);
         if (orderDateStr) {
             const date = new Date(orderDateStr).getTime();
             if (dateFrom) matchDate = matchDate && date >= new Date(dateFrom).getTime();
@@ -62,7 +82,7 @@ export function getFilteredOrders(filters) {
  * Updates order status.
  */
 export function updateOrderStatus(orderId, newStatus) {
-    const orders = fetchOrders();
+    const orders = getLS(KEY_ORDERS) || [];
     const index = orders.findIndex(o => o.id == orderId);
     if (index === -1) return false;
 

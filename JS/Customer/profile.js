@@ -4,43 +4,46 @@
  *             click order → orderDetails.html?id=ORDER_ID
  */
 
-import { getCurrentUser, logoutUser, updateCurrentUserInStorage } from '../Core/Auth.js';
+import { getCurrentUser, logoutUser, updateCurrentUserInStorage, ROLES } from '../Core/Auth.js';
 import { getWishlist, removeFromWishlist } from './Wishlist.js';
-import { getLS, setLS } from '../Core/Storage.js';
+import { getLS, setLS, initUsers  } from '../Core/Storage.js';
 import { KEY_ORDERS } from '../Core/Constants.js';
+import { uploadProfilePhoto } from '../Core/FileStorage.js';
 
 /* ── Guard ───────────────────────────────────────── */
 const user = getCurrentUser();
 if (!user) { window.location.href = 'CustomerHomePage.html'; }
 
+initUsers();
+
 /* ── DOM refs ────────────────────────────────────── */
 const avatarInitials = document.getElementById('avatarInitials');
-const sidebarName    = document.getElementById('sidebarName');
-const sidebarRole    = document.getElementById('sidebarRole');
-const sideWishCount  = document.getElementById('sideWishCount');
-const fieldName      = document.getElementById('fieldName');
-const fieldEmail     = document.getElementById('fieldEmail');
-const fieldPhone     = document.getElementById('fieldPhone');
-const fieldCity      = document.getElementById('fieldCity');
-const fieldBio       = document.getElementById('fieldBio');
-const metaJoined     = document.getElementById('metaJoined');
-const metaRole       = document.getElementById('metaRole');
-const metaWishlist   = document.getElementById('metaWishlist');
-const editInfoBtn    = document.getElementById('editInfoBtn');
-const infoFormActions= document.getElementById('infoFormActions');
-const cancelInfoBtn  = document.getElementById('cancelInfoBtn');
-const infoForm       = document.getElementById('infoForm');
-const securityForm   = document.getElementById('securityForm');
-const securityError  = document.getElementById('securityError');
-const strengthBar    = document.getElementById('strengthBar');
-const strengthLabel  = document.getElementById('strengthLabel');
-const strengthBarWrap= document.getElementById('passwordStrengthBar');
-const fieldNewPass   = document.getElementById('fieldNewPass');
-const wishlistGrid   = document.getElementById('profileWishlistGrid');
+const sidebarName = document.getElementById('sidebarName');
+const sidebarRole = document.getElementById('sidebarRole');
+const sideWishCount = document.getElementById('sideWishCount');
+const fieldName = document.getElementById('fieldName');
+const fieldEmail = document.getElementById('fieldEmail');
+const fieldPhone = document.getElementById('fieldPhone');
+const fieldCity = document.getElementById('fieldCity');
+const fieldBio = document.getElementById('fieldBio');
+const metaJoined = document.getElementById('metaJoined');
+const metaRole = document.getElementById('metaRole');
+const metaWishlist = document.getElementById('metaWishlist');
+const editInfoBtn = document.getElementById('editInfoBtn');
+const infoFormActions = document.getElementById('infoFormActions');
+const cancelInfoBtn = document.getElementById('cancelInfoBtn');
+const infoForm = document.getElementById('infoForm');
+const securityForm = document.getElementById('securityForm');
+const securityError = document.getElementById('securityError');
+const strengthBar = document.getElementById('strengthBar');
+const strengthLabel = document.getElementById('strengthLabel');
+const strengthBarWrap = document.getElementById('passwordStrengthBar');
+const fieldNewPass = document.getElementById('fieldNewPass');
+const wishlistGrid = document.getElementById('profileWishlistGrid');
 const clearWishlistBtn = document.getElementById('clearWishlistBtn');
-const profileToast   = document.getElementById('profileToast');
-const profileToastMsg= document.getElementById('profileToastMsg');
-const sidebarLogout  = document.getElementById('sidebarLogout');
+const profileToast = document.getElementById('profileToast');
+const profileToastMsg = document.getElementById('profileToastMsg');
+const sidebarLogout = document.getElementById('sidebarLogout');
 
 /* ── Helpers ─────────────────────────────────────── */
 function getInitials(name = '') {
@@ -56,28 +59,40 @@ function showToast(msg, isError = false) {
 }
 function formatDate(iso) {
   if (!iso) return '–';
-  return new Date(iso).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+  return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 /* ── Populate user data ──────────────────────────── */
 function populateUser() {
   const u = getCurrentUser();
+  console.log(u)
+
   if (!u) return;
   if (avatarInitials) avatarInitials.textContent = getInitials(u.name);
-  if (sidebarName)    sidebarName.textContent    = u.name || '–';
-  if (sidebarRole)    sidebarRole.textContent    = u.role || 'customer';
-  if (fieldName)      fieldName.value            = u.name  || '';
-  if (fieldEmail)     fieldEmail.value           = u.email || '';
-  if (fieldPhone)     fieldPhone.value           = u.phone || '';
-  if (fieldCity)      fieldCity.value            = u.city  || '';
-  if (fieldBio)       fieldBio.value             = u.bio   || '';
-  if (metaJoined)     metaJoined.textContent     = formatDate(u.createdAt);
-  if (metaRole)       metaRole.textContent       = u.role || 'customer';
+  const avatarPhoto = document.getElementById('avatarPhoto');
+  if (u.photoUrl && avatarPhoto) {
+    avatarPhoto.src = u.photoUrl;
+    avatarPhoto.style.display = 'block';
+    if (avatarInitials) avatarInitials.style.display = 'none';
+  } else if (avatarPhoto) {
+    avatarPhoto.style.display = 'none';
+    if (avatarInitials) avatarInitials.style.display = '';
+  }
+
+  if (sidebarName) sidebarName.textContent = u.name || '–';
+  if (sidebarRole) sidebarRole.textContent = u.role || 'customer';
+  if (fieldName) fieldName.value = u.name || '';
+  if (fieldEmail) fieldEmail.value = u.email || '';
+  if (fieldPhone) fieldPhone.value = u.phone || '';
+  if (fieldCity) fieldCity.value = u.city || '';
+  if (fieldBio) fieldBio.value = u.bio || '';
+  if (metaJoined) metaJoined.textContent = formatDate(u.createdAt);
+  if (metaRole) metaRole.textContent = u.role || 'customer';
   const wCount = getWishlist().length;
-  if (metaWishlist)   metaWishlist.textContent   = `${wCount} item${wCount !== 1 ? 's' : ''}`;
+  if (metaWishlist) metaWishlist.textContent = `${wCount} item${wCount !== 1 ? 's' : ''}`;
   if (sideWishCount) {
-    sideWishCount.textContent    = wCount;
-    sideWishCount.style.display  = wCount > 0 ? '' : 'none';
+    sideWishCount.textContent = wCount;
+    sideWishCount.style.display = wCount > 0 ? '' : 'none';
   }
 }
 populateUser();
@@ -92,7 +107,7 @@ document.querySelectorAll('.sidenav-item[data-tab]').forEach(link => {
     document.querySelectorAll('.profile-tab-panel').forEach(p => p.classList.remove('active'));
     document.getElementById(`tab-${tab}`)?.classList.add('active');
     if (tab === 'wishlist') renderWishlistTab();
-    if (tab === 'orders')   renderOrdersTab();
+    if (tab === 'orders') renderOrdersTab();
   });
 });
 
@@ -125,7 +140,7 @@ infoForm?.addEventListener('submit', e => {
   if (!name) { showToast('Name cannot be empty', true); return; }
   const ok = updateCurrentUserInStorage({ name, phone: fieldPhone?.value.trim(), city: fieldCity?.value.trim(), bio: fieldBio?.value.trim() });
   if (ok) { showToast('Profile updated successfully!'); cancelEdit(); populateUser(); }
-  else     showToast('Failed to save. Please try again.', true);
+  else showToast('Failed to save. Please try again.', true);
 });
 
 /* ── Password strength ───────────────────────────── */
@@ -134,20 +149,20 @@ fieldNewPass?.addEventListener('input', () => {
   if (!val) { strengthBarWrap?.classList.add('d-none'); return; }
   strengthBarWrap?.classList.remove('d-none');
   let score = 0;
-  if (val.length >= 6)           score++;
-  if (val.length >= 10)          score++;
-  if (/[A-Z]/.test(val))         score++;
-  if (/[0-9]/.test(val))         score++;
-  if (/[^A-Za-z0-9]/.test(val))  score++;
+  if (val.length >= 6) score++;
+  if (val.length >= 10) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
   const levels = [
-    { label:'Very Weak', color:'#ef4444', width:'20%' },
-    { label:'Weak',      color:'#f97316', width:'40%' },
-    { label:'Fair',      color:'#f59e0b', width:'60%' },
-    { label:'Strong',    color:'#22c55e', width:'80%' },
-    { label:'Very Strong', color:'#16a34a', width:'100%' },
+    { label: 'Very Weak', color: '#ef4444', width: '20%' },
+    { label: 'Weak', color: '#f97316', width: '40%' },
+    { label: 'Fair', color: '#f59e0b', width: '60%' },
+    { label: 'Strong', color: '#22c55e', width: '80%' },
+    { label: 'Very Strong', color: '#16a34a', width: '100%' },
   ];
   const lv = levels[Math.min(score, 4)];
-  if (strengthBar)   { strengthBar.style.background = lv.color; strengthBar.style.width = lv.width; }
+  if (strengthBar) { strengthBar.style.background = lv.color; strengthBar.style.width = lv.width; }
   if (strengthLabel) { strengthLabel.textContent = lv.label; strengthLabel.style.color = lv.color; }
 });
 
@@ -161,9 +176,9 @@ securityForm?.addEventListener('submit', e => {
   const u = getCurrentUser();
   if (!u) return;
   const showErr = msg => { if (securityError) { securityError.textContent = msg; securityError.classList.remove('d-none'); } };
-  if (current !== u.password)  return showErr('Current password is incorrect.');
+  if (current !== u.password) return showErr('Current password is incorrect.');
   if ((newPass?.length || 0) < 6) return showErr('New password must be at least 6 characters.');
-  if (newPass !== confirm)     return showErr('Passwords do not match.');
+  if (newPass !== confirm) return showErr('Passwords do not match.');
   const ok = updateCurrentUserInStorage({ password: newPass });
   if (ok) { showToast('Password updated successfully!'); securityForm.reset(); strengthBarWrap?.classList.add('d-none'); }
   else showToast('Failed to update password.', true);
@@ -232,13 +247,13 @@ clearWishlistBtn?.addEventListener('click', () => {
 
 /* ── Orders tab – Feature 6 ──────────────────────── */
 function renderOrdersTab() {
-  const orders   = getLS(KEY_ORDERS) || [];
-  const u        = getCurrentUser();
+  const orders = getLS(KEY_ORDERS) || [];
+  const u = getCurrentUser();
   const myOrders = orders.filter(o => o.userId === u?.id)
-                         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-  const grid   = document.getElementById('ordersGrid');
-  const empty  = document.getElementById('ordersEmpty');
+  const grid = document.getElementById('ordersGrid');
+  const empty = document.getElementById('ordersEmpty');
   if (!grid || !empty) return;
 
   if (myOrders.length === 0) {
@@ -251,17 +266,17 @@ function renderOrdersTab() {
   grid.classList.remove('d-none');
 
   const statusIcon = {
-    pending:   'bi-hourglass-split text-warning',
-    shipped:   'bi-truck text-info',
+    pending: 'bi-hourglass-split text-warning',
+    shipped: 'bi-truck text-info',
     delivered: 'bi-check-circle-fill text-success',
     cancelled: 'bi-x-circle-fill text-danger',
   };
 
   grid.innerHTML = myOrders.map(o => {
-    const status    = (o.status || 'pending').toLowerCase();
+    const status = (o.status || 'pending').toLowerCase();
     const canCancel = status === 'pending';
     const canDelete = status === 'delivered' || status === 'cancelled';
-    const icon      = statusIcon[status] || 'bi-bag';
+    const icon = statusIcon[status] || 'bi-bag';
 
     return `
       <div class="order-card" id="ocard-${o.id}">
@@ -310,7 +325,7 @@ function renderOrdersTab() {
 
 function updateOrderStatus(orderId, newStatus) {
   const orders = getLS(KEY_ORDERS) || [];
-  const idx    = orders.findIndex(o => o.id === orderId);
+  const idx = orders.findIndex(o => o.id === orderId);
   if (idx !== -1) {
     orders[idx].status = newStatus;
     setLS(KEY_ORDERS, orders);
@@ -324,3 +339,21 @@ function deleteOrder(orderId) {
 
 /* ── Logout ──────────────────────────────────────── */
 sidebarLogout?.addEventListener('click', e => { e.preventDefault(); logoutUser(); });
+
+document.getElementById('avatarUploadInput')?.addEventListener('change', async function() {
+  const file = this.files[0];
+  if (!file) return;
+  const btn = document.querySelector('.avatar-upload-btn');
+  if (btn) btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+  try {
+    const url = await uploadProfilePhoto(file);
+    const ok = updateCurrentUserInStorage({ photoUrl: url });
+    if (ok) { showToast('Profile photo updated!'); populateUser(); }
+    else showToast('Failed to save photo.', true);
+  } catch (err) {
+    showToast('Upload failed. Please try again.', true);
+  } finally {
+    if (btn) btn.innerHTML = '<i class="bi bi-camera-fill"></i>';
+    this.value = '';
+  }
+});

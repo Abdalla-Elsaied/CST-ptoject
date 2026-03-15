@@ -18,11 +18,21 @@ import {
     escapeHTML,
     statusBadge,
     renderPagination,
-    renderTableEmptyState
+    renderTableEmptyState,
+    debounce,
+    invalidateCaches,
+    applyTableCardLabels
 } from './admin-helpers.js';
 
-import { getLS } from '../Core/Storage.js';
+import { 
+    updateItem, 
+    deleteItem,
+    getLS,
+    setLS,
+    initUsers,
+} from '../Core/Storage.js';
 import { ROLES } from '../Core/Auth.js';
+import { KEY_USERS, KEY_PRODUCTS } from '../Core/Constants.js';
 import { logAdminAction } from './admin-profile.js';
 
 // Current search and filter state
@@ -35,7 +45,9 @@ let customerPagination = { page: 1, limit: 10 };
 /**
  * Main entry point for the customers section.
  */
-export function renderCustomers() {
+export async function renderCustomers() {
+    await initUsers(); 
+    console.log(getUsers())
     customerSearchQuery = '';
     customerStatusFilter = 'All';
     customerRoleFilter = 'All';
@@ -50,8 +62,35 @@ export function renderCustomers() {
     if (roleFilter) roleFilter.value = 'All';
     
     setupStatusFilter();
+    setupDeduplicationBtn();
     renderCustomersTable();
     bindCustomersEvents();
+}
+
+/**
+ * Handles the Clean Duplicates button visibility and click.
+ */
+function setupDeduplicationBtn() {
+    const btn = document.getElementById('deduplicateUsersBtn');
+    if (!btn) return;
+
+    // Listener for event dispatched by Storage.js initUsers()
+    window.addEventListener('duplicates-detected', (e) => {
+        btn.style.display = 'inline-flex';
+        btn.title = `Found ${e.detail} duplicate records in database. Click to clean.`;
+    });
+
+    btn.onclick = async () => {
+        const { initUsers } = await import('../Core/Storage.js');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Cleaning...';
+        
+        await initUsers(); // Runs deduplication again
+        
+        showToast('Database cleanup complete. Duplicates removed.', 'success');
+        btn.style.display = 'none';
+        renderCustomersTable();
+    };
 }
 
 /**
@@ -103,10 +142,9 @@ function normalizeCustomer(rawCustomer) {
  */
 export function renderCustomersTable() {
     const allUsers = getUsers();
-    // Show all valid users so we can see admins (admins have protected UI state)
     const users = allUsers.filter(u => u.role === ROLES.CUSTOMER || u.role === ROLES.SELLER || u.role === 'admin')
         .map(u => normalizeCustomer(u));
-    
+
     const query = customerSearchQuery.toLowerCase();
     const tbody = document.getElementById('customersTableBody');
 
@@ -161,114 +199,123 @@ export function renderCustomersTable() {
 
     tbody.innerHTML = paginated.map((c, i) => {
         const isBanned = c.isBanned;
-        const isAdmin = c.role === 'admin';
+        const isAdmin  = c.role === 'admin';
         const isSeller = c.role === ROLES.SELLER;
-        const isCustomer = c.role === ROLES.CUSTOMER;
 
-        const statusBadge = isBanned
-            ? `<span class="status-badge status-cancelled" title="Banned: ${escapeHTML(c.bannedReason || 'No reason provided')}">
-                <i class="bi bi-ban"></i> Banned
-               </span>`
-            : '<span class="status-badge status-active"><i class="bi bi-check-circle"></i> Active</span>';
-
-        const roleBadge = isAdmin
-            ? '<span class="status-badge bg-dark text-white"><i class="bi bi-shield-lock"></i> Admin</span>'
+        // Avatar: role-based gradient + 2-letter initials
+        const rawName  = (c.fullName || c.name || c.email || '?').trim();
+        const words    = rawName.split(/\s+/).filter(Boolean);
+        const initials = words.length >= 2
+            ? (words[0][0] + words[words.length - 1][0]).toUpperCase()
+            : rawName.slice(0, 2).toUpperCase();
+        const avatarGradient = isAdmin
+            ? 'linear-gradient(135deg,#f59e0b,#d97706)'
             : isSeller
-                ? '<span class="status-badge status-shipped"><i class="bi bi-shop"></i> Seller</span>'
-                : '<span class="status-badge status-pending"><i class="bi bi-person"></i> Customer</span>';
+                ? 'linear-gradient(135deg,#3b82f6,#2563eb)'
+                : 'linear-gradient(135deg,#8b5cf6,#7c3aed)';
 
-        const rowClass = isBanned ? 'banned-row' : '';
-        
-        // Get user initials for avatar
-        const initials = (c.name || c.fullName || c.email)
-            .split(' ')
-            .map(word => word.charAt(0).toUpperCase())
-            .join('')
-            .substring(0, 2);
+        // Role pill
+        const rolePill = isAdmin
+            ? '<span class="um-role-pill um-role-admin"><i class="bi bi-shield-lock"></i> Admin</span>'
+            : isSeller
+                ? '<span class="um-role-pill um-role-seller"><i class="bi bi-shop"></i> Seller</span>'
+                : '<span class="um-role-pill um-role-customer"><i class="bi bi-person"></i> Customer</span>';
+
+        // Status pill
+        const statusPill = isBanned
+            ? `<span class="um-status-pill um-status-banned" title="Banned: ${escapeHTML(c.bannedReason || 'No reason')}"><span class="um-dot um-dot-red"></span> Banned</span>`
+            : '<span class="um-status-pill um-status-active"><span class="um-dot um-dot-green um-dot-pulse"></span> Active</span>';
+
+        // Orders count — no duplicate "ORDERS" word
+        const orderCount = getOrders().filter(o => String(o.customerId) === String(c.id)).length;
+        const ordersCell = `<div class="um-orders-cell">
+            <span class="um-orders-count">${orderCount}</span>
+            <span class="um-orders-label">order${orderCount !== 1 ? 's' : ''}</span>
+        </div>`;
+
+        const subtitle = isAdmin ? 'System Administrator'
+            : isSeller ? escapeHTML(c.storeName || 'Marketplace Seller')
+            : 'Customer';
+
+        const rowClass = isBanned ? 'row-suspended' : '';
 
         return `
         <tr class="${rowClass}" data-user-id="${c.id}">
-            <td>
+            <td class="col-check">
                 ${isAdmin ? '' : `<input type="checkbox" class="form-check-input user-checkbox" value="${c.id}">`}
             </td>
-            <td>
-                <span class="text-muted small fw-bold">${start + i + 1}</span>
-            </td>
-            <td>
-                <div class="d-flex align-items-center gap-3">
-                    <div class="user-avatar ${isBanned ? 'banned' : ''}" style="background: ${isBanned ? '#ef4444' : 'linear-gradient(135deg, var(--green-primary), #10b981)'}">
-                        ${initials}
-                    </div>
-                    <div class="user-info">
-                        <div class="user-name">${escapeHTML(c.name || c.fullName || 'Unknown')}</div>
-                        <div class="user-role-text text-muted">${c.role === 'admin' ? 'System Administrator' : c.role === ROLES.SELLER ? 'Marketplace Seller' : 'Customer'}</div>
+            <td class="col-num hide-tablet">${start + i + 1}</td>
+            <td class="col-user">
+                <div class="user-cell">
+                    ${c.photoUrl
+                        ? `<img src="${c.photoUrl}" class="um-avatar" style="object-fit:cover;" onerror="this.style.display='none'"/>`
+                        : `<div class="um-avatar" style="background:${avatarGradient}">${escapeHTML(initials)}</div>`}
+                    <div class="user-meta">
+                        <div class="name" title="${escapeHTML(rawName)}">${escapeHTML(rawName)}</div>
+                        <div class="subtitle">${subtitle}</div>
                     </div>
                 </div>
             </td>
-            <td>
-                <div class="contact-info">
-                    <div class="user-email">
-                        <i class="bi bi-envelope text-muted me-1"></i>
-                        ${escapeHTML(c.email)}
+            <td class="col-contact hide-mobile-lg">
+                <div class="contact-cell">
+                    <div class="email" title="${escapeHTML(c.email || '')}">
+                        <i class="bi bi-envelope"></i>${escapeHTML(c.email || '—')}
                     </div>
-                    ${c.phone ? `
-                        <div class="user-phone text-muted small">
-                            <i class="bi bi-telephone me-1"></i>
-                            ${escapeHTML(c.phone)}
-                        </div>
-                    ` : ''}
+                    ${c.phone ? `<div class="phone"><i class="bi bi-telephone"></i>${escapeHTML(c.phone)}</div>` : ''}
                 </div>
             </td>
-            <td>${roleBadge}</td>
-            <td>${statusBadge}</td>
-            <td>
-                <div class="date-info">
-                    <div class="join-date">${formatDate(c.createdAt)}</div>
-                    ${c.lastLoginAt ? `
-                        <div class="last-login text-muted small">
-                            Last: ${formatDate(c.lastLoginAt)}
-                        </div>
-                    ` : '<div class="text-muted small">Never logged in</div>'}
+            <td class="col-role">${rolePill}</td>
+            <td class="col-status">${statusPill}</td>
+            <td class="col-joined hide-tablet">
+                <div class="joined-cell">
+                    <div class="date">${formatDate(c.createdAt)}</div>
+                    <div class="last-login">${c.lastLoginAt ? `Last: ${formatDate(c.lastLoginAt)}` : 'Never logged in'}</div>
                 </div>
             </td>
-            <td>
-                <div class="orders-info text-center">
-                    <span class="fw-bold">${getCustomerOrderCount(c.id)}</span>
-                    <div class="text-muted small">orders</div>
-                </div>
-            </td>
-            <td class="text-center">
+            <td class="col-orders hide-tablet">${ordersCell}</td>
+            <td class="col-actions">
                 ${isAdmin
-                ? '<span class="text-muted small"><i class="bi bi-shield-lock"></i> Protected</span>'
-                : `<div class="action-buttons d-flex gap-1 justify-content-center flex-wrap">
-                        <button class="btn-action btn-info btn-sm" title="View Details"
-                                data-id="${c.id}" data-action="viewDetails">
-                            <i class="bi bi-eye"></i>
+                    ? `<span class="um-protected-badge"><i class="bi bi-shield-lock-fill"></i> Protected</span>`
+                    : `<div class="um-action-cell">
+                        <button class="um-btn-primary" data-id="${c.id}" data-action="viewDetails">
+                            <i class="bi bi-eye"></i> View
                         </button>
-                        ${isBanned
-                    ? `<button class="btn-action btn-success btn-sm" title="Unban Account"
-                                    data-id="${c.id}" data-action="unban">
-                                <i class="bi bi-check-circle"></i>
-                            </button>`
-                    : `<button class="btn-action btn-warn btn-sm" title="Ban Account"
-                                    data-id="${c.id}" data-action="ban">
-                                <i class="bi bi-ban"></i>
-                            </button>`
-                }
-                        <button class="btn-action btn-edit btn-sm" title="Reset Password"
-                                data-id="${c.id}" data-action="resetPassword">
-                            <i class="bi bi-key"></i>
-                        </button>
-                        <button class="btn-action btn-delete btn-sm" title="Delete Account"
-                                data-id="${c.id}" data-action="delete">
-                            <i class="bi bi-trash"></i>
-                        </button>
+                        <div class="um-overflow-wrap">
+                            <button class="um-btn-more" data-id="${c.id}" aria-label="More actions" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <div class="um-dropdown" role="menu">
+                                ${isBanned
+                                    ? `<button class="um-drop-item um-drop-success" data-id="${c.id}" data-action="unban" role="menuitem">
+                                            <i class="bi bi-check-circle"></i> Unban User
+                                       </button>`
+                                    : `<button class="um-drop-item um-drop-warn" data-id="${c.id}" data-action="ban" role="menuitem">
+                                            <i class="bi bi-slash-circle"></i> Ban User
+                                       </button>`
+                                }
+                                <button class="um-drop-item" data-id="${c.id}" data-action="resetPassword" role="menuitem">
+                                    <i class="bi bi-key"></i> Reset Password
+                                </button>
+                                ${isSeller
+                                    ? `<button class="um-drop-item um-drop-warn" data-id="${c.id}" data-action="revertToCustomer" role="menuitem">
+                                            <i class="bi bi-person-dash"></i> Remove Seller Role
+                                       </button>`
+                                    : ''
+                                }
+                                <div class="um-drop-divider"></div>
+                                <button class="um-drop-item um-drop-danger" data-id="${c.id}" data-action="delete" role="menuitem">
+                                    <i class="bi bi-trash"></i> Delete User
+                                </button>
+                            </div>
+                        </div>
                     </div>`
-            }
+                }
             </td>
-        </tr>
-    `;
+        </tr>`;
     }).join('');
+
+    // Apply card labels for mobile layout
+    applyTableCardLabels('usersTable');
 
     // Render Pagination
     renderPagination(totalItems, customerPagination.limit, customerPagination.page, 'customersPagination', (newPage) => {
@@ -284,11 +331,32 @@ export function renderCustomersTable() {
 function bindCustomersEvents() {
     const searchInput = document.getElementById('customerSearchInput');
     if (searchInput) {
-        searchInput.oninput = (e) => {
+        // Show/hide clear button based on input value
+        const updateClearBtn = () => {
+            const clearBtn = document.getElementById('customerSearchClear');
+            if (clearBtn) clearBtn.style.display = searchInput.value ? 'flex' : 'none';
+        };
+
+        searchInput.oninput = debounce((e) => {
             customerSearchQuery = e.target.value;
             customerPagination.page = 1;
             renderCustomersTable();
-        };
+            updateClearBtn();
+        }, 300);
+
+        // Wire up clear button
+        const clearBtn = document.getElementById('customerSearchClear');
+        if (clearBtn) {
+            clearBtn.onclick = () => {
+                searchInput.value = '';
+                customerSearchQuery = '';
+                customerPagination.page = 1;
+                renderCustomersTable();
+                updateClearBtn();
+                searchInput.focus();
+            };
+            updateClearBtn();
+        }
     }
 
     // Bulk selection
@@ -320,9 +388,36 @@ function bindCustomersEvents() {
 
     const tbody = document.getElementById('customersTableBody');
     if (tbody) {
-        tbody.onclick = (e) => {
+        // Toggle ⋯ dropdown
+        tbody.addEventListener('click', (e) => {
+            const moreBtn = e.target.closest('.um-btn-more');
+            if (moreBtn) {
+                e.stopPropagation();
+                const wrap = moreBtn.closest('.um-overflow-wrap');
+                const dropdown = wrap.querySelector('.um-dropdown');
+                const isOpen = dropdown.classList.contains('open');
+
+                // Close all other open dropdowns first
+                document.querySelectorAll('.um-dropdown.open').forEach(d => {
+                    d.classList.remove('open');
+                    d.closest('.um-overflow-wrap')?.querySelector('.um-btn-more')?.setAttribute('aria-expanded', 'false');
+                });
+
+                if (!isOpen) {
+                    dropdown.classList.add('open');
+                    moreBtn.setAttribute('aria-expanded', 'true');
+                }
+                return;
+            }
+
             const btn = e.target.closest('[data-action]');
             if (!btn) return;
+
+            // Close any open dropdown
+            document.querySelectorAll('.um-dropdown.open').forEach(d => {
+                d.classList.remove('open');
+                d.closest('.um-overflow-wrap')?.querySelector('.um-btn-more')?.setAttribute('aria-expanded', 'false');
+            });
 
             const id = btn.dataset.id;
             const action = btn.dataset.action;
@@ -330,14 +425,28 @@ function bindCustomersEvents() {
             if (action === 'viewDetails') openCustomerDetailsModal(id);
             if (action === 'ban') banCustomer(id);
             if (action === 'unban') unbanCustomer(id);
+            if (action === 'revertToCustomer') revertSellerToCustomer(id);
             if (action === 'resetPassword') {
                 const users = getUsers();
                 const user = users.find(u => String(u.id) === String(id));
-                const type = user && user.role === ROLES.SELLER ? 'seller' : 'customer';
-                openResetPasswordModal(id, type);
+                openResetPasswordModal(id, 'customer');
             }
             if (action === 'delete') confirmDeleteCustomer(id);
-        };
+        });
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.um-dropdown.open').forEach(d => {
+            d.classList.remove('open');
+            d.closest('.um-overflow-wrap')?.querySelector('.um-btn-more')?.setAttribute('aria-expanded', 'false');
+        });
+    });
+
+    // Bulk actions button
+    const bulkBtn = document.getElementById('bulkActionsBtn');
+    if (bulkBtn) {
+        bulkBtn.onclick = () => showBulkActionsMenu();
     }
 }
 
@@ -351,7 +460,7 @@ function updateBulkActionsVisibility() {
     if (bulkBtn) {
         if (checkedBoxes.length > 0) {
             bulkBtn.style.display = 'inline-flex';
-            bulkBtn.textContent = `Bulk Actions (${checkedBoxes.length})`;
+            bulkBtn.innerHTML = `<i class="bi bi-check2-square"></i> Bulk Actions (${checkedBoxes.length})`;
         } else {
             bulkBtn.style.display = 'none';
         }
@@ -359,56 +468,130 @@ function updateBulkActionsVisibility() {
 }
 
 
-// ─── SUSPEND / UNSUSPEND CUSTOMER ────────────────────────────
+// ─── BAN / UNBAN ACCOUNT ─────────────────────────────
 
 /**
- * Suspends a customer account - blocks login.
+ * Bans a user account - blocks login and hides products if seller.
  */
-export function confirmSuspendCustomer(id) {
+function banCustomer(id) {
     const users = getUsers();
-    const customer = users.find(u => String(u.id) === String(id));
-    if (!customer) return;
+    const user = users.find(u => String(u.id) === String(id));
+    if (!user) return;
 
-    showConfirm(
-        `Suspend customer "${customer.name || customer.fullName || customer.email}"? They will not be able to login.`,
-        () => {
-            const index = users.findIndex(u => String(u.id) === String(id));
-            if (index === -1) return;
+    if (user.role === 'admin') {
+        showToast('Cannot ban admin accounts.', 'error');
+        return;
+    }
 
-            users[index].isSuspended = true;
-            users[index].suspendedAt = new Date().toISOString();
-            users[index].suspendedBy = getCurrentUser()?.id;
-            saveUsers(users);
-            renderCustomersTable();
+    // Create ban reason modal if it doesn't exist
+    if (!document.getElementById('banReasonModal')) {
+        const modalHTML = `
+            <div class="modal fade" id="banReasonModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Ban User Account</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>You are about to ban <strong id="banUserName"></strong></p>
+                            <div class="mb-3">
+                                <label class="form-label">Reason for ban (optional)</label>
+                                <textarea class="form-control" id="banReason" rows="3" placeholder="Enter reason for banning this user..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-danger" id="confirmBanBtn">Ban User</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
 
-            console.log(`[AUDIT] Customer ${customer.email} suspended by admin`);
-            showToast('Customer account suspended.', 'warning');
+    // Populate and show modal
+    document.getElementById('banUserName').textContent = user.name || user.fullName || user.email;
+    document.getElementById('banReason').value = '';
+    
+    const bannerModal = new bootstrap.Modal(document.getElementById('banReasonModal'));
+    bannerModal.show();
+
+    // Handle ban confirmation
+    document.getElementById('confirmBanBtn').onclick = () => {
+        const reason = document.getElementById('banReason').value.trim();
+        
+        // Use updateItem to set isBanned
+        updateItem(KEY_USERS, id, {
+            isBanned:     true,
+            bannedAt:     new Date().toISOString(),
+            bannedReason: reason || 'No reason provided',
+            bannedBy:     getCurrentUser()?.id
+        });
+
+        // If user is a seller, hide their products
+        if (user.role === ROLES.SELLER) {
+            const products = getLS(KEY_PRODUCTS) || [];
+            const sellerProducts = products.filter(p => String(p.sellerId) === String(id));
+            
+            sellerProducts.forEach(p => {
+                const idx = products.findIndex(x => x.id === p.id);
+                if (idx !== -1) {
+                    products[idx].isActive = false;
+                    products[idx].hiddenByBan = true;
+                }
+            });
+            setLS(KEY_PRODUCTS, products);
+            console.log(`[BAN] Seller ${user.email} banned. ${sellerProducts.length} products hidden.`);
         }
-    );
+
+        logAdminAction('banned_user', user.name || user.fullName || user.email, id);
+        invalidateUserSession(id);
+        renderCustomersTable();
+        showToast('User account banned successfully.', 'success');
+        
+        bannerModal.hide();
+    };
 }
 
 /**
- * Unsuspends a customer account - allows login again.
+ * Unbans a user account - allows login again and restores products if seller.
  */
-export function confirmUnsuspendCustomer(id) {
+function unbanCustomer(id) {
     const users = getUsers();
-    const customer = users.find(u => String(u.id) === String(id));
-    if (!customer) return;
+    const user = users.find(u => String(u.id) === String(id));
+    if (!user) return;
 
     showConfirm(
-        `Unsuspend customer "${customer.name || customer.fullName || customer.email}"? They will be able to login again.`,
+        `Unban "${user.name || user.fullName || user.email}"? They will be able to access their account again.`,
         () => {
-            const index = users.findIndex(u => String(u.id) === String(id));
-            if (index === -1) return;
+            updateItem(KEY_USERS, id, {
+                isBanned:    false,
+                unbannedAt:  new Date().toISOString(),
+                unbannedBy:  getCurrentUser()?.id,
+                bannedReason: null
+            });
 
-            users[index].isSuspended = false;
-            users[index].unsuspendedAt = new Date().toISOString();
-            users[index].unsuspendedBy = getCurrentUser()?.id;
-            saveUsers(users);
+            // If user is a seller, restore their products
+            if (user.role === ROLES.SELLER) {
+                const products = getLS(KEY_PRODUCTS) || [];
+                const hiddenProducts = products.filter(p => String(p.sellerId) === String(id) && p.hiddenByBan);
+                
+                hiddenProducts.forEach(p => {
+                    const idx = products.findIndex(x => x.id === p.id);
+                    if (idx !== -1) {
+                        products[idx].isActive = true;
+                        delete products[idx].hiddenByBan;
+                    }
+                });
+                setLS(KEY_PRODUCTS, products);
+                console.log(`[UNBAN] Seller ${user.email} unbanned. ${hiddenProducts.length} products restored.`);
+            }
+
+            logAdminAction('unbanned_user', user.name || user.fullName || user.email, id);
             renderCustomersTable();
-
-            console.log(`[AUDIT] Customer ${customer.email} unsuspended by admin`);
-            showToast('Customer account unsuspended.', 'success');
+            showToast('User account unbanned successfully.', 'success');
         }
     );
 }
@@ -417,64 +600,30 @@ export function confirmUnsuspendCustomer(id) {
 // ─── HELPERS ─────────────────────────────────────────────────
 
 /**
+ * Invalidates a user's session by clearing their currentUser if they're logged in.
+ * This forces them to re-login after ban or role change.
+ * @param {string|number} userId - The user ID to invalidate
+ */
+function invalidateUserSession(userId) {
+    const currentUser = getLS('ls_currentUser');
+    if (currentUser && String(currentUser.id) === String(userId)) {
+        localStorage.removeItem('ls_currentUser');
+        console.log(`[SESSION] User ${userId} session invalidated - forced logout`);
+    }
+}
+
+/**
  * Returns how many orders a customer has placed.
  */
 export function getCustomerOrderCount(customerId) {
     const count = getOrders().filter(o => String(o.customerId) === String(customerId)).length;
-    return count === 0
-        ? '<span class="text-muted small">0 orders</span>'
-        : `<span class="badge" style="background:var(--green-light-bg); color:var(--green-dark)">${count} order${count !== 1 ? 's' : ''}</span>`;
+    return `<div class="um-orders-cell">
+        <span class="um-orders-count">${count} ORDER${count !== 1 ? 'S' : ''}</span>
+        <span class="um-orders-label">ORDERS</span>
+    </div>`;
 }
 
 
-// ─── ROLE CHANGE ─────────────────────────────────────────────
-
-/**
- * Changes a seller's role to customer.
- * Validates that seller has no active products before allowing change.
- */
-export function confirmChangeToCustomer(id) {
-    const users = getUsers();
-    const user = users.find(u => String(u.id) === String(id));
-    if (!user || user.role !== ROLES.SELLER) return;
-
-    // Check if seller has ANY products (active or inactive)
-    const products = getLS('ls_products') || [];
-    const sellerProducts = products.filter(p => String(p.sellerId) === String(id));
-
-    if (sellerProducts.length > 0) {
-        showToast(`Cannot change role. Seller still has ${sellerProducts.length} product(s) in the catalog. Please delete them first.`, 'error');
-        return;
-    }
-
-    showConfirm(
-        `Change "${user.name || user.fullName || user.email}" from Seller to Customer? All seller-specific data will be removed.`,
-        () => {
-            const index = users.findIndex(u => String(u.id) === String(id));
-            if (index === -1) return;
-
-            // Change role and remove seller-specific fields
-            users[index].role = ROLES.CUSTOMER;
-            delete users[index].storeName;
-            delete users[index].storeDescription;
-            delete users[index].description;
-            delete users[index].city;
-            delete users[index].phone;
-            delete users[index].paymentMethod;
-            delete users[index].isApproved;
-
-            users[index].roleChangedAt = new Date().toISOString();
-            users[index].roleChangedBy = getCurrentUser()?.id;
-            users[index].previousRole = ROLES.SELLER;
-
-            saveUsers(users);
-            renderCustomersTable();
-
-            console.log(`[AUDIT] User ${user.email} role changed from Seller to Customer by admin`);
-            showToast('User role changed to Customer successfully.', 'success');
-        }
-    );
-}
 
 /**
  * Changes a customer's role to seller.
@@ -539,7 +688,7 @@ function openSellerInfoModal(userId) {
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn-primary-green" onclick="saveSellerInfo()">Save & Change Role</button>
+                            <button type="button" class="btn-primary-green" id="sellerInfoSaveBtn">Save &amp; Change Role</button>
                         </div>
                     </div>
                 </div>
@@ -556,6 +705,13 @@ function openSellerInfoModal(userId) {
     document.getElementById('sellerInfoPhone').value = '';
     document.getElementById('sellerInfoPayment').value = '';
     document.getElementById('sellerInfoDescription').value = '';
+
+    // Wire save button for existing-user (customer→seller) flow
+    const saveBtn = document.getElementById('sellerInfoSaveBtn');
+    const newSaveBtn = saveBtn.cloneNode(true);
+    saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+    newSaveBtn.textContent = 'Save & Change Role';
+    newSaveBtn.onclick = () => window.saveSellerInfo();
 
     new bootstrap.Modal(modal).show();
 }
@@ -582,24 +738,28 @@ window.saveSellerInfo = function () {
     if (index === -1) return;
 
     // Change role and add seller-specific fields
-    users[index].role = ROLES.SELLER;
-    users[index].storeName = storeName;
-    users[index].city = city;
-    users[index].phone = phone;
-    users[index].paymentMethod = payment;
-    users[index].description = description;
-    users[index].storeDescription = description;
-    users[index].isApproved = true; // Admin-approved seller
-    users[index].roleChangedAt = new Date().toISOString();
-    users[index].roleChangedBy = getCurrentUser()?.id;
-    users[index].previousRole = ROLES.CUSTOMER;
-
-    saveUsers(users);
+    // ✅ Use updateItem() — updates _usersCache + sends PUT
+    updateItem(KEY_USERS, userId, {
+        role:              ROLES.SELLER,
+        storeName:         storeName,
+        city:              city,
+        phone:             phone,
+        paymentMethod:     payment,
+        description:       description,
+        storeDescription:  description,
+        isApproved:        true,
+        roleChangedAt:     new Date().toISOString(),
+        roleChangedBy:     getCurrentUser()?.id,
+        previousRole:      ROLES.CUSTOMER
+    });
 
     // Close modal
     const modalEl = document.getElementById('sellerInfoModal');
     const modal = bootstrap.Modal.getInstance(modalEl);
     if (modal) modal.hide();
+
+    // ✅ CRITICAL: Force logout on role change
+    invalidateUserSession(userId);
 
     renderCustomersTable();
 
@@ -609,8 +769,159 @@ window.saveSellerInfo = function () {
 
 
 /**
- * Opens customer details modal showing comprehensive user information
+ * Opens seller info modal when creating a NEW user with role=seller directly.
+ * Reuses the same sellerInfoModal but saves a full new user instead of updating.
  */
+function openSellerInfoModalForNewUser(baseUser) {
+    let modal = document.getElementById('sellerInfoModal');
+    if (!modal) {
+        // trigger the normal modal creation path by calling openSellerInfoModal with a dummy id
+        // but we need to intercept the save — so we build it inline
+        const modalHTML = `
+            <div class="modal fade" id="sellerInfoModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Seller Information Required</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" id="sellerInfoUserId">
+                            <div class="mb-3">
+                                <label class="form-label">Store Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="sellerInfoStoreName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">City <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="sellerInfoCity" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Phone <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="sellerInfoPhone" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Payment Method <span class="text-danger">*</span></label>
+                                <select class="form-select" id="sellerInfoPayment" required>
+                                    <option value="">Select...</option>
+                                    <option>Bank Transfer</option>
+                                    <option>Vodafone Cash</option>
+                                    <option>InstaPay</option>
+                                    <option>PayPal</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Store Description</label>
+                                <textarea class="form-control" id="sellerInfoDescription" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn-primary-green" id="sellerInfoSaveBtn">Save & Create Seller</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        modal = document.getElementById('sellerInfoModal');
+    }
+
+    // Clear fields
+    document.getElementById('sellerInfoUserId').value = '';
+    document.getElementById('sellerInfoStoreName').value = '';
+    document.getElementById('sellerInfoCity').value = '';
+    document.getElementById('sellerInfoPhone').value = '';
+    document.getElementById('sellerInfoPayment').value = '';
+    document.getElementById('sellerInfoDescription').value = '';
+
+    // Override save button for new-user flow
+    const saveBtn = document.getElementById('sellerInfoSaveBtn');
+    const newSaveBtn = saveBtn.cloneNode(true);
+    saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+
+    newSaveBtn.textContent = 'Save & Create Seller';
+    newSaveBtn.onclick = () => {
+        const storeName   = document.getElementById('sellerInfoStoreName').value.trim();
+        const city        = document.getElementById('sellerInfoCity').value.trim();
+        const phone       = document.getElementById('sellerInfoPhone').value.trim();
+        const payment     = document.getElementById('sellerInfoPayment').value;
+        const description = document.getElementById('sellerInfoDescription').value.trim();
+
+        if (!storeName || !city || !phone || !payment) {
+            showToast('Please fill all required fields.', 'error');
+            return;
+        }
+
+        const newSeller = {
+            ...baseUser,
+            role:              ROLES.SELLER,
+            storeName,
+            city,
+            phone:             phone || baseUser.phone,
+            paymentMethod:     payment,
+            description,
+            storeDescription:  description,
+            isApproved:        true,
+        };
+
+        saveUsers([newSeller]);
+        logAdminAction('created_user', baseUser.name, baseUser.id);
+
+        bootstrap.Modal.getInstance(modal)?.hide();
+        renderCustomersTable();
+        showToast(`Seller "${baseUser.name}" created successfully.`, 'success');
+    };
+
+    new bootstrap.Modal(modal).show();
+}
+
+
+/**
+ * Reverts a seller back to customer role.
+ * Clears all seller-specific fields and hides their products.
+ */
+export function revertSellerToCustomer(id) {
+    const users = getUsers();
+    const user  = users.find(u => String(u.id) === String(id));
+    if (!user || user.role !== ROLES.SELLER) return;
+
+    showConfirm(
+        `Remove seller role from "${user.name || user.fullName || user.email}"? They will become a Customer. Their products will be hidden.`,
+        () => {
+            // Hide seller's products
+            const products = getLS(KEY_PRODUCTS) || [];
+            let hiddenCount = 0;
+            products.forEach((p, idx) => {
+                if (String(p.sellerId) === String(id) && p.isActive !== false) {
+                    products[idx].isActive       = false;
+                    products[idx].hiddenByDemotion = true;
+                    hiddenCount++;
+                }
+            });
+            setLS(KEY_PRODUCTS, products);
+
+            // Revert role — clear seller fields
+            updateItem(KEY_USERS, id, {
+                role:             ROLES.CUSTOMER,
+                storeName:        null,
+                storeDescription: null,
+                description:      null,
+                city:             null,
+                paymentMethod:    null,
+                isApproved:       null,
+                previousRole:     ROLES.SELLER,
+                demotedAt:        new Date().toISOString(),
+                demotedBy:        getCurrentUser()?.id,
+            });
+
+            invalidateUserSession(id);
+            logAdminAction('reverted_seller_to_customer', user.name || user.email, id);
+            renderCustomersTable();
+            showToast(`Seller role removed. ${hiddenCount} product(s) hidden.`, 'success');
+        }
+    );
+}
+
+window.revertSellerToCustomer = revertSellerToCustomer;
 function openCustomerDetailsModal(id) {
     const users = getUsers();
     const user = users.find(u => String(u.id) === String(id));
@@ -720,114 +1031,27 @@ function openCustomerDetailsModal(id) {
     modal.show();
 }
 
-/**
- * Ban a customer account with reason
- */
-function banCustomer(id) {
-    const users = getUsers();
-    const user = users.find(u => String(u.id) === String(id));
-    if (!user) return;
-
-    if (user.role === 'admin') {
-        showToast('Cannot ban admin accounts.', 'error');
-        return;
-    }
-
-    // Create ban reason modal if it doesn't exist
-    if (!document.getElementById('banReasonModal')) {
-        const modalHTML = `
-            <div class="modal fade" id="banReasonModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Ban User Account</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p>You are about to ban <strong id="banUserName"></strong></p>
-                            <div class="mb-3">
-                                <label class="form-label">Reason for ban (optional)</label>
-                                <textarea class="form-control" id="banReason" rows="3" placeholder="Enter reason for banning this user..."></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-danger" id="confirmBanBtn">Ban User</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-    }
-
-    // Populate and show modal
-    document.getElementById('banUserName').textContent = user.name || user.fullName || user.email;
-    document.getElementById('banReason').value = '';
-    
-    const modal = new bootstrap.Modal(document.getElementById('banReasonModal'));
-    modal.show();
-
-    // Handle ban confirmation
-    document.getElementById('confirmBanBtn').onclick = () => {
-        const reason = document.getElementById('banReason').value.trim();
-        
-        const userIndex = users.findIndex(u => String(u.id) === String(id));
-        if (userIndex !== -1) {
-            users[userIndex].isBanned = true;
-            users[userIndex].bannedAt = new Date().toISOString();
-            users[userIndex].bannedReason = reason || 'No reason provided';
-            users[userIndex].bannedBy = getCurrentUser()?.id;
-            
-            saveUsers(users);
-            logAdminAction('banned_user', user.name || user.fullName || user.email, id);
-            renderCustomersTable();
-            showToast('User account banned successfully.', 'success');
-        }
-        
-        modal.hide();
-    };
-}
-
-/**
- * Unban a customer account
- */
-function unbanCustomer(id) {
-    const users = getUsers();
-    const user = users.find(u => String(u.id) === String(id));
-    if (!user) return;
-
-    showConfirm(
-        `Unban "${user.name || user.fullName || user.email}"? They will be able to access their account again.`,
-        () => {
-            const userIndex = users.findIndex(u => String(u.id) === String(id));
-            if (userIndex !== -1) {
-                users[userIndex].isBanned = false;
-                users[userIndex].unbannedAt = new Date().toISOString();
-                users[userIndex].unbannedBy = getCurrentUser()?.id;
-                delete users[userIndex].bannedReason;
-                
-                saveUsers(users);
-                logAdminAction('unbanned_user', user.name || user.fullName || user.email, id);
-                renderCustomersTable();
-                showToast('User account unbanned successfully.', 'success');
-            }
-        }
-    );
-}
 
 /**
  * Shows confirm dialog then removes customer from ls_users.
  * Prevents deletion of admin accounts.
  */
 export function confirmDeleteCustomer(id) {
+    const currentUser = getCurrentUser();
+
+    // GUARD: Cannot delete own account
+    if (String(id) === String(currentUser?.id)) {
+        showToast('You cannot delete your own account.', 'error');
+        return;
+    }
+
     const users = getUsers();
     const customer = users.find(u => String(u.id) === String(id));
     if (!customer) return;
 
-    // Prevent admin deletion
+    // GUARD: Cannot delete admin accounts
     if (customer.role === 'admin') {
-        showToast('Cannot delete admin accounts from UI.', 'error');
+        showToast('Admin accounts cannot be deleted from this panel.', 'error');
         return;
     }
 
@@ -839,13 +1063,28 @@ export function confirmDeleteCustomer(id) {
     showConfirm(
         `Delete customer "${customer.name || customer.fullName || customer.email}"?${warning}`,
         () => {
-            const updated = users.filter(u => String(u.id) !== String(id));
-            saveUsers(updated);
+            cascadeDeleteUser(id);
             logAdminAction('deleted_user', customer.name || customer.fullName || customer.email, id);
             renderCustomersTable();
             showToast('Customer account deleted.', 'info');
         }
     );
+}
+
+/**
+ * Cascade-deletes a user: removes from MockAPI and cleans up their products.
+ */
+function cascadeDeleteUser(id) {
+    deleteItem(KEY_USERS, id);
+
+    const products = getLS(KEY_PRODUCTS) || [];
+    const remainingProducts = products.filter(p => String(p.sellerId) !== String(id));
+    if (products.length !== remainingProducts.length) {
+        setLS(KEY_PRODUCTS, remainingProducts);
+    }
+
+    invalidateCaches();
+    console.log(`[AUDIT] User ${id} deleted with cascade cleanup`);
 }
 
 
@@ -893,8 +1132,8 @@ export function saveResetPassword() {
         const index = users.findIndex(u => String(u.id) === String(id));
         if (index === -1) return;
         userEmail = users[index].email;
-        users[index].password = newPass;
-        saveUsers(users);
+        // ✅ Use updateItem()
+        updateItem(KEY_USERS, id, { password: newPass });
 
     } else if (type === 'seller') {
         const sellers = getSellers();
@@ -914,46 +1153,228 @@ export function saveResetPassword() {
     showToast('Password reset successfully.', 'success');
 }
 
+
+// ─── BULK ACTIONS ────────────────────────────────────────────
+
 /**
- * Export users data to CSV
+ * Shows bulk actions menu
  */
-function exportUsersData() {
-    const users = getUsers();
-    const csvData = [
-        ['ID', 'Name', 'Email', 'Role', 'Status', 'Joined', 'Last Login', 'Orders', 'Ban Reason']
-    ];
-    
-    users.forEach(user => {
-        const orderCount = getOrders().filter(o => String(o.customerId) === String(user.id)).length;
-        csvData.push([
-            user.id,
-            user.name || user.fullName || '',
-            user.email,
-            user.role,
-            user.isBanned ? 'Banned' : 'Active',
-            formatDate(user.createdAt),
-            user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Never',
-            orderCount,
-            user.bannedReason || ''
-        ]);
-    });
-    
-    const csvContent = csvData.map(row => 
-        row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')
-    ).join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `users_export_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    showToast('Users data exported successfully!', 'success');
+function showBulkActionsMenu() {
+    const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+    if (checkedBoxes.length === 0) {
+        showToast('No users selected', 'info');
+        return;
+    }
+
+    // Create bulk actions modal if it doesn't exist
+    if (!document.getElementById('bulkActionsModal')) {
+        const modalHTML = `
+            <div class="modal fade" id="bulkActionsModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Bulk Actions</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p><strong id="bulkSelectedCount"></strong> user(s) selected</p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-danger" onclick="bulkBanUsers()">
+                                    <i class="bi bi-ban"></i> Ban Selected Users
+                                </button>
+                                <button class="btn btn-success" onclick="bulkUnbanUsers()">
+                                    <i class="bi bi-check-circle"></i> Unban Selected Users
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="bulkDeleteUsers()">
+                                    <i class="bi bi-trash"></i> Delete Selected Users
+                                </button>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+
+    document.getElementById('bulkSelectedCount').textContent = checkedBoxes.length;
+    new bootstrap.Modal(document.getElementById('bulkActionsModal')).show();
 }
+
+/**
+ * Bulk ban selected users
+ */
+window.bulkBanUsers = function() {
+    const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+    const userIds = Array.from(checkedBoxes).map(cb => cb.value);
+    
+    if (userIds.length === 0) return;
+
+    showConfirm(
+        `Ban ${userIds.length} user(s)? They will not be able to login, and seller products will be hidden.`,
+        () => {
+            const users = getUsers();
+            const products = getLS(KEY_PRODUCTS) || [];
+            let bannedCount = 0;
+
+            userIds.forEach(id => {
+                const user = users.find(u => String(u.id) === String(id));
+                if (user && user.role !== 'admin') {
+                    // Update user
+                    updateItem(KEY_USERS, id, {
+                        isBanned:     true,
+                        bannedAt:     new Date().toISOString(),
+                        bannedReason: 'Bulk ban action',
+                        bannedBy:     getCurrentUser()?.id
+                    });
+
+                    // Update products if seller
+                    if (user.role === ROLES.SELLER) {
+                        products.forEach((p, idx) => {
+                            if (String(p.sellerId) === String(id)) {
+                                products[idx].isActive = false;
+                                products[idx].hiddenByBan = true;
+                            }
+                        });
+                    }
+                    
+                    invalidateUserSession(id);
+                    bannedCount++;
+                }
+            });
+
+            setLS(KEY_PRODUCTS, products);
+            renderCustomersTable();
+            showToast(`${bannedCount} user(s) banned successfully.`, 'success');
+
+            // Close bulk actions modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('bulkActionsModal'));
+            if (modal) modal.hide();
+
+            // Uncheck all
+            document.querySelectorAll('.user-checkbox').forEach(cb => cb.checked = false);
+            const selectAll = document.getElementById('selectAllUsers');
+            if (selectAll) selectAll.checked = false;
+            updateBulkActionsVisibility();
+        }
+    );
+};
+
+/**
+ * Bulk unban selected users
+ */
+window.bulkUnbanUsers = function() {
+    const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+    const userIds = Array.from(checkedBoxes).map(cb => cb.value);
+    
+    if (userIds.length === 0) return;
+
+    showConfirm(
+        `Unban ${userIds.length} user(s)? They will be able to login again, and hidden seller products will be restored.`,
+        () => {
+            const users = getUsers();
+            const products = getLS(KEY_PRODUCTS) || [];
+            let unbannedCount = 0;
+
+            userIds.forEach(id => {
+                const user = users.find(u => String(u.id) === String(id));
+                if (user) {
+                    // Update user
+                    updateItem(KEY_USERS, id, {
+                        isBanned:     false,
+                        unbannedAt:   new Date().toISOString(),
+                        unbannedBy:   getCurrentUser()?.id,
+                        bannedReason: null
+                    });
+
+                    // Restore products if seller
+                    if (user.role === ROLES.SELLER) {
+                        products.forEach((p, idx) => {
+                            if (String(p.sellerId) === String(id) && p.hiddenByBan) {
+                                products[idx].isActive = true;
+                                delete products[idx].hiddenByBan;
+                            }
+                        });
+                    }
+                    
+                    unbannedCount++;
+                }
+            });
+
+            setLS(KEY_PRODUCTS, products);
+            renderCustomersTable();
+            showToast(`${unbannedCount} user(s) unbanned successfully.`, 'success');
+
+            // Close bulk actions modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('bulkActionsModal'));
+            if (modal) modal.hide();
+
+            // Uncheck all
+            document.querySelectorAll('.user-checkbox').forEach(cb => cb.checked = false);
+            const selectAll = document.getElementById('selectAllUsers');
+            if (selectAll) selectAll.checked = false;
+            updateBulkActionsVisibility();
+        }
+    );
+};
+
+/**
+ * Bulk delete selected users
+ */
+window.bulkDeleteUsers = function() {
+    const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+    const userIds = Array.from(checkedBoxes).map(cb => cb.value);
+    
+    if (userIds.length === 0) return;
+
+    const users = getUsers();
+    const usersToDelete = users.filter(u => userIds.includes(String(u.id)) && u.role !== 'admin');
+    
+    if (usersToDelete.length === 0) {
+        showToast('No users can be deleted (admins are protected)', 'error');
+        return;
+    }
+
+    showConfirm(
+        `Delete ${usersToDelete.length} user(s)? This action cannot be undone, but their orders will remain.`,
+        () => {
+            const products = getLS(KEY_PRODUCTS) || [];
+            let deletedCount = 0;
+
+            usersToDelete.forEach(u => {
+                deleteItem(KEY_USERS, u.id);
+                
+                // If seller, delete their products too
+                if (u.role === ROLES.SELLER) {
+                    const remainingProducts = products.filter(p => String(p.sellerId) !== String(u.id));
+                    if (products.length !== remainingProducts.length) {
+                        setLS(KEY_PRODUCTS, remainingProducts);
+                    }
+                }
+                
+                logAdminAction('deleted_user', u.name || u.fullName || u.email, u.id);
+                deletedCount++;
+            });
+
+            renderCustomersTable();
+            showToast(`${deletedCount} user(s) deleted successfully.`, 'info');
+
+            // Close bulk actions modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('bulkActionsModal'));
+            if (modal) modal.hide();
+
+            // Uncheck all
+            document.querySelectorAll('.user-checkbox').forEach(cb => cb.checked = false);
+            const selectAll = document.getElementById('selectAllUsers');
+            if (selectAll) selectAll.checked = false;
+            updateBulkActionsVisibility();
+        }
+    );
+};
+
 
 /**
  * Reset all user filters
@@ -974,15 +1395,225 @@ function resetUserFilters() {
     renderCustomersTable();
 }
 
-// Global exposure
-window.openResetPasswordModal = openResetPasswordModal;
+// ─── ADD USER MODAL ──────────────────────────────────────────
+
+// Phone regex — Egyptian mobile numbers
+const PHONE_RE = /^(\+20|0)(10|11|12|15)[0-9]{8}$/;
+
+/**
+ * Opens the Add User modal with full manual validation.
+ * No form cloning — uses a single named handler that is removed on close.
+ */
+export function openAddUserModal() {
+    const modalEl  = document.getElementById('addUserModal');
+    const form     = document.getElementById('addUserForm');
+    if (!modalEl || !form) return;
+
+    // ── Reset state ───────────────────────────────────────────
+    form.reset();
+    _clearAllFieldErrors();
+    _hideError();
+
+    // ── Password show/hide toggle ─────────────────────────────
+    const pwdInput   = document.getElementById('addUserPassword');
+    const pwdToggle  = document.getElementById('addUserPasswordToggle');
+    const pwdEye     = document.getElementById('addUserPasswordEyeIcon');
+    if (pwdToggle) {
+        // Clone to remove any previous listener
+        const freshToggle = pwdToggle.cloneNode(true);
+        pwdToggle.parentNode.replaceChild(freshToggle, pwdToggle);
+        freshToggle.addEventListener('click', () => {
+            const isText = pwdInput.type === 'text';
+            pwdInput.type = isText ? 'password' : 'text';
+            document.getElementById('addUserPasswordEyeIcon').className =
+                isText ? 'bi bi-eye' : 'bi bi-eye-slash';
+        });
+    }
+
+    // ── Real-time validation on blur ──────────────────────────
+    document.getElementById('addUserFullName').onblur  = () => _validateName();
+    document.getElementById('addUserEmail').onblur     = () => _validateEmail();
+    document.getElementById('addUserPassword').onblur  = () => _validatePassword();
+    document.getElementById('addUserPhone').onblur     = () => _validatePhone();
+    document.getElementById('addUserRole').onchange    = () => _validateRole();
+
+    // Clear error on input
+    ['addUserFullName','addUserEmail','addUserPassword','addUserPhone'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.oninput = () => { _clearFieldError(id); _hideError(); };
+    });
+
+    // ── Submit handler ────────────────────────────────────────
+    const submitHandler = (e) => {
+        e.preventDefault();
+
+        const nameOk  = _validateName();
+        const emailOk = _validateEmail();
+        const pwdOk   = _validatePassword();
+        const phoneOk = _validatePhone();
+        const roleOk  = _validateRole();
+
+        if (!nameOk || !emailOk || !pwdOk || !phoneOk || !roleOk) return;
+
+        const fullName = document.getElementById('addUserFullName').value.trim();
+        const email    = document.getElementById('addUserEmail').value.trim().toLowerCase();
+        const password = document.getElementById('addUserPassword').value;
+        const phone    = document.getElementById('addUserPhone').value.trim() || null;
+        const role     = document.getElementById('addUserRole').value;
+
+        // Duplicate email check
+        const existing = getUsers().find(u => (u.email || '').toLowerCase() === email);
+        if (existing) {
+            _setFieldError('addUserEmail', 'This email is already registered.');
+            return;
+        }
+
+        const bsModal = bootstrap.Modal.getInstance(modalEl);
+
+        // Seller → open store info modal first
+        if (role === ROLES.SELLER) {
+            bsModal?.hide();
+            openSellerInfoModalForNewUser({
+                id:        Date.now(),
+                name:      fullName,
+                fullName,
+                email,
+                password,
+                phone,
+                role,
+                isBanned:  false,
+                createdAt: new Date().toISOString(),
+                createdBy: getCurrentUser()?.id,
+            });
+            return;
+        }
+
+        // Customer — save directly
+        saveUsers([{
+            id:        Date.now(),
+            name:      fullName,
+            fullName,
+            email,
+            password,
+            phone,
+            role,
+            isBanned:  false,
+            createdAt: new Date().toISOString(),
+            createdBy: getCurrentUser()?.id,
+        }]);
+
+        logAdminAction('created_user', fullName, Date.now());
+        bsModal?.hide();
+        renderCustomersTable();
+        showToast(`User "${fullName}" created successfully.`, 'success');
+    };
+
+    // Remove old listener, attach fresh one
+    form.removeEventListener('submit', form._addUserHandler);
+    form._addUserHandler = submitHandler;
+    form.addEventListener('submit', submitHandler);
+
+    new bootstrap.Modal(modalEl).show();
+}
+
+// ── Field validators ──────────────────────────────────────────
+
+function _validateName() {
+    const val = document.getElementById('addUserFullName').value.trim();
+    if (!val || val.length < 3) {
+        _setFieldError('addUserFullName', 'Full name must be at least 3 characters.');
+        return false;
+    }
+    _clearFieldError('addUserFullName');
+    return true;
+}
+
+function _validateEmail() {
+    const val = document.getElementById('addUserEmail').value.trim();
+    const re  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!val || !re.test(val)) {
+        _setFieldError('addUserEmail', 'Please enter a valid email address.');
+        return false;
+    }
+    _clearFieldError('addUserEmail');
+    return true;
+}
+
+function _validatePassword() {
+    const val = document.getElementById('addUserPassword').value;
+    if (!val || val.length < 6) {
+        _setFieldError('addUserPassword', 'Password must be at least 6 characters.');
+        return false;
+    }
+    _clearFieldError('addUserPassword');
+    return true;
+}
+
+function _validatePhone() {
+    const val = document.getElementById('addUserPhone').value.trim();
+    if (!val) return true; // optional
+    if (!PHONE_RE.test(val)) {
+        _setFieldError('addUserPhone', 'Invalid phone. Use format: 01XXXXXXXXX or +201XXXXXXXXX');
+        return false;
+    }
+    _clearFieldError('addUserPhone');
+    return true;
+}
+
+function _validateRole() {
+    const val = document.getElementById('addUserRole').value;
+    if (!val) {
+        _setFieldError('addUserRole', 'Please select a role.');
+        return false;
+    }
+    _clearFieldError('addUserRole');
+    return true;
+}
+
+// ── DOM helpers ───────────────────────────────────────────────
+
+function _setFieldError(fieldId, message) {
+    const el       = document.getElementById(fieldId);
+    const feedback = document.getElementById(fieldId + 'Feedback') ||
+                     el?.nextElementSibling;
+    if (el)       el.classList.add('is-invalid');
+    if (feedback) feedback.textContent = message;
+}
+
+function _clearFieldError(fieldId) {
+    const el = document.getElementById(fieldId);
+    if (el) { el.classList.remove('is-invalid'); el.classList.add('is-valid'); }
+}
+
+function _clearAllFieldErrors() {
+    ['addUserFullName','addUserEmail','addUserPassword','addUserPhone','addUserRole']
+        .forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.classList.remove('is-invalid', 'is-valid'); }
+        });
+}
+
+function _showError(msg) {
+    const el = document.getElementById('addUserError');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.remove('d-none');
+}
+
+function _hideError() {
+    const el = document.getElementById('addUserError');
+    if (el) el.classList.add('d-none');
+}
+
+
+
 window.saveResetPassword = saveResetPassword;
+window.openResetPasswordModal = openResetPasswordModal;
 window.confirmDeleteCustomer = confirmDeleteCustomer;
-window.confirmSuspendCustomer = confirmSuspendCustomer;
-window.confirmUnsuspendCustomer = confirmUnsuspendCustomer;
 window.openCustomerDetailsModal = openCustomerDetailsModal;
 window.banCustomer = banCustomer;
 window.unbanCustomer = unbanCustomer;
-window.exportUsersData = exportUsersData;
 window.resetUserFilters = resetUserFilters;
 window.updateBulkActionsVisibility = updateBulkActionsVisibility;
+window.saveSellerInfo = saveSellerInfo;
+window.openAddUserModal = openAddUserModal;

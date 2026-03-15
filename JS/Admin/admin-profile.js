@@ -1,18 +1,24 @@
-/**
- * admin-profile.js - Admin Profile Management
- * Handles profile dropdown, change password modal, profile modal, and activity logging
- */
+// ============================================================
+// admin-profile.js
+// Profile dropdown, edit profile, change password, activity log.
+//
+// FIX: saveProfileChanges() and savePasswordChange() now use
+//      updateItem() → PUT to MockAPI instead of setLS(KEY_USERS)
+//      which was causing full array POST → duplicates.
+// ============================================================
 
-import { getLS, setLS } from '../Core/Storage.js';
+import { getLS, setLS, updateItem } from '../Core/Storage.js';
+import { KEY_USERS, KEY_CURRENT_USER, KEY_APPROVAL, KEY_CATEGORIES } from '../Core/Constants.js';
+import { showToast, formatDate } from './admin-helpers.js';
+import { uploadProfilePhoto } from '../Core/FileStorage.js';
 
-// Global variables
 let currentAdmin = null;
 
-/**
- * Initialize admin profile functionality
- */
+
+// ─── INIT ────────────────────────────────────────────────────
+
 export function initAdminProfile() {
-    currentAdmin = getLS('ls_currentUser');
+    currentAdmin = getLS(KEY_CURRENT_USER);
     if (!currentAdmin) return;
 
     setupProfileDropdown();
@@ -22,61 +28,57 @@ export function initAdminProfile() {
     updateSidebarBadges();
 }
 
-/**
- * Update sidebar badges with pending counts
- */
+
+// ─── SIDEBAR BADGES ──────────────────────────────────────────
+
 export function updateSidebarBadges() {
-    // Update seller requests badge
-    const sellerRequests = getLS('ls_sellerRequests') || getLS('ls_approval') || [];
-    const pendingRequests = sellerRequests.filter(r => r.status === 'pending').length;
-    
-    const requestsBadge = document.getElementById('requestsBadge');
-    if (requestsBadge) {
-        requestsBadge.textContent = pendingRequests;
-        if (pendingRequests > 0) {
-            requestsBadge.classList.remove('d-none');
+    const requests        = getLS(KEY_APPROVAL) || [];
+    const pendingRequests = requests.filter(r => r.status === 'pending').length;
+
+    const categories        = getLS(KEY_CATEGORIES) || [];
+    const pendingCategories = categories.filter(
+        c => c.visibility === 'draft'
+    ).length;
+
+    const setBadge = (id, count) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (count > 0) {
+            el.textContent = count > 99 ? '99+' : count;
+            el.classList.remove('d-none');
         } else {
-            requestsBadge.classList.add('d-none');
+            el.classList.add('d-none');
         }
-    }
-    
-    // Update category suggestions badge
-    const categoryRequests = getLS('ls_categoryRequests') || getLS('ls_categories') || [];
-    const pendingCategories = categoryRequests.filter(c => c.status === 'pending' || c.visibility === 'draft').length;
-    
-    const categoriesBadge = document.getElementById('categoriesBadge');
-    if (categoriesBadge) {
-        categoriesBadge.textContent = pendingCategories;
-        if (pendingCategories > 0) {
-            categoriesBadge.classList.remove('d-none');
-        } else {
-            categoriesBadge.classList.add('d-none');
-        }
-    }
+    };
+
+    setBadge('requestsBadge',   pendingRequests);
+    setBadge('categoriesBadge', pendingCategories);
 }
 
-/**
- * Setup the profile dropdown in topbar
- */
+
+// ─── PROFILE DROPDOWN ────────────────────────────────────────
+
 function setupProfileDropdown() {
     const topbarRight = document.querySelector('.topbar-right');
     if (!topbarRight) return;
 
-    // Find and replace the existing user section
-    const existingUser = topbarRight.querySelector('.topbar-user');
-    if (existingUser) {
-        existingUser.remove();
-    }
+    // Remove any existing dropdown to avoid duplicates
+    topbarRight.querySelector('.topbar-profile-dropdown')?.remove();
 
-    // Create new profile dropdown
     const profileDropdown = document.createElement('div');
     profileDropdown.className = 'topbar-profile-dropdown';
     profileDropdown.innerHTML = `
         <div class="profile-trigger" id="profileTrigger">
-            <div class="profile-avatar">${getInitials(currentAdmin.fullName)}</div>
+            <div class="profile-avatar" id="topbarProfileAvatar">
+                ${currentAdmin.photoUrl
+                    ? `<img src="${currentAdmin.photoUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"/>`
+                    : getInitials(currentAdmin.fullName || currentAdmin.name || 'A')}
+            </div>
             <div class="profile-info">
-                <div class="profile-name">${currentAdmin.fullName}</div>
-                <div class="profile-role">${currentAdmin.role}</div>
+                <div class="profile-name" id="topbarProfileName">
+                    ${currentAdmin.fullName || currentAdmin.name || 'Admin'}
+                </div>
+                <div class="profile-role">${currentAdmin.role || 'admin'}</div>
             </div>
             <i class="bi bi-chevron-down profile-arrow"></i>
         </div>
@@ -94,229 +96,209 @@ function setupProfileDropdown() {
                 <i class="bi bi-box-arrow-right"></i>
                 <span>Logout</span>
             </div>
-        </div>
-    `;
+        </div>`;
 
     // Insert before logout button
     const logoutBtn = topbarRight.querySelector('#logoutBtn');
     if (logoutBtn) {
         topbarRight.insertBefore(profileDropdown, logoutBtn);
-        logoutBtn.style.display = 'none'; // Hide old logout button
+        logoutBtn.style.display = 'none';
+    } else {
+        topbarRight.appendChild(profileDropdown);
     }
 
-    // Add event listeners
+    // Toggle dropdown
     const trigger = document.getElementById('profileTrigger');
-    const menu = document.getElementById('profileDropdownMenu');
+    const menu    = document.getElementById('profileDropdownMenu');
 
-    trigger.addEventListener('click', (e) => {
+    trigger?.addEventListener('click', (e) => {
         e.stopPropagation();
         menu.classList.toggle('show');
     });
 
-    // Close dropdown when clicking outside
-    document.addEventListener('click', () => {
-        menu.classList.remove('show');
-    });
+    // Use a named handler stored on the element to prevent stacking
+    if (profileDropdown._docClickHandler) {
+        document.removeEventListener('click', profileDropdown._docClickHandler);
+    }
+    profileDropdown._docClickHandler = () => menu?.classList.remove('show');
+    document.addEventListener('click', profileDropdown._docClickHandler);
 
-    // Handle dropdown actions
-    menu.addEventListener('click', (e) => {
+    menu?.addEventListener('click', (e) => {
         e.stopPropagation();
         const action = e.target.closest('.dropdown-item')?.dataset.action;
-        
-        switch (action) {
-            case 'profile':
-                openProfileModal();
-                break;
-            case 'change-password':
-                openChangePasswordModal();
-                break;
-            case 'logout':
-                handleLogout();
-                break;
-        }
-        
+        if (action === 'profile')         openProfileModal();
+        if (action === 'change-password') openChangePasswordModal();
+        if (action === 'logout')          handleLogout();
         menu.classList.remove('show');
     });
 }
 
-/**
- * Get initials from full name
- */
 function getInitials(fullName) {
-    return fullName
+    if (!fullName) return 'A';
+    return (fullName || '')
         .split(' ')
-        .map(word => word.charAt(0).toUpperCase())
+        .map(w => w.charAt(0).toUpperCase())
         .join('')
         .substring(0, 2);
 }
 
-/**
- * Update topbar profile display
- */
 function updateTopbarProfile() {
-    const profileName = document.querySelector('.profile-name');
-    if (profileName && currentAdmin) {
-        profileName.textContent = currentAdmin.fullName;
+    const nameEl = document.querySelector('.profile-name');
+    if (nameEl && currentAdmin) {
+        nameEl.textContent = currentAdmin.fullName || currentAdmin.name || 'Admin';
     }
 }
 
-/**
- * Setup change password modal
- */
+
+// ─── CHANGE PASSWORD MODAL ───────────────────────────────────
+
 function setupChangePasswordModal() {
-    // Check if modal already exists
     if (document.getElementById('changePasswordModal')) return;
 
-    const modalHTML = `
+    document.body.insertAdjacentHTML('beforeend', `
         <div class="modal fade" id="changePasswordModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Change Password</h5>
+                        <h5 class="modal-title">
+                            <i class="bi bi-lock"></i> Change Password
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <form id="changePasswordForm" novalidate>
                             <div class="mb-3">
                                 <label class="form-label">Current Password</label>
-                                <input type="password" class="form-control" id="currentPassword" required>
+                                <input type="password" class="form-control"
+                                    id="currentPassword" required>
                                 <div class="invalid-feedback" id="currentPasswordError"></div>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">New Password</label>
-                                <input type="password" class="form-control" id="newPassword" minlength="6" required>
+                                <input type="password" class="form-control"
+                                    id="newPassword" minlength="6" required>
                                 <div class="invalid-feedback" id="newPasswordError"></div>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Confirm New Password</label>
-                                <input type="password" class="form-control" id="confirmPassword" required>
+                                <input type="password" class="form-control"
+                                    id="confirmPassword" required>
                                 <div class="invalid-feedback" id="confirmPasswordError"></div>
                             </div>
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn-primary-green" onclick="savePasswordChange()">Change Password</button>
+                        <button type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn-primary-green"
+                            id="savePasswordBtn">Change Password</button>
                     </div>
                 </div>
             </div>
-        </div>
-    `;
+        </div>`);
 
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    document.getElementById('savePasswordBtn')
+        ?.addEventListener('click', savePasswordChange);
 }
 
-/**
- * Open change password modal
- */
 function openChangePasswordModal() {
-    const modal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
-    
-    // Clear form
-    document.getElementById('changePasswordForm').reset();
-    document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
-    document.querySelectorAll('.form-control').forEach(el => el.classList.remove('is-invalid'));
-    
-    modal.show();
+    document.getElementById('changePasswordForm')?.reset();
+    document.querySelectorAll('#changePasswordModal .invalid-feedback')
+        .forEach(el => el.textContent = '');
+    document.querySelectorAll('#changePasswordModal .form-control')
+        .forEach(el => el.classList.remove('is-invalid'));
+    new bootstrap.Modal(document.getElementById('changePasswordModal')).show();
 }
 
 /**
- * Save password change
+ * FIX: Was calling setLS(KEY_USERS, fullArray) → POST duplicates.
+ *      Now uses updateItem() → PUT for just the admin user.
  */
-window.savePasswordChange = function() {
+function savePasswordChange() {
     const currentPassword = document.getElementById('currentPassword').value;
-    const newPassword = document.getElementById('newPassword').value;
+    const newPassword     = document.getElementById('newPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
 
     // Clear previous errors
-    document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
-    document.querySelectorAll('.form-control').forEach(el => el.classList.remove('is-invalid'));
+    document.querySelectorAll('#changePasswordModal .invalid-feedback')
+        .forEach(el => el.textContent = '');
+    document.querySelectorAll('#changePasswordModal .form-control')
+        .forEach(el => el.classList.remove('is-invalid'));
 
     let hasErrors = false;
 
-    // Validate current password
     if (currentPassword !== currentAdmin.password) {
         showFieldError('currentPassword', 'Current password is incorrect.');
         hasErrors = true;
     }
-
-    // Validate new password length
     if (newPassword.length < 6) {
         showFieldError('newPassword', 'Password must be at least 6 characters.');
         hasErrors = true;
     }
-
-    // Validate passwords match
     if (newPassword !== confirmPassword) {
         showFieldError('confirmPassword', 'Passwords do not match.');
         hasErrors = true;
     }
-
-    // Validate new password is different
-    if (newPassword === currentPassword) {
+    if (newPassword === currentPassword && !hasErrors) {
         showFieldError('newPassword', 'New password must be different from current.');
         hasErrors = true;
     }
-
     if (hasErrors) return;
 
-    // Update password
-    const users = getLS('ls_users') || [];
-    const userIndex = users.findIndex(u => u.id === currentAdmin.id);
-    
-    if (userIndex !== -1) {
-        users[userIndex].password = newPassword;
-        users[userIndex].passwordChangedAt = new Date().toISOString();
-        
-        // Update localStorage
-        setLS('ls_users', users);
-        
-        // Update current user
-        currentAdmin.password = newPassword;
-        currentAdmin.passwordChangedAt = users[userIndex].passwordChangedAt;
-        setLS('ls_currentUser', currentAdmin);
-        
-        // Show success and close modal
-        if (window.showToast) {
-            window.showToast('Password changed successfully!', 'success');
-        }
-        
-        bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
-        
-        // Clear form
-        document.getElementById('changePasswordForm').reset();
-    }
-};
+    const now = new Date().toISOString();
 
-/**
- * Show field error
- */
-function showFieldError(fieldId, message) {
-    const field = document.getElementById(fieldId);
-    const errorEl = document.getElementById(fieldId + 'Error');
-    
-    field.classList.add('is-invalid');
-    errorEl.textContent = message;
+    // FIX: updateItem → PUT to MockAPI for just this user (no duplicates)
+    updateItem(KEY_USERS, currentAdmin.id, {
+        password:          newPassword,
+        passwordChangedAt: now
+    });
+
+    // Update session
+    currentAdmin.password          = newPassword;
+    currentAdmin.passwordChangedAt = now;
+    setLS(KEY_CURRENT_USER, currentAdmin);
+
+    showToast('Password changed successfully!', 'success');
+    bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'))?.hide();
+    document.getElementById('changePasswordForm')?.reset();
 }
 
-/**
- * Setup profile modal
- */
+window.savePasswordChange = savePasswordChange;
+
+
+// ─── PROFILE MODAL ───────────────────────────────────────────
+
 function setupProfileModal() {
-    // Check if modal already exists
     if (document.getElementById('profileModal')) return;
 
-    const modalHTML = `
+    document.body.insertAdjacentHTML('beforeend', `
         <div class="modal fade" id="profileModal" tabindex="-1">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Admin Profile</h5>
+                        <h5 class="modal-title">
+                            <i class="bi bi-person-circle"></i> Admin Profile
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <!-- Personal Info Section -->
-                        <h6 class="mb-3" style="color: var(--green-dark); font-weight: 600;">Personal Information</h6>
+                        <div class="text-center mb-4">
+                            <div style="position:relative;width:80px;height:80px;margin:0 auto;">
+                                <img id="adminAvatarPhoto" src=""
+                                    style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:none;"/>
+                                <div id="adminAvatarInitials" class="profile-avatar"
+                                    style="width:80px;height:80px;font-size:1.8rem;margin:0;display:flex;">
+                                </div>
+                                <label for="adminPhotoInput" style="position:absolute;bottom:2px;right:2px;background:#16a34a;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;border:2px solid #fff;">
+                                    <i class="bi bi-camera-fill"></i>
+                                </label>
+                                <input type="file" id="adminPhotoInput" accept="image/*" style="display:none"/>
+                            </div>
+                            <div id="adminPhotoUploadStatus" class="small text-muted mt-2"></div>
+                        </div>
+                        <h6 class="section-heading mb-3">
+                            <i class="bi bi-person"></i> Personal Information
+                        </h6>
                         <form id="profileForm" class="mb-4">
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -325,234 +307,354 @@ function setupProfileModal() {
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Email Address</label>
-                                    <input type="email" class="form-control" id="profileEmail" readonly style="background-color: #f8f9fa; color: #6c757d;">
+                                    <input type="email" class="form-control" id="profileEmail"
+                                        readonly>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Role</label>
-                                    <input type="text" class="form-control" value="Admin 🔒" readonly style="background-color: #f8f9fa; color: #6c757d;">
+                                    <input type="text" class="form-control"
+                                        value="Admin 🔒" readonly>
                                 </div>
                             </div>
                         </form>
 
-                        <!-- Security Info Section -->
-                        <h6 class="mb-3" style="color: var(--green-dark); font-weight: 600;">Security Information</h6>
+                        <h6 class="section-heading mb-3">
+                            <i class="bi bi-shield"></i> Security Information
+                        </h6>
                         <div class="row g-3 mb-4">
                             <div class="col-md-4">
-                                <label class="form-label text-muted">Member Since</label>
-                                <div class="fw-bold" id="memberSince"></div>
+                                <label class="form-label text-muted small">Member Since</label>
+                                <div class="fw-bold" id="memberSince">—</div>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label text-muted">Last Login</label>
-                                <div class="fw-bold" id="lastLogin"></div>
+                                <label class="form-label text-muted small">Last Login</label>
+                                <div class="fw-bold" id="lastLogin">—</div>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label text-muted">Password Last Changed</label>
-                                <div class="fw-bold" id="passwordChanged"></div>
+                                <label class="form-label text-muted small">Password Changed</label>
+                                <div class="fw-bold" id="passwordChanged">—</div>
                             </div>
                         </div>
 
-                        <!-- Recent Activity Section -->
-                        <h6 class="mb-3" style="color: var(--green-dark); font-weight: 600;">Recent Activity</h6>
-                        <div class="activity-log" id="activityLog" style="max-height: 300px; overflow-y: auto;">
-                            <!-- Activity items will be populated here -->
+                        <h6 class="section-heading mb-3">
+                            <i class="bi bi-clock-history"></i> Recent Activity
+                        </h6>
+                        <div class="activity-log" id="activityLog"
+                            style="max-height:300px;overflow-y:auto;">
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn-primary-green" onclick="saveProfileChanges()">Save Changes</button>
+                        <button type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn-primary-green"
+                            id="saveProfileBtn" disabled>Save Changes</button>
                     </div>
                 </div>
             </div>
-        </div>
-    `;
-
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
+        </div>`);
 }
 
-/**
- * Open profile modal
- */
 function openProfileModal() {
     const modal = new bootstrap.Modal(document.getElementById('profileModal'));
-    
-    // Populate form fields
-    document.getElementById('profileFullName').value = currentAdmin.fullName || '';
-    document.getElementById('profileEmail').value = currentAdmin.email || '';
-    
-    // Populate security info
-    document.getElementById('memberSince').textContent = formatDate(currentAdmin.createdAt);
-    document.getElementById('lastLogin').textContent = currentAdmin.lastLoginAt ? formatDate(currentAdmin.lastLoginAt) : 'Not recorded yet';
-    document.getElementById('passwordChanged').textContent = currentAdmin.passwordChangedAt ? formatDate(currentAdmin.passwordChangedAt) : 'Never changed';
-    
-    // Populate activity log
+
+    const originalName = currentAdmin.fullName || currentAdmin.name || '';
+
+    // Populate fields
+    document.getElementById('profileFullName').value = originalName;
+    document.getElementById('profileEmail').value    = currentAdmin.email || '';
+    document.getElementById('memberSince').textContent     = formatDate(currentAdmin.createdAt);
+    document.getElementById('lastLogin').textContent       = currentAdmin.lastLoginAt
+        ? formatDate(currentAdmin.lastLoginAt) : 'Not recorded yet';
+    document.getElementById('passwordChanged').textContent = currentAdmin.passwordChangedAt
+        ? formatDate(currentAdmin.passwordChangedAt) : 'Never changed';
+
+    const photoEl    = document.getElementById('adminAvatarPhoto');
+    const initialsEl = document.getElementById('adminAvatarInitials');
+    if (currentAdmin.photoUrl) {
+        if (photoEl)    { photoEl.src = currentAdmin.photoUrl; photoEl.style.display = 'block'; }
+        if (initialsEl) initialsEl.style.display = 'none';
+    } else {
+        if (photoEl)    photoEl.style.display = 'none';
+        if (initialsEl) { 
+            initialsEl.style.display = 'flex'; 
+            initialsEl.textContent = getInitials(originalName);
+        }
+    }
+
+    // ── Clean up stale listeners by replacing both elements ──
+    const oldInput  = document.getElementById('profileFullName');
+    const oldBtn    = document.getElementById('saveProfileBtn');
+
+    const newInput = oldInput.cloneNode(true);
+    const newBtn   = oldBtn.cloneNode(true);
+
+    oldInput.replaceWith(newInput);
+    oldBtn.replaceWith(newBtn);
+
+    // Set value on the fresh input
+    newInput.value    = originalName;
+    newBtn.disabled   = true;
+
+    // Wire up enable/disable logic
+    newInput.addEventListener('input', () => {
+        const val = newInput.value.trim();
+        newBtn.disabled = !val || val === originalName;
+    });
+
+    // Wire up save
+    newBtn.addEventListener('click', () => {
+        const newFullName = newInput.value.trim();
+        if (!newFullName) {
+            showToast('Full name is required.', 'error');
+            return;
+        }
+
+        updateItem(KEY_USERS, currentAdmin.id, { fullName: newFullName, name: newFullName });
+
+        currentAdmin.fullName = newFullName;
+        currentAdmin.name     = newFullName;
+        setLS(KEY_CURRENT_USER, currentAdmin);
+
+        updateAdminNameEverywhere(newFullName);
+        showToast('Profile updated successfully!', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('profileModal'))?.hide();
+    });
+
+    // Photo upload handler
+        const photoInput = document.getElementById('adminPhotoInput');
+        if (photoInput) {
+            photoInput.onchange = async function() {
+                const file = this.files[0];
+                if (!file) return;
+                const statusEl = document.getElementById('adminPhotoUploadStatus');
+                if (statusEl) statusEl.textContent = 'Uploading...';
+                try {
+                    const url = await uploadProfilePhoto(file);
+                    // Save to MockAPI
+                    updateItem(KEY_USERS, currentAdmin.id, { photoUrl: url });
+                    currentAdmin.photoUrl = url;
+                    setLS(KEY_CURRENT_USER, currentAdmin);
+                    // Update modal preview
+                    const photoEl    = document.getElementById('adminAvatarPhoto');
+                    const initialsEl = document.getElementById('adminAvatarInitials');
+                    if (photoEl)    { photoEl.src = url; photoEl.style.display = 'block'; }
+                    if (initialsEl) initialsEl.style.display = 'none';
+                    // Update topbar avatar
+                    updateAdminPhotoEverywhere(url);
+                    if (statusEl) statusEl.textContent = 'Photo updated!';
+                    setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 3000);
+                } catch {
+                    if (statusEl) statusEl.textContent = 'Upload failed. Try again.';
+                } finally {
+                    this.value = '';
+                }
+            };
+        }
+
     populateActivityLog();
-    
     modal.show();
 }
 
-/**
- * Format date for display
- */
-function formatDate(dateString) {
-    if (!dateString) return 'Not available';
-    
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+export function updateAdminPhotoEverywhere(photoUrl) {
+    const topbarAvatar = document.getElementById('topbarProfileAvatar');
+    if (topbarAvatar) {
+        topbarAvatar.innerHTML = photoUrl
+            ? `<img src="${photoUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"/>`
+            : getInitials(currentAdmin.fullName || currentAdmin.name || 'A');
+    }
+
+    const sidebarAvatar = document.getElementById('sidebarUserAvatar');
+    if (sidebarAvatar) {
+        sidebarAvatar.style.overflow = 'hidden';
+        sidebarAvatar.style.borderRadius = '50%';
+        sidebarAvatar.style.padding = '0';
+        sidebarAvatar.innerHTML = photoUrl
+            ? `<img src="${photoUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"/>`
+            : (currentAdmin.fullName || currentAdmin.name || 'A').charAt(0).toUpperCase();
+    }
 }
 
 /**
- * Populate activity log
+ * Exposed for external calls if needed.
  */
+function saveProfileChanges() {
+    const newInput = document.getElementById('profileFullName');
+    const newFullName = newInput ? newInput.value.trim() : '';
+
+    if (!newFullName) {
+        showToast('Full name is required.', 'error');
+        return;
+    }
+
+    updateItem(KEY_USERS, currentAdmin.id, { fullName: newFullName, name: newFullName });
+
+    currentAdmin.fullName = newFullName;
+    currentAdmin.name     = newFullName;
+    setLS(KEY_CURRENT_USER, currentAdmin);
+
+    updateAdminNameEverywhere(newFullName);
+    showToast('Profile updated successfully!', 'success');
+    bootstrap.Modal.getInstance(document.getElementById('profileModal'))?.hide();
+}
+
+window.saveProfileChanges = saveProfileChanges;
+
+
+// ─── UPDATE NAME EVERYWHERE ───────────────────────────────────
+
+/**
+ * Updates admin name in all 5 UI locations simultaneously.
+ * Called on save and also exported for admin-panel.js to use on load.
+ */
+export function updateAdminNameEverywhere(newName) {
+    if (!newName || !newName.trim()) return;
+    // Normalize: capitalize first letter of each word, lowercase the rest
+    const clean = newName.trim()
+        .split(' ')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(' ');
+    const initials = clean.split(' ')
+        .map(w => w.charAt(0).toUpperCase())
+        .join('')
+        .substring(0, 2);
+
+    // Always query fresh — never cache element references
+    document.getElementById('adminUserName')          && (document.getElementById('adminUserName').textContent          = clean);
+    document.getElementById('topbarProfileName')      && (document.getElementById('topbarProfileName').textContent      = clean);
+    if (document.getElementById('topbarProfileAvatar')) {
+        const av = document.getElementById('topbarProfileAvatar');
+        if (!currentAdmin.photoUrl) av.textContent = initials;
+    }
+    document.getElementById('sidebarUserName')        && (document.getElementById('sidebarUserName').textContent        = clean);
+    
+    document.getElementById('sidebarUserAvatar') && (() => {
+        const el = document.getElementById('sidebarUserAvatar');
+        el.style.overflow = 'hidden';
+        el.style.borderRadius = '50%';
+        el.style.padding = '0';
+        if (currentAdmin.photoUrl) {
+            el.innerHTML = `<img src="${currentAdmin.photoUrl}" style="width:100%;height:100%;object-fit:cover;display:block;"/>`;
+        } else {
+            el.textContent = clean.charAt(0).toUpperCase();
+        }
+    })();
+    // Also update by class — fallback in case IDs not set
+    document.querySelector('.profile-name')   && (document.querySelector('.profile-name').textContent   = clean);
+    document.querySelector('.profile-avatar') && (document.querySelector('.profile-avatar').textContent = initials);
+
+    // Persist to session
+    const current = getLS(KEY_CURRENT_USER);
+    if (current && current.id) {
+        current.fullName = clean;
+        current.name     = clean;
+        setLS(KEY_CURRENT_USER, current);
+    }
+}
+
+
+// ─── ACTIVITY LOG ────────────────────────────────────────────
+
 function populateActivityLog() {
     const activityLog = document.getElementById('activityLog');
+    if (!activityLog) return;
     const actions = currentAdmin.actionsLog || [];
-    
+
     if (actions.length === 0) {
         activityLog.innerHTML = `
             <div class="text-center text-muted py-4">
-                <i class="bi bi-clock-history fs-1 opacity-25"></i>
-                <p class="mb-0 mt-2">No recent activity recorded.</p>
-            </div>
-        `;
+                <i class="bi bi-clock-history" style="font-size:2rem;opacity:0.3;display:block;"></i>
+                <p class="mb-0 mt-2 small">No recent activity recorded.</p>
+            </div>`;
         return;
     }
-    
-    // Show last 10 actions
-    const recentActions = actions.slice(0, 10);
-    
-    activityLog.innerHTML = recentActions.map(action => `
+
+    activityLog.innerHTML = actions.slice(0, 10).map(action => `
         <div class="activity-item d-flex align-items-center gap-3 p-3 border-bottom">
             <div class="activity-icon">${getActionIcon(action.action)}</div>
-            <div class="activity-content flex-grow-1">
-                <div class="activity-description fw-bold">${getActionDescription(action)}</div>
-                <div class="activity-time text-muted small">${formatDate(action.timestamp)}</div>
+            <div class="flex-grow-1">
+                <div class="activity-description fw-semibold small">
+                    ${getActionDescription(action)}
+                </div>
+                <div class="activity-time text-muted" style="font-size:11px">
+                    ${formatDate(action.timestamp)}
+                </div>
             </div>
-        </div>
-    `).join('');
+        </div>`).join('');
 }
 
-/**
- * Get action icon
- */
 function getActionIcon(action) {
     const icons = {
-        approved_seller: '✅',
-        rejected_seller: '❌',
-        deleted_user: '🗑',
-        reset_password: '🔑',
-        deleted_product: '📦',
-        deactivated_product: '🚫',
-        changed_order_status: '🧾'
+        approved_seller:       '✅',
+        rejected_seller:       '❌',
+        deleted_user:          '🗑️',
+        reset_password:        '🔑',
+        deleted_product:       '📦',
+        deactivated_product:   '🚫',
+        changed_order_status:  '🧾'
     };
-    
     return icons[action] || '⚙️';
 }
 
-/**
- * Get action description
- */
 function getActionDescription(action) {
     const descriptions = {
-        approved_seller: `Approved seller: ${action.target}`,
-        rejected_seller: `Rejected seller: ${action.target}`,
-        deleted_user: `Deleted user: ${action.target}`,
-        reset_password: `Reset password for: ${action.target}`,
-        deleted_product: `Deleted product: ${action.target}`,
-        deactivated_product: `Deactivated product: ${action.target}`,
-        changed_order_status: `Changed status for ${action.target}`
+        approved_seller:      `Approved seller: ${action.target}`,
+        rejected_seller:      `Rejected seller: ${action.target}`,
+        deleted_user:         `Deleted user: ${action.target}`,
+        reset_password:       `Reset password for: ${action.target}`,
+        deleted_product:      `Deleted product: ${action.target}`,
+        deactivated_product:  `Deactivated product: ${action.target}`,
+        changed_order_status: `Changed order status: ${action.target}`
     };
-    
-    return descriptions[action.action] || `Performed action on: ${action.target}`;
+    return descriptions[action.action] || `Action on: ${action.target}`;
 }
 
-/**
- * Save profile changes
- */
-window.saveProfileChanges = function() {
-    const newFullName = document.getElementById('profileFullName').value.trim();
-    
-    if (!newFullName) {
-        if (window.showToast) {
-            window.showToast('Full name is required.', 'error');
-        }
-        return;
-    }
-    
-    // Update user data
-    const users = getLS('ls_users') || [];
-    const userIndex = users.findIndex(u => u.id === currentAdmin.id);
-    
-    if (userIndex !== -1) {
-        users[userIndex].fullName = newFullName;
-        
-        // Update localStorage
-        setLS('ls_users', users);
-        
-        // Update current user
-        currentAdmin.fullName = newFullName;
-        setLS('ls_currentUser', currentAdmin);
-        
-        // Update topbar display
-        updateTopbarProfile();
-        
-        // Show success and close modal
-        if (window.showToast) {
-            window.showToast('Profile updated successfully!', 'success');
-        }
-        
-        bootstrap.Modal.getInstance(document.getElementById('profileModal')).hide();
-    }
-};
 
-/**
- * Handle logout
- */
+function showFieldError(fieldId, message) {
+    const field   = document.getElementById(fieldId);
+    const errorEl = document.getElementById(fieldId + 'Error');
+    if (field)   field.classList.add('is-invalid');
+    if (errorEl) errorEl.textContent = message;
+}
+
+
+// ─── LOGOUT ──────────────────────────────────────────────────
+
 function handleLogout() {
-    localStorage.removeItem('ls_currentUser');
+    localStorage.removeItem(KEY_CURRENT_USER);
     sessionStorage.removeItem('adminActiveSection');
     window.location.href = '../Customer/Login.html';
 }
 
+
+// ─── LOG ADMIN ACTION ────────────────────────────────────────
+
 /**
- * Log admin action - shared helper function
+ * Logs an admin action to the admin user's actionsLog.
+ * FIX: Uses updateItem() → PUT instead of setLS(KEY_USERS).
  */
 export function logAdminAction(action, target, targetId) {
-    const users = getLS('ls_users') || [];
-    const current = getLS('ls_currentUser');
-    
+    const current = getLS(KEY_CURRENT_USER);
     if (!current) return;
-    
-    const index = users.findIndex(u => String(u.id) === String(current.id));
-    if (index === -1) return;
-    
+
     const logEntry = {
         action,
         target,
         targetId,
         timestamp: new Date().toISOString()
     };
-    
-    if (!users[index].actionsLog) users[index].actionsLog = [];
-    users[index].actionsLog.unshift(logEntry); // newest first
-    
-    // Keep only last 50 entries to avoid LS bloat
-    users[index].actionsLog = users[index].actionsLog.slice(0, 50);
-    
-    // Sync to ls_currentUser too
-    current.actionsLog = users[index].actionsLog;
-    
-    setLS('ls_users', users);
-    setLS('ls_currentUser', current);
-    
-    // Update currentAdmin reference
+
+    const actionsLog = [logEntry, ...(current.actionsLog || [])].slice(0, 50);
+
+    // FIX: updateItem → PUT — no duplicate users
+    updateItem(KEY_USERS, current.id, { actionsLog });
+
+    // Update session
+    current.actionsLog = actionsLog;
+    setLS(KEY_CURRENT_USER, current);
     currentAdmin = current;
 }
 
-// Initialize when DOM is loaded
+
+// ─── INIT ON DOM READY ───────────────────────────────────────
+
 document.addEventListener('DOMContentLoaded', initAdminProfile);

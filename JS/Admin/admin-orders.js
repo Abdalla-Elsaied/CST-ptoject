@@ -9,15 +9,21 @@ import {
     saveOrders,
     getCustomerName,
     getSellerName,
+    resolveOrderSellerId,
     getCurrentUser,
     formatPrice,
+    formatDate,
     statusBadge,
     showToast,
     showConfirm,
     renderPagination,
     renderTableEmptyState,
-    debounce
+    debounce,
+    escapeHTML
 } from './admin-helpers.js';
+
+import { getLS, setLS } from '../Core/Storage.js';
+import { KEY_PRODUCTS } from '../Core/Constants.js';
 
 import { 
     fetchOrders, 
@@ -99,51 +105,54 @@ export function renderOrdersTable() {
     // Since a single order can have multiple items from different sellers,
     // we take the seller of the first item for display brevity, or 'Multiple Sellers' if multiple.
     tbody.innerHTML = items.map((o, i) => {
+        const resolvedSellerId = resolveOrderSellerId(o);
         let sellerText = '—';
-        if (o.items && o.items.length > 0) {
-            const uniqueSellerIds = [...new Set(o.items.map(item => item.sellerId).filter(Boolean))];
-            if (uniqueSellerIds.length === 0) {
-                sellerText = '—';
-            } else if (uniqueSellerIds.length > 1) {
-                sellerText = 'Multiple Sellers';
-            } else {
-                sellerText = getSellerName(uniqueSellerIds[0]);
-            }
-        } else if (o.sellerId) {
-            // Fallback to order-level sellerId if items not available
-            sellerText = getSellerName(o.sellerId);
+        if (resolvedSellerId === 'multiple') {
+            sellerText = 'Multiple Sellers';
+        } else if (resolvedSellerId) {
+            sellerText = getSellerName(resolvedSellerId);
         }
 
-        // Dropdown to change order status
-        const statuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Refunded'];
+        const itemCount = o.items ? o.items.length : 0;
+        const total = Number(o.totalPrice || o.total || o.subtotal) || 0;
+        const fullId = String(o.id || '');
+        const shortId = '#' + (fullId.length > 6 ? fullId.slice(-6) : fullId);
+        // Support both customerId and userId
+        const customerId = o.customerId || o.userId;
+
+        const statuses = ['Pending','Processing','Shipped','Delivered','Cancelled','Refunded'];
+        // Normalize status to capitalized form for consistent comparison
+        const normalizedStatus = o.status
+            ? o.status.charAt(0).toUpperCase() + o.status.slice(1).toLowerCase()
+            : 'Pending';
         const statusOptions = statuses.map(st =>
-            `<option value="${st}" ${st === o.status ? 'selected' : ''}>${st}</option>`
+            `<option value="${st}" ${st === normalizedStatus ? 'selected' : ''}>${st}</option>`
         ).join('');
 
         return `
             <tr>
                 <td><span class="text-muted small fw-bold">${startIdx + i + 1}</span></td>
-                <td><span class="fw-bold">#${o.id}</span></td>
-                <td>${getCustomerName(o.customerId)}</td>
-                <td>${sellerText}</td>
-                <td>${o.items ? o.items.length : 0} item(s)</td>
-                <td><span class="fw-bold text-success">${formatPrice(o.totalPrice || o.total || o.subtotal)}</span></td>
-                <td>${statusBadge(o.status)}</td>
-                <td>${formatDate(o.date || o.createdAt)}</td>
+                <td><span class="order-id-pill" title="${escapeHTML(fullId)}">${escapeHTML(shortId)}</span></td>
+                <td style="font-size:12px;">${getCustomerName(customerId)}</td>
+                <td style="font-size:12px;">${sellerText}</td>
+                <td class="text-center">
+                    <span style="font-weight:700;font-size:13px;color:var(--text-primary);">${itemCount}</span>
+                    <span style="font-size:10px;color:var(--text-muted);display:block;">item${itemCount !== 1 ? 's' : ''}</span>
+                </td>
+                <td style="text-align:right;font-weight:700;">${formatPrice(total)}</td>
+                <td>${statusBadge(normalizedStatus)}</td>
+                <td><div style="font-size:12px;">${formatDate(o.date || o.createdAt)}</div></td>
                 <td>
-                    <select class="form-select form-select-sm status-dropdown" 
-                            data-id="${o.id}" 
-                            data-original="${o.status}">
+                    <select class="order-status-select status-dropdown" data-id="${o.id}" data-original="${normalizedStatus}">
                         ${statusOptions}
                     </select>
                 </td>
                 <td class="text-center">
-                    <button class="btn-action btn-view" data-id="${o.id}" data-action="view">
-                        <i class="bi bi-eye"></i> View
+                    <button class="btn-action btn-view" data-id="${o.id}" data-action="view" title="View Details">
+                        <i class="bi bi-eye"></i>
                     </button>
                 </td>
-            </tr>
-        `;
+            </tr>`;
     }).join('');
 
     // Render Pagination
@@ -169,21 +178,15 @@ function openOrderDetail(orderId) {
 
     titleEl.textContent = `Order #${order.id}`;
 
-    const customerName = getCustomerName(order.customerId);
+    const customerName = getCustomerName(order.customerId || order.userId);
 
     // Sellers summary
     let sellerSummary = '—';
-    if (order.items && order.items.length > 0) {
-        const uniqueSellerIds = [...new Set(order.items.map(i => i.sellerId).filter(Boolean))];
-        if (uniqueSellerIds.length === 0) {
-            sellerSummary = '—';
-        } else if (uniqueSellerIds.length > 1) {
-            sellerSummary = 'Multiple Sellers';
-        } else {
-            sellerSummary = getSellerName(uniqueSellerIds[0]);
-        }
-    } else if (order.sellerId) {
-        sellerSummary = getSellerName(order.sellerId);
+    const resolvedSellerId = resolveOrderSellerId(order);
+    if (resolvedSellerId === 'multiple') {
+        sellerSummary = 'Multiple Sellers';
+    } else if (resolvedSellerId) {
+        sellerSummary = getSellerName(resolvedSellerId);
     }
 
     const createdAt = formatDate(order.date || order.createdAt);
@@ -346,7 +349,9 @@ export function confirmChangeOrderStatus(orderId, newStatus, selectElement) {
     const index = orders.findIndex(o => String(o.id) === String(orderId));
     if (index === -1) return;
 
-    const currentStatus = orders[index].status;
+    // Normalize stored status to capitalized form
+    const rawStatus = orders[index].status || 'pending';
+    const currentStatus = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase();
 
     // Business Rule: Cannot change from Delivered, Cancelled, or Refunded
     if (currentStatus === 'Delivered' || currentStatus === 'Cancelled' || currentStatus === 'Refunded') {
@@ -388,6 +393,12 @@ export function confirmChangeOrderStatus(orderId, newStatus, selectElement) {
         // Confirmed
         if (updateOrderStatus(orderId, newStatus)) {
             logAdminAction('changed_order_status', `Order #${orderId} (${currentStatus} → ${newStatus})`, orderId);
+            
+            // ✅ MAJOR: Restore inventory when order is cancelled or refunded
+            if (newStatus === 'Cancelled' || newStatus === 'Refunded') {
+                restoreOrderInventory(orderId);
+            }
+            
             renderOrdersTable();
             showToast(`Order #${orderId} marked as ${newStatus}.`, 'success');
         } else {
@@ -406,12 +417,55 @@ export function confirmChangeOrderStatus(orderId, newStatus, selectElement) {
     const modalEl = document.getElementById('confirmModal');
     if (modalEl) {
         const resetDropdown = () => {
-            if (selectElement) {
-                selectElement.value = currentStatus;
+            // Only reset if the status was NOT changed (i.e., user cancelled)
+            const currentOrders = getOrders();
+            const currentOrder = currentOrders.find(o => String(o.id) === String(orderId));
+            if (selectElement && currentOrder && currentOrder.status !== newStatus) {
+                selectElement.value = currentOrder.status;
             }
             modalEl.removeEventListener('hidden.bs.modal', resetDropdown);
         };
         modalEl.addEventListener('hidden.bs.modal', resetDropdown);
+    }
+}
+
+// ─── INVENTORY RESTORATION ───────────────────────────────────
+
+/**
+ * Restores product inventory when an order is cancelled or refunded.
+ * Adds back the quantities that were deducted when the order was placed.
+ * @param {string|number} orderId - The order ID
+ */
+function restoreOrderInventory(orderId) {
+    try {
+        const orders = getOrders();
+        const order = orders.find(o => String(o.id) === String(orderId));
+        
+        if (!order || !order.items || order.items.length === 0) {
+            return;
+        }
+
+        const products = getLS(KEY_PRODUCTS) || [];
+        let restoredCount = 0;
+
+        order.items.forEach(item => {
+            const productId = item.productId || item.id;
+            const quantity = item.quantity || item.qty || 1;
+            
+            const productIndex = products.findIndex(p => String(p.id) === String(productId));
+            if (productIndex !== -1) {
+                products[productIndex].stock = (products[productIndex].stock || 0) + quantity;
+                restoredCount++;
+                console.log(`[INVENTORY] Restored ${quantity} units to product ${productId} (Order #${orderId})`);
+            }
+        });
+
+        if (restoredCount > 0) {
+            setLS(KEY_PRODUCTS, products);
+            console.log(`[INVENTORY] Restored inventory for ${restoredCount} product(s) from Order #${orderId}`);
+        }
+    } catch (err) {
+        console.error('[INVENTORY] Error restoring inventory:', err);
     }
 }
 

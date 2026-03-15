@@ -521,9 +521,7 @@ function searchOrder(v){
 }
 
 function openModal(){
-  editingOrderId = null;
-  setModalMode('add');
-  renderProductPicker();
+  clearOrderForm();
   document.getElementById('modal').style.display = 'flex';
 }
 
@@ -702,7 +700,8 @@ function saveOrder(){
     }
   }
 
-  const payment = document.getElementById('payment').value;
+  const paymentRaw = document.getElementById('payment')?.value;
+  const payment = paymentRaw === 'Paid' ? 'Paid' : (paymentRaw === 'Unpaid' ? 'Unpaid' : 'Paid');
   const status = document.getElementById('status').value;
 
   const products = collectSelectedProducts();
@@ -733,9 +732,23 @@ function saveOrder(){
       };
 
       if (mixed) {
-        next.sellerStatus = { ...(original.sellerStatus || {}), [sellerId]: status };
+        const nextSellerStatus = { ...(original.sellerStatus || {}), [sellerId]: status };
+        next.sellerStatus = nextSellerStatus;
         next.sellerPayment = { ...(original.sellerPayment || {}), [sellerId]: payment };
         next.sellerSubtotal = { ...(original.sellerSubtotal || {}), [sellerId]: finalPrice };
+
+        const itemsWithSellerId = mergedItems.filter((item) => String(item?.sellerId ?? '').trim());
+        const canCheckAllSellers = mergedItems.length > 0 && itemsWithSellerId.length === mergedItems.length;
+        if (canCheckAllSellers) {
+          const sellerIds = new Set(itemsWithSellerId.map((item) => String(item.sellerId).trim()));
+          const allDelivered = Array.from(sellerIds).every((id) => {
+            const value = nextSellerStatus[id];
+            return String(value || '').toLowerCase() === 'delivered';
+          });
+          if (allDelivered) {
+            next.status = 'Delivered';
+          }
+        }
       } else {
         next.product = products[0]?.name ?? '';
         next.price = finalPrice;

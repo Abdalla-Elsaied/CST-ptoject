@@ -109,8 +109,6 @@ export async function loadProductsFromFolder() {
     }
 
     let products = await response.json();
-    console.log("**********")
-    console.log(products)
     products = products.filter(x => x.isActive);
 
     console.log(`Loaded ${products.length} products from MockAPI`);
@@ -171,4 +169,26 @@ export async function deleteProductFromDisk(productId) {
   return true;
 }
 
+export async function uploadProfilePhoto(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", UPLOAD_PRESET);
+  formData.append("folder", "Profile_Photos"); // separate folder from products
+  const response = await fetch(CLOUDINARY_URL, { method: "POST", body: formData });
+  if (!response.ok) throw new Error("Profile photo upload failed");
+  const data = await response.json();
+  return data.secure_url; // just return the URL string
+}
+
+export function avatarHTML(user, size = 36, extraClass = '') {
+  if (!user) return '<div class="dropdown-user-avatar">?</div>';
+  const initials = (user.name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  if (user.photoUrl) {
+    return `<img src="${user.photoUrl}" alt="${initials}" 
+                 class="dropdown-user-avatar ${extraClass}"
+                 style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;"
+                 onerror="this.style.display='none'"/>`;
+  }
+  return `<div class="dropdown-user-avatar ${extraClass}">${initials}</div>`;
+}
 
