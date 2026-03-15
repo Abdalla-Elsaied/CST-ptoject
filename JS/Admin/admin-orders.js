@@ -11,6 +11,7 @@ import {
     getSellerName,
     getCurrentUser,
     formatPrice,
+    formatDate,
     statusBadge,
     showToast,
     showConfirm,
@@ -117,8 +118,12 @@ export function renderOrdersTable() {
             sellerText = getSellerName(o.sellerId);
         }
 
-        // Dropdown to change order status
-        const statuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Refunded'];
+        const itemCount = o.items ? o.items.length : 0;
+        const total = Number(o.totalPrice || o.total || o.subtotal) || 0;
+        const fullId = String(o.id || '');
+        const shortId = '#' + (fullId.length > 6 ? fullId.slice(-6) : fullId);
+
+        const statuses = ['Pending','Processing','Shipped','Delivered','Cancelled','Refunded'];
         const statusOptions = statuses.map(st =>
             `<option value="${st}" ${st === o.status ? 'selected' : ''}>${st}</option>`
         ).join('');
@@ -126,27 +131,27 @@ export function renderOrdersTable() {
         return `
             <tr>
                 <td><span class="text-muted small fw-bold">${startIdx + i + 1}</span></td>
-                <td><span class="fw-bold">#${o.id}</span></td>
-                <td>${getCustomerName(o.customerId)}</td>
-                <td>${sellerText}</td>
-                <td>${o.items ? o.items.length : 0} item(s)</td>
-                <td><span class="fw-bold text-success">${formatPrice(o.totalPrice || o.total || o.subtotal)}</span></td>
+                <td><span class="order-id-pill" title="${escapeHTML(fullId)}">${escapeHTML(shortId)}</span></td>
+                <td style="font-size:12px;">${getCustomerName(o.customerId)}</td>
+                <td style="font-size:12px;">${sellerText}</td>
+                <td class="text-center">
+                    <span style="font-weight:700;font-size:13px;color:var(--text-primary);">${itemCount}</span>
+                    <span style="font-size:10px;color:var(--text-muted);display:block;">item${itemCount !== 1 ? 's' : ''}</span>
+                </td>
+                <td style="text-align:right;font-weight:700;">${formatPrice(total)}</td>
                 <td>${statusBadge(o.status)}</td>
-                <td>${formatDate(o.date || o.createdAt)}</td>
+                <td><div style="font-size:12px;">${formatDate(o.date || o.createdAt)}</div></td>
                 <td>
-                    <select class="form-select form-select-sm status-dropdown" 
-                            data-id="${o.id}" 
-                            data-original="${o.status}">
+                    <select class="order-status-select status-dropdown" data-id="${o.id}" data-original="${o.status}">
                         ${statusOptions}
                     </select>
                 </td>
                 <td class="text-center">
-                    <button class="btn-action btn-view" data-id="${o.id}" data-action="view">
-                        <i class="bi bi-eye"></i> View
+                    <button class="btn-action btn-view" data-id="${o.id}" data-action="view" title="View Details">
+                        <i class="bi bi-eye"></i>
                     </button>
                 </td>
-            </tr>
-        `;
+            </tr>`;
     }).join('');
 
     // Render Pagination
@@ -415,8 +420,11 @@ export function confirmChangeOrderStatus(orderId, newStatus, selectElement) {
     const modalEl = document.getElementById('confirmModal');
     if (modalEl) {
         const resetDropdown = () => {
-            if (selectElement) {
-                selectElement.value = currentStatus;
+            // Only reset if the status was NOT changed (i.e., user cancelled)
+            const currentOrders = getOrders();
+            const currentOrder = currentOrders.find(o => String(o.id) === String(orderId));
+            if (selectElement && currentOrder && currentOrder.status !== newStatus) {
+                selectElement.value = currentOrder.status;
             }
             modalEl.removeEventListener('hidden.bs.modal', resetDropdown);
         };

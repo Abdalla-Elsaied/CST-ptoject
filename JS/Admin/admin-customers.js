@@ -19,7 +19,8 @@ import {
     statusBadge,
     renderPagination,
     renderTableEmptyState,
-    debounce
+    debounce,
+    invalidateCaches
 } from './admin-helpers.js';
 
 import { 
@@ -137,10 +138,9 @@ function normalizeCustomer(rawCustomer) {
  */
 export function renderCustomersTable() {
     const allUsers = getUsers();
-    // Show all valid users so we can see admins (admins have protected UI state)
     const users = allUsers.filter(u => u.role === ROLES.CUSTOMER || u.role === ROLES.SELLER || u.role === 'admin')
         .map(u => normalizeCustomer(u));
-    
+
     const query = customerSearchQuery.toLowerCase();
     const tbody = document.getElementById('customersTableBody');
 
@@ -195,113 +195,93 @@ export function renderCustomersTable() {
 
     tbody.innerHTML = paginated.map((c, i) => {
         const isBanned = c.isBanned;
-        const isAdmin = c.role === 'admin';
+        const isAdmin  = c.role === 'admin';
         const isSeller = c.role === ROLES.SELLER;
-        const isCustomer = c.role === ROLES.CUSTOMER;
 
-        const statusBadge = isBanned
-            ? `<span class="status-badge status-cancelled" title="Banned: ${escapeHTML(c.bannedReason || 'No reason provided')}">
-                <i class="bi bi-ban"></i> Banned
-               </span>`
-            : '<span class="status-badge status-active"><i class="bi bi-check-circle"></i> Active</span>';
-
-        const roleBadge = isAdmin
-            ? '<span class="status-badge bg-dark text-white"><i class="bi bi-shield-lock"></i> Admin</span>'
+        // Avatar: role-based gradient + 2-letter initials
+        const rawName  = (c.fullName || c.name || c.email || '?').trim();
+        const words    = rawName.split(/\s+/).filter(Boolean);
+        const initials = words.length >= 2
+            ? (words[0][0] + words[words.length - 1][0]).toUpperCase()
+            : rawName.slice(0, 2).toUpperCase();
+        const avatarGradient = isAdmin
+            ? 'linear-gradient(135deg,#f59e0b,#d97706)'
             : isSeller
-                ? '<span class="status-badge status-shipped"><i class="bi bi-shop"></i> Seller</span>'
-                : '<span class="status-badge status-pending"><i class="bi bi-person"></i> Customer</span>';
+                ? 'linear-gradient(135deg,#3b82f6,#2563eb)'
+                : 'linear-gradient(135deg,#8b5cf6,#7c3aed)';
 
-        const rowClass = isBanned ? 'banned-row' : '';
-        
-        // Get user initials for avatar
-        const initials = (c.name || c.fullName || c.email)
-            .split(' ')
-            .map(word => word.charAt(0).toUpperCase())
-            .join('')
-            .substring(0, 2);
+        // Role pill
+        const rolePill = isAdmin
+            ? '<span class="um-role-pill um-role-admin"><i class="bi bi-shield-lock"></i> Admin</span>'
+            : isSeller
+                ? '<span class="um-role-pill um-role-seller"><i class="bi bi-shop"></i> Seller</span>'
+                : '<span class="um-role-pill um-role-customer"><i class="bi bi-person"></i> Customer</span>';
+
+        // Status pill
+        const statusPill = isBanned
+            ? `<span class="um-status-pill um-status-banned" title="Banned: ${escapeHTML(c.bannedReason || 'No reason')}"><span class="um-dot um-dot-red"></span> Banned</span>`
+            : '<span class="um-status-pill um-status-active"><span class="um-dot um-dot-green um-dot-pulse"></span> Active</span>';
+
+        // Orders count — no duplicate "ORDERS" word
+        const orderCount = getOrders().filter(o => String(o.customerId) === String(c.id)).length;
+        const ordersCell = `<div class="um-orders-cell">
+            <span class="um-orders-count">${orderCount}</span>
+            <span class="um-orders-label">order${orderCount !== 1 ? 's' : ''}</span>
+        </div>`;
+
+        const subtitle = isAdmin ? 'System Administrator'
+            : isSeller ? escapeHTML(c.storeName || 'Marketplace Seller')
+            : 'Customer';
+
+        const rowClass = isBanned ? 'row-suspended' : '';
 
         return `
         <tr class="${rowClass}" data-user-id="${c.id}">
-            <td>
+            <td class="col-check">
                 ${isAdmin ? '' : `<input type="checkbox" class="form-check-input user-checkbox" value="${c.id}">`}
             </td>
-            <td>
-                <span class="text-muted small fw-bold">${start + i + 1}</span>
-            </td>
-            <td>
-                <div class="d-flex align-items-center gap-3">
-                    <div class="user-avatar ${isBanned ? 'banned' : ''}" style="background: ${isBanned ? '#ef4444' : 'linear-gradient(135deg, var(--green-primary), #10b981)'}">
-                        ${initials}
-                    </div>
-                    <div class="user-info">
-                        <div class="user-name">${escapeHTML(c.name || c.fullName || 'Unknown')}</div>
-                        <div class="user-role-text text-muted">${c.role === 'admin' ? 'System Administrator' : c.role === ROLES.SELLER ? 'Marketplace Seller' : 'Customer'}</div>
+            <td class="col-index">${start + i + 1}</td>
+            <td class="col-user-name">
+                <div class="user-cell">
+                    <div class="um-avatar" style="background:${avatarGradient}">${escapeHTML(initials)}</div>
+                    <div class="user-meta">
+                        <div class="name" title="${escapeHTML(rawName)}">${escapeHTML(rawName)}</div>
+                        <div class="subtitle">${subtitle}</div>
                     </div>
                 </div>
             </td>
-            <td>
-                <div class="contact-info">
-                    <div class="user-email">
-                        <i class="bi bi-envelope text-muted me-1"></i>
-                        ${escapeHTML(c.email)}
+            <td class="col-contact">
+                <div class="contact-cell">
+                    <div class="email" title="${escapeHTML(c.email || '')}">
+                        <i class="bi bi-envelope"></i>${escapeHTML(c.email || '—')}
                     </div>
-                    ${c.phone ? `
-                        <div class="user-phone text-muted small">
-                            <i class="bi bi-telephone me-1"></i>
-                            ${escapeHTML(c.phone)}
-                        </div>
-                    ` : ''}
+                    ${c.phone ? `<div class="phone"><i class="bi bi-telephone"></i>${escapeHTML(c.phone)}</div>` : ''}
                 </div>
             </td>
-            <td>${roleBadge}</td>
-            <td>${statusBadge}</td>
-            <td>
-                <div class="date-info">
-                    <div class="join-date">${formatDate(c.createdAt)}</div>
-                    ${c.lastLoginAt ? `
-                        <div class="last-login text-muted small">
-                            Last: ${formatDate(c.lastLoginAt)}
-                        </div>
-                    ` : '<div class="text-muted small">Never logged in</div>'}
+            <td class="col-role">${rolePill}</td>
+            <td class="col-status">${statusPill}</td>
+            <td class="col-joined">
+                <div class="joined-cell">
+                    <div class="date">${formatDate(c.createdAt)}</div>
+                    <div class="last-login">${c.lastLoginAt ? `Last: ${formatDate(c.lastLoginAt)}` : 'Never logged in'}</div>
                 </div>
             </td>
-            <td>
-                <div class="orders-info text-center">
-                    <span class="fw-bold">${getCustomerOrderCount(c.id)}</span>
-                    <div class="text-muted small">orders</div>
-                </div>
-            </td>
-            <td class="text-center">
+            <td class="col-orders">${ordersCell}</td>
+            <td class="col-actions">
                 ${isAdmin
-                ? '<span class="text-muted small"><i class="bi bi-shield-lock"></i> Protected</span>'
-                : `<div class="action-buttons d-flex gap-1 justify-content-center flex-wrap">
-                        <button class="btn-action btn-info btn-sm" title="View Details"
-                                data-id="${c.id}" data-action="viewDetails">
-                            <i class="bi bi-eye"></i>
-                        </button>
+                    ? `<span class="um-protected-badge"><i class="bi bi-shield-lock-fill"></i> Protected</span>`
+                    : `<div class="action-group">
+                        <button class="btn-action btn-view"   title="View Details"    data-id="${c.id}" data-action="viewDetails"><i class="bi bi-eye"></i></button>
                         ${isBanned
-                    ? `<button class="btn-action btn-success btn-sm" title="Unban Account"
-                                    data-id="${c.id}" data-action="unban">
-                                <i class="bi bi-check-circle"></i>
-                            </button>`
-                    : `<button class="btn-action btn-warn btn-sm" title="Ban Account"
-                                    data-id="${c.id}" data-action="ban">
-                                <i class="bi bi-ban"></i>
-                            </button>`
-                }
-                        <button class="btn-action btn-edit btn-sm" title="Reset Password"
-                                data-id="${c.id}" data-action="resetPassword">
-                            <i class="bi bi-key"></i>
-                        </button>
-                        <button class="btn-action btn-delete btn-sm" title="Delete Account"
-                                data-id="${c.id}" data-action="delete">
-                            <i class="bi bi-trash"></i>
-                        </button>
+                            ? `<button class="btn-action btn-success" title="Unban" data-id="${c.id}" data-action="unban"><i class="bi bi-check-circle"></i></button>`
+                            : `<button class="btn-action btn-warn"    title="Ban"   data-id="${c.id}" data-action="ban"><i class="bi bi-slash-circle"></i></button>`}
+                        ${isSeller ? `<button class="btn-action btn-warn" title="Remove Seller Role → Customer" data-id="${c.id}" data-action="revertToCustomer" style="color:#f59e0b"><i class="bi bi-person-dash"></i></button>` : ''}
+                        <button class="btn-action btn-key"    title="Reset Password" data-id="${c.id}" data-action="resetPassword"><i class="bi bi-key"></i></button>
+                        <button class="btn-action btn-delete" title="Delete"         data-id="${c.id}" data-action="delete"><i class="bi bi-trash"></i></button>
                     </div>`
                 }
             </td>
-        </tr>
-    `;
+        </tr>`;
     }).join('');
 
     // Render Pagination
@@ -318,11 +298,32 @@ export function renderCustomersTable() {
 function bindCustomersEvents() {
     const searchInput = document.getElementById('customerSearchInput');
     if (searchInput) {
+        // Show/hide clear button based on input value
+        const updateClearBtn = () => {
+            const clearBtn = document.getElementById('customerSearchClear');
+            if (clearBtn) clearBtn.style.display = searchInput.value ? 'flex' : 'none';
+        };
+
         searchInput.oninput = debounce((e) => {
             customerSearchQuery = e.target.value;
             customerPagination.page = 1;
             renderCustomersTable();
+            updateClearBtn();
         }, 300);
+
+        // Wire up clear button
+        const clearBtn = document.getElementById('customerSearchClear');
+        if (clearBtn) {
+            clearBtn.onclick = () => {
+                searchInput.value = '';
+                customerSearchQuery = '';
+                customerPagination.page = 1;
+                renderCustomersTable();
+                updateClearBtn();
+                searchInput.focus();
+            };
+            updateClearBtn();
+        }
     }
 
     // Bulk selection
@@ -364,6 +365,7 @@ function bindCustomersEvents() {
             if (action === 'viewDetails') openCustomerDetailsModal(id);
             if (action === 'ban') banCustomer(id);
             if (action === 'unban') unbanCustomer(id);
+            if (action === 'revertToCustomer') revertSellerToCustomer(id);
             if (action === 'resetPassword') {
                 const users = getUsers();
                 const user = users.find(u => String(u.id) === String(id));
@@ -391,7 +393,7 @@ function updateBulkActionsVisibility() {
     if (bulkBtn) {
         if (checkedBoxes.length > 0) {
             bulkBtn.style.display = 'inline-flex';
-            bulkBtn.textContent = `Bulk Actions (${checkedBoxes.length})`;
+            bulkBtn.innerHTML = `<i class="bi bi-check2-square"></i> Bulk Actions (${checkedBoxes.length})`;
         } else {
             bulkBtn.style.display = 'none';
         }
@@ -548,9 +550,10 @@ function invalidateUserSession(userId) {
  */
 export function getCustomerOrderCount(customerId) {
     const count = getOrders().filter(o => String(o.customerId) === String(customerId)).length;
-    return count === 0
-        ? '<span class="text-muted small">0 orders</span>'
-        : `<span class="badge" style="background:var(--green-light-bg); color:var(--green-dark)">${count} order${count !== 1 ? 's' : ''}</span>`;
+    return `<div class="um-orders-cell">
+        <span class="um-orders-count">${count} ORDER${count !== 1 ? 'S' : ''}</span>
+        <span class="um-orders-label">ORDERS</span>
+    </div>`;
 }
 
 
@@ -618,7 +621,7 @@ function openSellerInfoModal(userId) {
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn-primary-green" onclick="saveSellerInfo()">Save & Change Role</button>
+                            <button type="button" class="btn-primary-green" id="sellerInfoSaveBtn">Save &amp; Change Role</button>
                         </div>
                     </div>
                 </div>
@@ -635,6 +638,13 @@ function openSellerInfoModal(userId) {
     document.getElementById('sellerInfoPhone').value = '';
     document.getElementById('sellerInfoPayment').value = '';
     document.getElementById('sellerInfoDescription').value = '';
+
+    // Wire save button for existing-user (customer→seller) flow
+    const saveBtn = document.getElementById('sellerInfoSaveBtn');
+    const newSaveBtn = saveBtn.cloneNode(true);
+    saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+    newSaveBtn.textContent = 'Save & Change Role';
+    newSaveBtn.onclick = () => window.saveSellerInfo();
 
     new bootstrap.Modal(modal).show();
 }
@@ -692,8 +702,159 @@ window.saveSellerInfo = function () {
 
 
 /**
- * Opens customer details modal showing comprehensive user information
+ * Opens seller info modal when creating a NEW user with role=seller directly.
+ * Reuses the same sellerInfoModal but saves a full new user instead of updating.
  */
+function openSellerInfoModalForNewUser(baseUser) {
+    let modal = document.getElementById('sellerInfoModal');
+    if (!modal) {
+        // trigger the normal modal creation path by calling openSellerInfoModal with a dummy id
+        // but we need to intercept the save — so we build it inline
+        const modalHTML = `
+            <div class="modal fade" id="sellerInfoModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Seller Information Required</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" id="sellerInfoUserId">
+                            <div class="mb-3">
+                                <label class="form-label">Store Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="sellerInfoStoreName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">City <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="sellerInfoCity" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Phone <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="sellerInfoPhone" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Payment Method <span class="text-danger">*</span></label>
+                                <select class="form-select" id="sellerInfoPayment" required>
+                                    <option value="">Select...</option>
+                                    <option>Bank Transfer</option>
+                                    <option>Vodafone Cash</option>
+                                    <option>InstaPay</option>
+                                    <option>PayPal</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Store Description</label>
+                                <textarea class="form-control" id="sellerInfoDescription" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn-primary-green" id="sellerInfoSaveBtn">Save & Create Seller</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        modal = document.getElementById('sellerInfoModal');
+    }
+
+    // Clear fields
+    document.getElementById('sellerInfoUserId').value = '';
+    document.getElementById('sellerInfoStoreName').value = '';
+    document.getElementById('sellerInfoCity').value = '';
+    document.getElementById('sellerInfoPhone').value = '';
+    document.getElementById('sellerInfoPayment').value = '';
+    document.getElementById('sellerInfoDescription').value = '';
+
+    // Override save button for new-user flow
+    const saveBtn = document.getElementById('sellerInfoSaveBtn');
+    const newSaveBtn = saveBtn.cloneNode(true);
+    saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+
+    newSaveBtn.textContent = 'Save & Create Seller';
+    newSaveBtn.onclick = () => {
+        const storeName   = document.getElementById('sellerInfoStoreName').value.trim();
+        const city        = document.getElementById('sellerInfoCity').value.trim();
+        const phone       = document.getElementById('sellerInfoPhone').value.trim();
+        const payment     = document.getElementById('sellerInfoPayment').value;
+        const description = document.getElementById('sellerInfoDescription').value.trim();
+
+        if (!storeName || !city || !phone || !payment) {
+            showToast('Please fill all required fields.', 'error');
+            return;
+        }
+
+        const newSeller = {
+            ...baseUser,
+            role:              ROLES.SELLER,
+            storeName,
+            city,
+            phone:             phone || baseUser.phone,
+            paymentMethod:     payment,
+            description,
+            storeDescription:  description,
+            isApproved:        true,
+        };
+
+        saveUsers([newSeller]);
+        logAdminAction('created_user', baseUser.name, baseUser.id);
+
+        bootstrap.Modal.getInstance(modal)?.hide();
+        renderCustomersTable();
+        showToast(`Seller "${baseUser.name}" created successfully.`, 'success');
+    };
+
+    new bootstrap.Modal(modal).show();
+}
+
+
+/**
+ * Reverts a seller back to customer role.
+ * Clears all seller-specific fields and hides their products.
+ */
+export function revertSellerToCustomer(id) {
+    const users = getUsers();
+    const user  = users.find(u => String(u.id) === String(id));
+    if (!user || user.role !== ROLES.SELLER) return;
+
+    showConfirm(
+        `Remove seller role from "${user.name || user.fullName || user.email}"? They will become a Customer. Their products will be hidden.`,
+        () => {
+            // Hide seller's products
+            const products = getLS(KEY_PRODUCTS) || [];
+            let hiddenCount = 0;
+            products.forEach((p, idx) => {
+                if (String(p.sellerId) === String(id) && p.isActive !== false) {
+                    products[idx].isActive       = false;
+                    products[idx].hiddenByDemotion = true;
+                    hiddenCount++;
+                }
+            });
+            setLS(KEY_PRODUCTS, products);
+
+            // Revert role — clear seller fields
+            updateItem(KEY_USERS, id, {
+                role:             ROLES.CUSTOMER,
+                storeName:        null,
+                storeDescription: null,
+                description:      null,
+                city:             null,
+                paymentMethod:    null,
+                isApproved:       null,
+                previousRole:     ROLES.SELLER,
+                demotedAt:        new Date().toISOString(),
+                demotedBy:        getCurrentUser()?.id,
+            });
+
+            invalidateUserSession(id);
+            logAdminAction('reverted_seller_to_customer', user.name || user.email, id);
+            renderCustomersTable();
+            showToast(`Seller role removed. ${hiddenCount} product(s) hidden.`, 'success');
+        }
+    );
+}
+
+window.revertSellerToCustomer = revertSellerToCustomer;
 function openCustomerDetailsModal(id) {
     const users = getUsers();
     const user = users.find(u => String(u.id) === String(id));
@@ -809,13 +970,21 @@ function openCustomerDetailsModal(id) {
  * Prevents deletion of admin accounts.
  */
 export function confirmDeleteCustomer(id) {
+    const currentUser = getCurrentUser();
+
+    // GUARD: Cannot delete own account
+    if (String(id) === String(currentUser?.id)) {
+        showToast('You cannot delete your own account.', 'error');
+        return;
+    }
+
     const users = getUsers();
     const customer = users.find(u => String(u.id) === String(id));
     if (!customer) return;
 
-    // Prevent admin deletion
+    // GUARD: Cannot delete admin accounts
     if (customer.role === 'admin') {
-        showToast('Cannot delete admin accounts from UI.', 'error');
+        showToast('Admin accounts cannot be deleted from this panel.', 'error');
         return;
     }
 
@@ -827,13 +996,28 @@ export function confirmDeleteCustomer(id) {
     showConfirm(
         `Delete customer "${customer.name || customer.fullName || customer.email}"?${warning}`,
         () => {
-            // ✅ Use deleteItem() — removes from cache + sends DELETE to MockAPI
-            deleteItem(KEY_USERS, id);
+            cascadeDeleteUser(id);
             logAdminAction('deleted_user', customer.name || customer.fullName || customer.email, id);
             renderCustomersTable();
             showToast('Customer account deleted.', 'info');
         }
     );
+}
+
+/**
+ * Cascade-deletes a user: removes from MockAPI and cleans up their products.
+ */
+function cascadeDeleteUser(id) {
+    deleteItem(KEY_USERS, id);
+
+    const products = getLS(KEY_PRODUCTS) || [];
+    const remainingProducts = products.filter(p => String(p.sellerId) !== String(id));
+    if (products.length !== remainingProducts.length) {
+        setLS(KEY_PRODUCTS, remainingProducts);
+    }
+
+    invalidateCaches();
+    console.log(`[AUDIT] User ${id} deleted with cascade cleanup`);
 }
 
 
@@ -1126,47 +1310,6 @@ window.bulkDeleteUsers = function() {
 
 
 /**
- * Export users data to CSV
- */
-function exportUsersData() {
-    const users = getUsers();
-    const csvData = [
-        ['ID', 'Name', 'Email', 'Role', 'Status', 'Joined', 'Last Login', 'Orders', 'Ban Reason']
-    ];
-    
-    users.forEach(user => {
-        const orderCount = getOrders().filter(o => String(o.customerId) === String(user.id)).length;
-        csvData.push([
-            user.id,
-            user.name || user.fullName || '',
-            user.email,
-            user.role,
-            user.isBanned ? 'Banned' : 'Active',
-            formatDate(user.createdAt),
-            user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Never',
-            orderCount,
-            user.bannedReason || ''
-        ]);
-    });
-    
-    const csvContent = csvData.map(row => 
-        row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')
-    ).join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `users_export_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    showToast('Users data exported successfully!', 'success');
-}
-
-/**
  * Reset all user filters
  */
 function resetUserFilters() {
@@ -1185,14 +1328,225 @@ function resetUserFilters() {
     renderCustomersTable();
 }
 
-// Global exposure
-window.openResetPasswordModal = openResetPasswordModal;
+// ─── ADD USER MODAL ──────────────────────────────────────────
+
+// Phone regex — Egyptian mobile numbers
+const PHONE_RE = /^(\+20|0)(10|11|12|15)[0-9]{8}$/;
+
+/**
+ * Opens the Add User modal with full manual validation.
+ * No form cloning — uses a single named handler that is removed on close.
+ */
+export function openAddUserModal() {
+    const modalEl  = document.getElementById('addUserModal');
+    const form     = document.getElementById('addUserForm');
+    if (!modalEl || !form) return;
+
+    // ── Reset state ───────────────────────────────────────────
+    form.reset();
+    _clearAllFieldErrors();
+    _hideError();
+
+    // ── Password show/hide toggle ─────────────────────────────
+    const pwdInput   = document.getElementById('addUserPassword');
+    const pwdToggle  = document.getElementById('addUserPasswordToggle');
+    const pwdEye     = document.getElementById('addUserPasswordEyeIcon');
+    if (pwdToggle) {
+        // Clone to remove any previous listener
+        const freshToggle = pwdToggle.cloneNode(true);
+        pwdToggle.parentNode.replaceChild(freshToggle, pwdToggle);
+        freshToggle.addEventListener('click', () => {
+            const isText = pwdInput.type === 'text';
+            pwdInput.type = isText ? 'password' : 'text';
+            document.getElementById('addUserPasswordEyeIcon').className =
+                isText ? 'bi bi-eye' : 'bi bi-eye-slash';
+        });
+    }
+
+    // ── Real-time validation on blur ──────────────────────────
+    document.getElementById('addUserFullName').onblur  = () => _validateName();
+    document.getElementById('addUserEmail').onblur     = () => _validateEmail();
+    document.getElementById('addUserPassword').onblur  = () => _validatePassword();
+    document.getElementById('addUserPhone').onblur     = () => _validatePhone();
+    document.getElementById('addUserRole').onchange    = () => _validateRole();
+
+    // Clear error on input
+    ['addUserFullName','addUserEmail','addUserPassword','addUserPhone'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.oninput = () => { _clearFieldError(id); _hideError(); };
+    });
+
+    // ── Submit handler ────────────────────────────────────────
+    const submitHandler = (e) => {
+        e.preventDefault();
+
+        const nameOk  = _validateName();
+        const emailOk = _validateEmail();
+        const pwdOk   = _validatePassword();
+        const phoneOk = _validatePhone();
+        const roleOk  = _validateRole();
+
+        if (!nameOk || !emailOk || !pwdOk || !phoneOk || !roleOk) return;
+
+        const fullName = document.getElementById('addUserFullName').value.trim();
+        const email    = document.getElementById('addUserEmail').value.trim().toLowerCase();
+        const password = document.getElementById('addUserPassword').value;
+        const phone    = document.getElementById('addUserPhone').value.trim() || null;
+        const role     = document.getElementById('addUserRole').value;
+
+        // Duplicate email check
+        const existing = getUsers().find(u => (u.email || '').toLowerCase() === email);
+        if (existing) {
+            _setFieldError('addUserEmail', 'This email is already registered.');
+            return;
+        }
+
+        const bsModal = bootstrap.Modal.getInstance(modalEl);
+
+        // Seller → open store info modal first
+        if (role === ROLES.SELLER) {
+            bsModal?.hide();
+            openSellerInfoModalForNewUser({
+                id:        Date.now(),
+                name:      fullName,
+                fullName,
+                email,
+                password,
+                phone,
+                role,
+                isBanned:  false,
+                createdAt: new Date().toISOString(),
+                createdBy: getCurrentUser()?.id,
+            });
+            return;
+        }
+
+        // Customer — save directly
+        saveUsers([{
+            id:        Date.now(),
+            name:      fullName,
+            fullName,
+            email,
+            password,
+            phone,
+            role,
+            isBanned:  false,
+            createdAt: new Date().toISOString(),
+            createdBy: getCurrentUser()?.id,
+        }]);
+
+        logAdminAction('created_user', fullName, Date.now());
+        bsModal?.hide();
+        renderCustomersTable();
+        showToast(`User "${fullName}" created successfully.`, 'success');
+    };
+
+    // Remove old listener, attach fresh one
+    form.removeEventListener('submit', form._addUserHandler);
+    form._addUserHandler = submitHandler;
+    form.addEventListener('submit', submitHandler);
+
+    new bootstrap.Modal(modalEl).show();
+}
+
+// ── Field validators ──────────────────────────────────────────
+
+function _validateName() {
+    const val = document.getElementById('addUserFullName').value.trim();
+    if (!val || val.length < 3) {
+        _setFieldError('addUserFullName', 'Full name must be at least 3 characters.');
+        return false;
+    }
+    _clearFieldError('addUserFullName');
+    return true;
+}
+
+function _validateEmail() {
+    const val = document.getElementById('addUserEmail').value.trim();
+    const re  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!val || !re.test(val)) {
+        _setFieldError('addUserEmail', 'Please enter a valid email address.');
+        return false;
+    }
+    _clearFieldError('addUserEmail');
+    return true;
+}
+
+function _validatePassword() {
+    const val = document.getElementById('addUserPassword').value;
+    if (!val || val.length < 6) {
+        _setFieldError('addUserPassword', 'Password must be at least 6 characters.');
+        return false;
+    }
+    _clearFieldError('addUserPassword');
+    return true;
+}
+
+function _validatePhone() {
+    const val = document.getElementById('addUserPhone').value.trim();
+    if (!val) return true; // optional
+    if (!PHONE_RE.test(val)) {
+        _setFieldError('addUserPhone', 'Invalid phone. Use format: 01XXXXXXXXX or +201XXXXXXXXX');
+        return false;
+    }
+    _clearFieldError('addUserPhone');
+    return true;
+}
+
+function _validateRole() {
+    const val = document.getElementById('addUserRole').value;
+    if (!val) {
+        _setFieldError('addUserRole', 'Please select a role.');
+        return false;
+    }
+    _clearFieldError('addUserRole');
+    return true;
+}
+
+// ── DOM helpers ───────────────────────────────────────────────
+
+function _setFieldError(fieldId, message) {
+    const el       = document.getElementById(fieldId);
+    const feedback = document.getElementById(fieldId + 'Feedback') ||
+                     el?.nextElementSibling;
+    if (el)       el.classList.add('is-invalid');
+    if (feedback) feedback.textContent = message;
+}
+
+function _clearFieldError(fieldId) {
+    const el = document.getElementById(fieldId);
+    if (el) { el.classList.remove('is-invalid'); el.classList.add('is-valid'); }
+}
+
+function _clearAllFieldErrors() {
+    ['addUserFullName','addUserEmail','addUserPassword','addUserPhone','addUserRole']
+        .forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.classList.remove('is-invalid', 'is-valid'); }
+        });
+}
+
+function _showError(msg) {
+    const el = document.getElementById('addUserError');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.remove('d-none');
+}
+
+function _hideError() {
+    const el = document.getElementById('addUserError');
+    if (el) el.classList.add('d-none');
+}
+
+
+
 window.saveResetPassword = saveResetPassword;
+window.openResetPasswordModal = openResetPasswordModal;
 window.confirmDeleteCustomer = confirmDeleteCustomer;
 window.openCustomerDetailsModal = openCustomerDetailsModal;
-window.exportUsersData = exportUsersData;
 window.banCustomer = banCustomer;
 window.unbanCustomer = unbanCustomer;
 window.resetUserFilters = resetUserFilters;
 window.updateBulkActionsVisibility = updateBulkActionsVisibility;
 window.saveSellerInfo = saveSellerInfo;
+window.openAddUserModal = openAddUserModal;

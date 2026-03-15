@@ -113,7 +113,12 @@ function setupProfileDropdown() {
         menu.classList.toggle('show');
     });
 
-    document.addEventListener('click', () => menu?.classList.remove('show'));
+    // Use a named handler stored on the element to prevent stacking
+    if (profileDropdown._docClickHandler) {
+        document.removeEventListener('click', profileDropdown._docClickHandler);
+    }
+    profileDropdown._docClickHandler = () => menu?.classList.remove('show');
+    document.addEventListener('click', profileDropdown._docClickHandler);
 
     menu?.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -325,58 +330,89 @@ function setupProfileModal() {
                         <button type="button" class="btn btn-secondary"
                             data-bs-dismiss="modal">Close</button>
                         <button type="button" class="btn-primary-green"
-                            id="saveProfileBtn">Save Changes</button>
+                            id="saveProfileBtn" disabled>Save Changes</button>
                     </div>
                 </div>
             </div>
         </div>`);
-
-    document.getElementById('saveProfileBtn')
-        ?.addEventListener('click', saveProfileChanges);
 }
 
 function openProfileModal() {
     const modal = new bootstrap.Modal(document.getElementById('profileModal'));
 
-    document.getElementById('profileFullName').value = currentAdmin.fullName || currentAdmin.name || '';
-    document.getElementById('profileEmail').value    = currentAdmin.email || '';
+    const originalName = currentAdmin.fullName || currentAdmin.name || '';
 
-    document.getElementById('memberSince').textContent    = formatDate(currentAdmin.createdAt);
-    document.getElementById('lastLogin').textContent      = currentAdmin.lastLoginAt
+    // Populate fields
+    document.getElementById('profileFullName').value = originalName;
+    document.getElementById('profileEmail').value    = currentAdmin.email || '';
+    document.getElementById('memberSince').textContent     = formatDate(currentAdmin.createdAt);
+    document.getElementById('lastLogin').textContent       = currentAdmin.lastLoginAt
         ? formatDate(currentAdmin.lastLoginAt) : 'Not recorded yet';
     document.getElementById('passwordChanged').textContent = currentAdmin.passwordChangedAt
         ? formatDate(currentAdmin.passwordChangedAt) : 'Never changed';
+
+    // ── Clean up stale listeners by replacing both elements ──
+    const oldInput  = document.getElementById('profileFullName');
+    const oldBtn    = document.getElementById('saveProfileBtn');
+
+    const newInput = oldInput.cloneNode(true);
+    const newBtn   = oldBtn.cloneNode(true);
+
+    oldInput.replaceWith(newInput);
+    oldBtn.replaceWith(newBtn);
+
+    // Set value on the fresh input
+    newInput.value    = originalName;
+    newBtn.disabled   = true;
+
+    // Wire up enable/disable logic
+    newInput.addEventListener('input', () => {
+        const val = newInput.value.trim();
+        newBtn.disabled = !val || val === originalName;
+    });
+
+    // Wire up save
+    newBtn.addEventListener('click', () => {
+        const newFullName = newInput.value.trim();
+        if (!newFullName) {
+            showToast('Full name is required.', 'error');
+            return;
+        }
+
+        updateItem(KEY_USERS, currentAdmin.id, { fullName: newFullName, name: newFullName });
+
+        currentAdmin.fullName = newFullName;
+        currentAdmin.name     = newFullName;
+        setLS(KEY_CURRENT_USER, currentAdmin);
+
+        updateAdminNameEverywhere(newFullName);
+        showToast('Profile updated successfully!', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('profileModal'))?.hide();
+    });
 
     populateActivityLog();
     modal.show();
 }
 
 /**
- * FIX: Was calling setLS(KEY_USERS, fullArray) → POST duplicates.
- *      Now uses updateItem() → PUT for just the admin user.
+ * Exposed for external calls if needed.
  */
 function saveProfileChanges() {
-    const newFullName = document.getElementById('profileFullName').value.trim();
+    const newInput = document.getElementById('profileFullName');
+    const newFullName = newInput ? newInput.value.trim() : '';
 
     if (!newFullName) {
         showToast('Full name is required.', 'error');
         return;
     }
 
-    // FIX: updateItem → PUT to MockAPI for just this user
-    updateItem(KEY_USERS, currentAdmin.id, {
-        fullName: newFullName,
-        name:     newFullName
-    });
+    updateItem(KEY_USERS, currentAdmin.id, { fullName: newFullName, name: newFullName });
 
-    // Update session
     currentAdmin.fullName = newFullName;
     currentAdmin.name     = newFullName;
     setLS(KEY_CURRENT_USER, currentAdmin);
 
-    // Update all UI locations atomically
     updateAdminNameEverywhere(newFullName);
-
     showToast('Profile updated successfully!', 'success');
     bootstrap.Modal.getInstance(document.getElementById('profileModal'))?.hide();
 }
@@ -392,7 +428,11 @@ window.saveProfileChanges = saveProfileChanges;
  */
 export function updateAdminNameEverywhere(newName) {
     if (!newName || !newName.trim()) return;
-    const clean    = newName.trim();
+    // Normalize: capitalize first letter of each word, lowercase the rest
+    const clean = newName.trim()
+        .split(' ')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(' ');
     const initials = clean.split(' ')
         .map(w => w.charAt(0).toUpperCase())
         .join('')

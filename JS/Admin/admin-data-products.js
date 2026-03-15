@@ -118,7 +118,7 @@ export async function deleteProduct(id) {
         _productsCache = products;
         return true;
     } catch (err) {
-        console.error("Failed to delete product remotely", err);
-        throw err;
+        console.error('[PRODUCTS] Failed to delete remotely:', err);
+        throw new Error('Could not delete product. Please check your connection and try again.');
     }
 }

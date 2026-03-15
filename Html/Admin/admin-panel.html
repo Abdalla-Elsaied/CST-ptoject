@@ -160,7 +160,7 @@
 
             <!-- Recent tables row -->
             <div class="row g-3">
-                <div class="col-lg-6">
+                <div class="col-lg-6 col-12">
                     <div class="data-card h-100">
                         <div class="data-card-header">Recent Sellers</div>
                         <div class="table-responsive">
@@ -180,7 +180,7 @@
                     </div>
                 </div>
 
-                <div class="col-lg-6">
+                <div class="col-lg-6 col-12">
                     <div class="data-card h-100">
                         <div class="data-card-header">Recent Orders</div>
                         <div class="table-responsive">
@@ -232,7 +232,7 @@
                                 <th>Store Name</th>
                                 <th>City</th>
                                 <th>Payment</th>
-                                <th class="text-center" style="min-width:160px">Actions</th>
+                                <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="sellersTableBody"></tbody>
@@ -387,26 +387,24 @@
                             style="display:none">
                             <i class="bi bi-database-check"></i> Clean Duplicates
                         </button>
-                        <button class="btn-outline-green btn-sm" onclick="exportUsersData()">
-                            <i class="bi bi-download"></i> Export
-                        </button>
+
                     </div>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0 users-table">
                         <thead>
                             <tr>
-                                <th style="width:40px">
+                                <th>
                                     <input type="checkbox" id="selectAllUsers" class="form-check-input">
                                 </th>
-                                <th style="width:50px">#</th>
-                                <th style="width:200px">User</th>
-                                <th style="min-width:220px;max-width:280px">Contact</th>
-                                <th style="width:110px">Role</th>
-                                <th style="width:110px">Status</th>
-                                <th style="width:120px">Joined</th>
-                                <th style="width:80px">Orders</th>
-                                <th style="width:160px" class="text-center">Actions</th>
+                                <th>#</th>
+                                <th>User</th>
+                                <th>Contact</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Joined</th>
+                                <th>Orders</th>
+                                <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="customersTableBody"></tbody>
@@ -483,9 +481,9 @@
                     <option>Delivered</option>
                     <option>Cancelled</option>
                 </select>
-                <input type="date" id="orderDateFrom" class="filter-input" style="max-width:160px"
+                <input type="date" id="orderDateFrom" class="filter-input date-input"
                     title="From date">
-                <input type="date" id="orderDateTo" class="filter-input" style="max-width:160px"
+                <input type="date" id="orderDateTo" class="filter-input date-input"
                     title="To date">
             </div>
 
@@ -517,27 +515,29 @@
         <!-- ── ANALYTICS ──────────────────────────────────── -->
         <section id="analyticsSection" class="admin-section" style="display:none">
             <div class="section-header">
-                <h2 class="section-title">Sales & Analytics</h2>
-                <p class="section-subtitle">Marketplace-wide statistics and trends.</p>
+                <div>
+                    <h2 class="section-title">Sales & Analytics</h2>
+                    <p class="section-subtitle">Marketplace-wide statistics and trends.</p>
+                </div>
             </div>
 
             <div class="row g-3">
-                <div class="col-lg-6">
+                <div class="col-lg-6 col-12">
                     <div class="chart-card">
                         <canvas id="userDistributionChart"></canvas>
                     </div>
                 </div>
-                <div class="col-lg-6">
+                <div class="col-lg-6 col-12">
                     <div class="chart-card">
                         <canvas id="ordersByStatusChart"></canvas>
                     </div>
                 </div>
-                <div class="col-lg-6">
+                <div class="col-lg-6 col-12">
                     <div class="chart-card">
                         <canvas id="topSellersChart"></canvas>
                     </div>
                 </div>
-                <div class="col-lg-6">
+                <div class="col-lg-6 col-12">
                     <div class="chart-card">
                         <canvas id="dailyOrdersChart"></canvas>
                     </div>

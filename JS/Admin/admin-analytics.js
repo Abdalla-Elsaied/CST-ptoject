@@ -1,7 +1,8 @@
 import {
     getSellers,
     getUsers,
-    getOrders
+    getOrders,
+    getOrderDate
 } from './admin-helpers.js';
 
 
@@ -260,7 +261,7 @@ function renderDailyOrdersChart(isDark) {
     // Count how many orders fall on each day (support date, createdAt)
     const counts = days.map(day =>
         orders.filter(o => {
-            const d = o.createdAt || o.date;
+            const d = getOrderDate(o);
             return d && String(d).slice(0, 10) === day;
         }).length
     );
