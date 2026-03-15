@@ -253,11 +253,15 @@ export function renderProductsByCategory(products, container) {
     (a, b) => groups[b].length - groups[a].length
   );
 
+    // Only render the top 4 categories on the home page
+  const top4 = sortedCategories.slice(0, 4);
+
   // Build HTML in popularity order
-  const html = sortedCategories
+  const html = top4
     .map((cat, idx) => categorySectionHTML(cat, groups[cat], idx))
     .join('');
 
+    
   container.innerHTML = html;
 
   // Populate search <select> with sorted categories
@@ -279,30 +283,12 @@ function populateCategoryNav(sortedCategories) {
   const scroll = document.querySelector('.cat-scroll');
   if (!scroll) return;
 
-  const top4 = sortedCategories.slice(0, 4);
-  const more = sortedCategories.slice(4);
-
-  const links = top4.map(cat => {
+  scroll.innerHTML = sortedCategories.map(cat => {
     const enc = encodeURIComponent(cat);
     return `<a href="categoryProducts.html?category=${enc}" class="cat-link">${cat}</a>`;
   }).join('');
 
-  const moreItems = more.length
-    ? more.map(cat => {
-      const enc = encodeURIComponent(cat);
-      return `<li><a class="dropdown-item" href="categoryProducts.html?category=${enc}">${cat}</a></li>`;
-    }).join('')
-    : '<li><a class="dropdown-item text-muted" href="#">No more categories</a></li>';
-
-  scroll.innerHTML = `
-    ${links}
-    <div class="dropdown d-inline-block">
-      <a href="#" class="cat-link dropdown-toggle" data-bs-toggle="dropdown">More</a>
-      <ul class="dropdown-menu">${moreItems}</ul>
-    </div>`;
-
-  // Active highlight on click (for anchor-only nav)
-  scroll.querySelectorAll('.cat-link:not(.dropdown-toggle)').forEach(link => {
+  scroll.querySelectorAll('.cat-link').forEach(link => {
     link.addEventListener('click', () => {
       scroll.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
       link.classList.add('active');

@@ -21,7 +21,7 @@ import {
     debounce,
     formatDate,
     getCurrentUser,
-    applyTableCardLabels
+    // applyTableCardLabels
 } from './admin-helpers.js';
 
 import { getLS, setLS } from '../Core/Storage.js';
@@ -241,7 +241,7 @@ export function renderProductsTable() {
             </td>
         </tr>`; }).join('');
 
-    applyTableCardLabels('productsTable');
+  //  applyTableCardLabels('productsTable');
 
     // Bind toggle switches
     document.querySelectorAll('.product-status-toggle').forEach(toggle => {
