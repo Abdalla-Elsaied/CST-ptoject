@@ -113,6 +113,9 @@ body {
   background: #fff;
   border-bottom: 1.5px solid var(--border);
 }
+.category-nav .dropdown-menu {
+  z-index: 1051; /* above sticky navbar-top (1050) */
+}
 .cat-scroll {
   display: flex;
   align-items: center;
@@ -520,6 +523,19 @@ body {
   width: 100%;
 }
 .btn-add-cart:hover { background: var(--green-dark); color: #fff; transform: translateY(-1px); }
+
+.btn-viewd {
+  background: var(--green-primary);
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  font-size: 0.8rem;
+  border-radius: 8px;
+  padding: 8px 14px;
+  transition: all 0.2s;
+  width: 100%;
+}
+.btn-viewd:hover { background: var(--green-dark); color: #fff; transform: translateY(-1px); }
 
 .btn-view {
   font-size: 0.75rem;

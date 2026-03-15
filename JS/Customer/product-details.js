@@ -621,7 +621,7 @@ function renderRelated(allProducts, current) {
             <p class="product-category">${p.category || ''}</p>
             <h5 class="product-name">${name}</h5>
             <div class="product-price"><span class="price-now">$${price.toFixed(2)}</span></div>
-            <a href="product-details.html?id=${p.id}" class="btn btn-add-cart mt-1">View Details</a>
+            <a href="product-details.html?id=${p.id}" class="btn btn-viewd mt-1">View Details</a>
           </div>
         </div>
       </div>`;
