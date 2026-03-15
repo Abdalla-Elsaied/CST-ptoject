@@ -7,7 +7,6 @@ const roleFilter = document.getElementById('roleFilter');
 const sortFilter = document.getElementById('sortFilter');
 const tableBody = document.getElementById('customersTableBody');
 const emptyState = document.getElementById('customersEmpty');
-const exportBtn = document.getElementById('exportCustomersBtn');
 
 const stats = {
   totalCustomers: document.getElementById('statTotalCustomers'),
@@ -192,22 +191,6 @@ function renderTable() {
   }).join('');
 }
 
-function handleExport() {
-  const payload = {
-    generatedAt: new Date().toISOString(),
-    users
-  };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'customers.json';
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-}
-
 function init() {
   users = loadUsers();
   computeStats();
@@ -218,6 +201,7 @@ searchInput.addEventListener('input', renderTable);
 roleFilter.addEventListener('change', renderTable);
 sortFilter.addEventListener('change', renderTable);
 
-if (exportBtn) exportBtn.addEventListener('click', handleExport);
 
 init();
+
+

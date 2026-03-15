@@ -1,5 +1,6 @@
 import { KEY_CATEGORIES, KEY_PRODUCTS } from "../Core/Constants.js";
-import { getLS, setLS } from "../Core/Storage.js"
+import { getLS, setLS } from "../Core/Storage.js";
+import { getCurrentUser } from "../Core/Auth.js";
 
 let categories = getLS(KEY_CATEGORIES);
 
@@ -17,7 +18,7 @@ const modal = document.getElementById("categoryModal");
 const addCategoryBtn = document.getElementById("addCategoryBtn");
 const cancelModalBtn = document.getElementById("cancelModalBtn");
 const saveCategoryBtn = document.getElementById("saveCategoryBtn");
-const exportBtn = document.getElementById("exportBtn");
+
 const categoryNameInput = document.getElementById("categoryNameInput");
 const categoryVisibilityInput = document.getElementById("categoryVisibilityInput");
 const categoryDescInput = document.getElementById("categoryDescInput");
@@ -206,14 +207,19 @@ const handleSave = () => {
         : cat
     );
   } else {
+    const seller = getCurrentUser();
+
     page = 1;
     categories.unshift({
-      id: `cat-${Date.now()}`,
+      id:          `cat-${Date.now()}`,
       name,
-      visibility,
+      visibility:  'draft',
+      source:      'seller',
+      suggestedBy: seller?.id || null,
       description,
-      products: 0,
-      updated: formatDate(new Date())
+      products:    0,
+      updated:     formatDate(new Date()),
+      createdAt:   new Date().toISOString()
     });
   }
 
@@ -231,17 +237,7 @@ const handleSave = () => {
   }
 };
 
-const handleExport = () => {
-  const blob = new Blob([JSON.stringify(categories, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "categories.json";
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-};
+
 
 const syncThemeIcon = () => {
   const icon = themeToggleBtn?.querySelector("i");
@@ -354,9 +350,7 @@ if (paginationEl) {
   });
 }
 
-if (exportBtn) {
-  exportBtn.addEventListener("click", handleExport);
-}
+
 
 if (categoryNoticeOk && categoryNotice) {
   categoryNoticeOk.addEventListener("click", () => {

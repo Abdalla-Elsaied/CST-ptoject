@@ -9,7 +9,7 @@ const ratingFilter = document.getElementById('reviewRatingFilter');
 const sortSelect = document.getElementById('reviewSort');
 const reviewsList = document.getElementById('reviewsList');
 const emptyState = document.getElementById('reviewsEmpty');
-const exportBtn = document.getElementById('exportReviewsBtn');
+
 
 const stats = {
   total: document.getElementById('statTotalReviews'),
@@ -255,21 +255,7 @@ function renderReviews() {
   }).join('');
 }
 
-function handleExport() {
-  const payload = {
-    generatedAt: new Date().toISOString(),
-    reviews: allReviews
-  };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'product-reviews.json';
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-}
+
 
 function init() {
   loadProducts();
@@ -283,6 +269,6 @@ productFilter.addEventListener('change', renderReviews);
 ratingFilter.addEventListener('change', renderReviews);
 sortSelect.addEventListener('change', renderReviews);
 
-if (exportBtn) exportBtn.addEventListener('click', handleExport);
+
 
 init();
