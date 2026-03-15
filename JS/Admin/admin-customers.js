@@ -28,7 +28,8 @@ import {
     updateItem, 
     deleteItem,
     getLS,
-    setLS
+    setLS,
+    initUsers,
 } from '../Core/Storage.js';
 import { ROLES } from '../Core/Auth.js';
 import { KEY_USERS, KEY_PRODUCTS } from '../Core/Constants.js';
@@ -44,7 +45,9 @@ let customerPagination = { page: 1, limit: 10 };
 /**
  * Main entry point for the customers section.
  */
-export function renderCustomers() {
+export async function renderCustomers() {
+    await initUsers(); 
+    console.log(getUsers())
     customerSearchQuery = '';
     customerStatusFilter = 'All';
     customerRoleFilter = 'All';
@@ -244,7 +247,9 @@ export function renderCustomersTable() {
             <td class="col-num hide-tablet">${start + i + 1}</td>
             <td class="col-user">
                 <div class="user-cell">
-                    <div class="um-avatar" style="background:${avatarGradient}">${escapeHTML(initials)}</div>
+                    ${c.photoUrl
+                        ? `<img src="${c.photoUrl}" class="um-avatar" style="object-fit:cover;" onerror="this.style.display='none'"/>`
+                        : `<div class="um-avatar" style="background:${avatarGradient}">${escapeHTML(initials)}</div>`}
                     <div class="user-meta">
                         <div class="name" title="${escapeHTML(rawName)}">${escapeHTML(rawName)}</div>
                         <div class="subtitle">${subtitle}</div>

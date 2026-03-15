@@ -4,7 +4,7 @@
  * Feature 2 – Role-based access: redirect admin away from this page
  */
 
-import { loadProductsFromFolder }                              from '../Core/FileStorage.js';
+import { loadProductsFromFolder, avatarHTML }                              from '../Core/FileStorage.js';
 import { renderProductsByCategory, showSkeleton, showError }   from './ProductRenderer.js';
 import { getCurrentUser, logoutUser, getCartCount, ROLES }     from '../Core/Auth.js';
 import {
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     accountDropdown.innerHTML = `
       <li>
         <div class="dropdown-user-header">
-          <div class="dropdown-user-avatar">${initials}</div>
+          ${avatarHTML(user)}
           <div>
             <div class="dropdown-user-name">${user.name}</div>
             <div class="dropdown-user-email">${user.email}</div>
@@ -201,7 +201,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const initials = user.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
         mobileMenu.innerHTML = `
           <div class="mobile-nav-user">
-            <div class="mobile-nav-avatar">${initials}</div>
+            ${user.photoUrl 
+  ? `<img src="${user.photoUrl}" class="mobile-nav-avatar" style="border-radius:50%;object-fit:cover;width:36px;height:36px;"/>`
+  : `<div class="mobile-nav-avatar">${initials}</div>`}
             <div>
               <div class="mobile-nav-name">${user.name}</div>
               <div class="mobile-nav-email">${user.email}</div>
@@ -718,7 +720,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!user)                           return showErr('You must be logged in.');
     if (rating < 1)                      return showErr('Please select a star rating.');
     if (!comment || comment.length < 10) return showErr('Comment must be at least 10 characters.');
-    addTestimonial({ userId: user.id, name: user.name, avatar: null, rating, comment });
+    addTestimonial({ userId: user.id, name: user.name, avatar: user.photoUrl || null, rating, comment });
     renderTestimonials();
     if (testiCommentIn) testiCommentIn.value = '';
     selectedRating = 0;

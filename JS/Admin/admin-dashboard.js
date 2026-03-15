@@ -21,7 +21,9 @@ import {
     resolveOrderSellerId,
     statusBadge,
     formatPrice,
-    escapeHTML
+    escapeHTML,
+    getCustomerUser,
+    getSellerUser
 } from './admin-helpers.js';
 
 
@@ -247,7 +249,9 @@ function renderRecentSellers() {
             <tr data-seller-id="${s.id}">
                 <td>
                     <div class="d-flex align-items-center gap-2 flex-nowrap">
-                        <span class="table-avatar ${avatarClass}" style="${avatarStyle};flex-shrink:0">${initial}</span>
+                        ${s.photoUrl
+                            ? `<img src="${s.photoUrl}" class="table-avatar" style="${avatarStyle || ''};flex-shrink:0;object-fit:cover;" onerror="this.style.display='none'"/>`
+                            : `<span class="table-avatar ${avatarClass}" style="${avatarStyle};flex-shrink:0">${initial}</span>`}
                         <div style="min-width:0;">
                             <div class="fw-semibold d-flex align-items-center gap-1" style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;" title="${escapeHTML(name)}">
                                 <span class="status-dot ${dotClass}" style="flex-shrink:0"></span>${escapeHTML(name)}
@@ -334,9 +338,12 @@ function renderRecentOrders(allOrders) {
         const customerDisplay = customerName === '—'
             ? `<span class="text-muted">—</span>`
             : `<div class="d-flex align-items-center gap-2">
-                   <span class="table-avatar" style="width:28px;height:28px;font-size:11px;flex-shrink:0;">
-                       ${customerName.charAt(0).toUpperCase()}
-                   </span>
+                   ${(() => {
+                        const cu = getCustomerUser(o.customerId || o.userId);
+                        return cu?.photoUrl
+                            ? `<img src="${cu.photoUrl}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'"/>`
+                            : `<span class="table-avatar" style="width:28px;height:28px;font-size:11px;flex-shrink:0;">${customerName.charAt(0).toUpperCase()}</span>`;
+                        })()}
                    <span>${customerName}</span>
                </div>`;
 
@@ -351,9 +358,12 @@ function renderRecentOrders(allOrders) {
             sellerDisplay = sellerName === '—'
                 ? `<span class="text-muted">—</span>`
                 : `<div class="d-flex align-items-center gap-2">
-                       <span class="table-avatar" style="width:28px;height:28px;font-size:11px;flex-shrink:0;background:linear-gradient(135deg,#3b82f6,#2563eb);">
-                           ${sellerName.charAt(0).toUpperCase()}
-                       </span>
+                       ${(() => {
+                            const su = getSellerUser(rawSellerId);
+                            return su?.photoUrl
+                                ? `<img src="${su.photoUrl}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'"/>`
+                                : `<span class="table-avatar" style="width:28px;height:28px;font-size:11px;flex-shrink:0;background:linear-gradient(135deg,#3b82f6,#2563eb);">${sellerName.charAt(0).toUpperCase()}</span>`;
+                            })()}
                        <span>${sellerName}</span>
                    </div>`;
         }

@@ -1,5 +1,3 @@
-
-
 import { loadProductsFromFolder } from '../Core/FileStorage.js';
 import { KEY_CATEGORIES, KEY_ORDERS, KEY_PRODUCTS } from '../Core/Constants.js';
 import { getCurrentUser, logoutUser, requireRole, ROLES } from '../Core/Auth.js';
@@ -10,7 +8,9 @@ $(function () {
 
   const currentUser = getCurrentUser();
   if (!currentUser) return;
+
   const sellerId = currentUser?.id ? String(currentUser.id) : '';
+
 
   if (currentUser.isSuspended) {
     alert('Your account has been suspended. Please contact support.');
@@ -23,6 +23,36 @@ $(function () {
     logoutUser();
     return;
   }
+
+  console.log(currentUser)
+  // Update navbar and sidebar with real seller info
+    const initials = (currentUser.name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    const photoUrl = currentUser.photoUrl || null;
+    console.log(photoUrl)
+
+    const navbarAvatar = document.getElementById('sellerTopAvatar');
+if (navbarAvatar) {
+  if (photoUrl) {
+    navbarAvatar.src = photoUrl;
+  } else {
+    navbarAvatar.outerHTML = `<div class="topnav-avatar" style="display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-weight:700;font-size:14px;border-radius:50%;">${initials}</div>`;
+  }
+}
+
+const sidebarAvatar = document.getElementById('sellerUserAvatar');
+if (sidebarAvatar) {
+  if (photoUrl) {
+    sidebarAvatar.src = photoUrl;
+  } else {
+    sidebarAvatar.outerHTML = `<div class="user-avatar" style="display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-weight:700;font-size:15px;border-radius:50%;">${initials}</div>`;
+  }
+}
+
+const sidebarUserName = document.getElementById('sellerUserName');
+if (sidebarUserName) sidebarUserName.textContent = currentUser.storeName || currentUser.name || '—';
+
+const sidebarUserEmail = document.getElementById('sellerUserEmail');
+if (sidebarUserEmail) sidebarUserEmail.textContent = currentUser.email || '—';
 
   function getProductSellerId(product) {
     if (!product) return '';

@@ -195,7 +195,8 @@ export function loginUser(email, password) {
 export function logoutUser() {
     removeLS(KEY_CURRENT_USER);
     removeLS(KEY_CART);
-    window.location.href = LOGIN_URL;
+
+    window.location.replace(LOGIN_URL);
 }
 
 /**
@@ -232,25 +233,24 @@ export function requireRole(allowedRoles) {
     const liveUser  = liveUsers.find(u => u.id === user.id);
 
     if (liveUser && liveUser.isBanned) {
-        // Clear session and redirect to login with a message
         removeLS(KEY_CURRENT_USER);
         removeLS(KEY_CART);
-        window.location.href = LOGIN_URL + '?banned=1';
+        window.location.replace(LOGIN_URL + '?banned=1');
         return false;
     }
 
     if (liveUser && liveUser.isSuspended) {
         removeLS(KEY_CURRENT_USER);
         removeLS(KEY_CART);
-        window.location.href = LOGIN_URL + '?suspended=1';
+        window.location.replace(LOGIN_URL + '?suspended=1');
         return false;
     }
 
     if (!allowedRoles.includes(user.role)) {
         switch (user.role) {
-            case ROLES.ADMIN:    window.location.href = ADMIN_HOME_URL;    break;
-            case ROLES.SELLER:   window.location.href = SELLER_HOME_URL;   break;
-            default:             window.location.href = CUSTOMER_HOME_URL; break;
+            case ROLES.ADMIN:    window.location.replace(ADMIN_HOME_URL);    break;
+            case ROLES.SELLER:   window.location.replace(SELLER_HOME_URL);   break;
+            default:             window.location.replace(CUSTOMER_HOME_URL); break;
         }
         return false;
     }
@@ -319,10 +319,13 @@ export function addCustomerToSeller(userId, storeData) {
         return { success: false, error: 'Store name is already taken. Please choose another.' };
     }
 
+    const { userEmail, ...cleanStoreData } = storeData; // separate email from store data
+
     const newRequest = {
         id:        'req-' + Date.now().toString().slice(2, 9),
         userId,
-        ...storeData,
+        email:     userEmail || user?.email || '',  // ← use passed email
+        ...cleanStoreData,  // ← spread without userEmail
         status:    'pending',
         createdAt: new Date().toISOString()
     };
@@ -343,7 +346,9 @@ export function getAllCustomerToApproved() {
  *      Now uses updateItem() → sends PUT for just the one changed user.
  */
 export function acceptCustomerSellerRequest(requestId) {
+    console.log(requestId)
     const requests     = getLS(KEY_APPROVAL) || [];
+    console.log(requests)
     const requestIndex = requests.findIndex(r => r.id === requestId);
 
     if (requestIndex === -1) {
@@ -351,12 +356,16 @@ export function acceptCustomerSellerRequest(requestId) {
     }
 
     const request = requests[requestIndex];
+    console.log(request)
     const users   = getLS(KEY_USERS) || [];
-    const user    = users.find(u => u.id === request.userId);
-
-    if (!user) {
-        return { success: false, error: 'User not found' };
+    console.log(users)
+    let user = users.find(u => String(u.id) === String(request.userId));
+    if (!user && request.email) {
+        user = users.find(u => (u.email || '').toLowerCase() === request.email.toLowerCase());
     }
+
+    if (!user) return { success: false, error: 'User not found' };
+    console.log(user)
 
     // Build the seller updates
     const sellerUpdates = {

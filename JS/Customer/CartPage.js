@@ -13,7 +13,6 @@ import {
 import { getCurrentUser, logoutUser } from '../Core/Auth.js';
 import { getLS, setLS }               from '../Core/Storage.js';
 import { KEY_LOCATION, KEY_ORDERS }   from '../Core/Constants.js';
-import { saveProductToDisk }          from '../Core/FileStorage.js';
 
 const FREE_SHIPPING_THRESHOLD = 49;
 const PROMO_CODES = {
@@ -46,7 +45,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (accountDropdown) accountDropdown.innerHTML = `
         <li>
           <div class="dropdown-user-header">
-            <div class="dropdown-user-avatar">${initials}</div>
+            ${user.photoUrl 
+  ? `<img src="${user.photoUrl}" class="dropdown-user-avatar" style="border-radius:50%;object-fit:cover;"/>`
+  : `<div class="dropdown-user-avatar">${initials}</div>`}
             <div><div class="dropdown-user-name">${user.name}</div><div class="dropdown-user-email">${user.email}</div></div>
           </div>
         </li>

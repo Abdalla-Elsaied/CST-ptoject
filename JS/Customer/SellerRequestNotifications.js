@@ -87,7 +87,7 @@ function renderNotification() {
           <strong>Application not approved</strong>
           <span>Your seller application was not approved. You can apply again with updated information.</span>
         </div>
-        <a href="ContactUS.html" class="seller-notif-link">Apply Again</a>
+        <a href="CustomerHomePage.html#becomeSeller" class="seller-notif-link">Apply Again</a>
         <button class="seller-notif-dismiss" aria-label="Dismiss" data-dismiss="seller-rejected">&times;</button>
       </div>`;
   } else {
@@ -99,7 +99,7 @@ function renderNotification() {
           <strong>Want to sell on Dealport?</strong>
           <span>Join thousands of sellers and reach more customers.</span>
         </div>
-        <a href="ContactUS.html#becomeSeller" class="seller-notif-link">Become a Seller</a>
+        <a href="#" class="seller-notif-link" data-bs-toggle="modal" data-bs-target="#becomeSellerModal">Become a Seller</a>
         <button class="seller-notif-dismiss" aria-label="Dismiss" data-dismiss="seller-cta">&times;</button>
       </div>`;
   }

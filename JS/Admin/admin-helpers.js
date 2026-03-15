@@ -574,3 +574,19 @@ export function renderPagination(totalItems, itemsPerPage, currentPage, containe
         };
     });
 }
+
+export function getCustomerUser(customerId) {
+  if (!customerId) return null;
+  if (!_usersMapCache) {
+    _usersMapCache = new Map(getUsers().map(u => [String(u.id), u]));
+  }
+  return _usersMapCache.get(String(customerId)) || null;
+}
+
+export function getSellerUser(sellerId) {
+  if (!sellerId) return null;
+  if (!_sellersMapCache) {
+    _sellersMapCache = new Map(getSellers().map(s => [String(s.id), s]));
+  }
+  return _sellersMapCache.get(String(sellerId)) || null;
+}

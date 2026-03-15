@@ -5,7 +5,7 @@
  *       toolbar with search chip, skeleton loading.
  */
 
-import { loadProductsFromFolder }                              from '../Core/FileStorage.js';
+import { loadProductsFromFolder } from '../Core/FileStorage.js';
 import { getCurrentUser, logoutUser, getCartCount }            from '../Core/Auth.js';
 import { addToCart, getCart }                                  from './Cart.js';
 import { toggleWishlist, isWishlisted }                        from './Wishlist.js';
@@ -264,7 +264,9 @@ function renderAccountMenu() {
     dropdown.innerHTML = `
       <li>
         <div class="dropdown-user-header">
-          <div class="dropdown-user-avatar">${initials}</div>
+          ${user.photoUrl 
+            ? `<img src="${user.photoUrl}" class="dropdown-user-avatar" style="border-radius:50%;object-fit:cover;"/>`
+            : `<div class="dropdown-user-avatar">${initials}</div>`}
           <div>
             <div class="dropdown-user-name">${user.name}</div>
             <div class="dropdown-user-email">${user.email}</div>

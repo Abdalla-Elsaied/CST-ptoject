@@ -123,7 +123,9 @@ export function renderSellersTable() {
                 <td class="col-index">${i + 1}</td>
                 <td class="col-seller-name">
                     <div class="seller-cell">
-                        <div class="sm-avatar" style="background:${avatarGradient}">${escapeHTML(initials)}</div>
+                        ${s.photoUrl
+                            ? `<img src="${s.photoUrl}" class="sm-avatar" style="object-fit:cover;" onerror="this.style.display='none'"/>`
+                            : `<div class="sm-avatar" style="background:${avatarGradient}">${escapeHTML(initials)}</div>`}
                         <div class="seller-meta">
                             <div class="name" title="${escapeHTML(name)}">${escapeHTML(name)}</div>
                             <div class="email">${escapeHTML(s.email || '—')}</div>
