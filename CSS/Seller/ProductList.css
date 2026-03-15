@@ -28,8 +28,13 @@ font-family:'Plus Jakarta Sans',sans-serif;
 }
 body{
 background:var(--page-bg);
-padding:24px;
 color:var(--text-primary);
+height:100vh;
+overflow:hidden;
+display:flex;
+flex-direction:column;
+padding:24px;
+box-sizing:border-box;
 }
 .header{
 display:flex;
@@ -164,6 +169,8 @@ border:1px solid var(--border);
 border-radius:var(--radius);
 box-shadow:var(--shadow);
 overflow:auto;
+flex:1;
+min-height:0;
 }
 table{
 width:100%;
@@ -315,7 +322,7 @@ color:var(--green-dark);
 .stats{ grid-template-columns:repeat(2,1fr); }
 }
 @media (max-width: 600px){
-body{ padding:14px; }
+body{ padding:14px; box-sizing:border-box; }
 .stats{ grid-template-columns:1fr; }
 .search-wrap{ width:100%; }
 .search{ width:100%; min-width:0; }

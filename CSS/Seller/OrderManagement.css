@@ -31,14 +31,23 @@ font-family:'Plus Jakarta Sans',sans-serif;
 }
 body{
 background:var(--page-bg);
-padding:28px 16px;
 color:var(--text-primary);
-min-height:100vh;
+height:100vh;
+overflow:hidden;
+display:flex;
+flex-direction:column;
+min-height:0;
 }
 .container{
 max-width:1200px;
 margin:0 auto;
-padding:0;
+padding:28px 16px;
+height:100%;
+overflow-y:auto;
+overflow-x:hidden;
+display:flex;
+flex-direction:column;
+min-height:0;
 }
 .header{
 display:flex;
@@ -157,9 +166,12 @@ box-shadow:none;
 }
 .table-wrap{
 overflow-x:auto;
+overflow-y:auto;
 border-radius:var(--radius);
 border:1px solid var(--border);
 box-shadow:var(--shadow);
+flex:1;
+min-height:0;
 }
 table{
 width:100%;
@@ -513,12 +525,8 @@ grid-template-columns:repeat(2,1fr);
 }
 }
 @media (max-width:680px){
-body{
-padding:16px 10px;
-}
 .container{
-padding:16px;
-border-radius:14px;
+padding:16px 10px;
 }
 .title{
 font-size:24px;

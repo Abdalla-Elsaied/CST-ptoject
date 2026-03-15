@@ -140,6 +140,42 @@ export function getCustomerName(customerId) {
 }
 
 /**
+ * Resolves the seller id from an order's items.
+ * First tries item.sellerId, then falls back to looking up the product by id.
+ * Returns null if unresolvable, or 'multiple' if items span multiple sellers.
+ */
+export function resolveOrderSellerId(order) {
+    const items = Array.isArray(order?.items) ? order.items
+                : Array.isArray(order?.products) ? order.products
+                : [];
+
+    // Try direct sellerId on items first
+    let ids = [...new Set(items.map(i => i?.sellerId).filter(Boolean).map(String))];
+
+    // Fallback: look up each item's product to get sellerId
+    if (ids.length === 0 && items.length > 0) {
+        const products = getProducts();
+        const productMap = new Map(products.map(p => [String(p.id), p]));
+        ids = [...new Set(
+            items
+                .map(i => {
+                    const pid = String(i?.id ?? i?.productId ?? '');
+                    return productMap.get(pid)?.sellerId;
+                })
+                .filter(Boolean)
+                .map(String)
+        )];
+    }
+
+    // Fallback: order-level sellerId
+    if (ids.length === 0 && order?.sellerId) return String(order.sellerId);
+
+    if (ids.length === 0) return null;
+    if (ids.length > 1) return 'multiple';
+    return ids[0];
+}
+
+/**
  * Returns customer's email by id.
  */
 export function getCustomerEmail(customerId) {

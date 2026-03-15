@@ -43,6 +43,7 @@ export function addToCart(product, quantity = 1) {
     image:         product.image         || '',
     category:      product.category      || '',
     stockQuantity: product.stockQuantity != null ? parseInt(product.stockQuantity) : null,
+    sellerId:      product.sellerId      || null,
     quantity:      quantity,
   };
   setLS(KEY_CART, [...cart, item]);

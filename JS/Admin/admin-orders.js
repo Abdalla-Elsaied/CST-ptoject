@@ -9,6 +9,7 @@ import {
     saveOrders,
     getCustomerName,
     getSellerName,
+    resolveOrderSellerId,
     getCurrentUser,
     formatPrice,
     formatDate,
@@ -104,19 +105,12 @@ export function renderOrdersTable() {
     // Since a single order can have multiple items from different sellers,
     // we take the seller of the first item for display brevity, or 'Multiple Sellers' if multiple.
     tbody.innerHTML = items.map((o, i) => {
+        const resolvedSellerId = resolveOrderSellerId(o);
         let sellerText = '—';
-        if (o.items && o.items.length > 0) {
-            const uniqueSellerIds = [...new Set(o.items.map(item => item.sellerId).filter(Boolean))];
-            if (uniqueSellerIds.length === 0) {
-                sellerText = '—';
-            } else if (uniqueSellerIds.length > 1) {
-                sellerText = 'Multiple Sellers';
-            } else {
-                sellerText = getSellerName(uniqueSellerIds[0]);
-            }
-        } else if (o.sellerId) {
-            // Fallback to order-level sellerId if items not available
-            sellerText = getSellerName(o.sellerId);
+        if (resolvedSellerId === 'multiple') {
+            sellerText = 'Multiple Sellers';
+        } else if (resolvedSellerId) {
+            sellerText = getSellerName(resolvedSellerId);
         }
 
         const itemCount = o.items ? o.items.length : 0;
@@ -188,17 +182,11 @@ function openOrderDetail(orderId) {
 
     // Sellers summary
     let sellerSummary = '—';
-    if (order.items && order.items.length > 0) {
-        const uniqueSellerIds = [...new Set(order.items.map(i => i.sellerId).filter(Boolean))];
-        if (uniqueSellerIds.length === 0) {
-            sellerSummary = '—';
-        } else if (uniqueSellerIds.length > 1) {
-            sellerSummary = 'Multiple Sellers';
-        } else {
-            sellerSummary = getSellerName(uniqueSellerIds[0]);
-        }
-    } else if (order.sellerId) {
-        sellerSummary = getSellerName(order.sellerId);
+    const resolvedSellerId = resolveOrderSellerId(order);
+    if (resolvedSellerId === 'multiple') {
+        sellerSummary = 'Multiple Sellers';
+    } else if (resolvedSellerId) {
+        sellerSummary = getSellerName(resolvedSellerId);
     }
 
     const createdAt = formatDate(order.date || order.createdAt);

@@ -32,12 +32,17 @@ body{
 margin:0;
 background:var(--page-bg);
 color:var(--text-primary);
-padding:24px 16px;
+height:100vh;
+overflow:hidden;
 }
 
 .container{
 max-width:1200px;
 margin:0 auto;
+padding:24px 16px;
+height:100%;
+overflow-y:auto;
+overflow-x:hidden;
 }
 
 .header{
@@ -342,7 +347,7 @@ color:var(--text-sec);
 }
 
 @media (max-width:640px){
-body{padding:14px 10px;}
+.container{padding:14px 10px;}
 .stats{grid-template-columns:1fr;}
 .tab{padding:8px 10px;}
 .gallery{grid-template-columns:1fr;}

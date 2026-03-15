@@ -39,9 +39,9 @@ body {
   background: var(--page-bg);
   color: var(--text-primary);
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   transition: background .3s, color .3s;
-  overflow-x: hidden;
 }
 
 a { text-decoration: none; }
@@ -208,7 +208,8 @@ img { max-width: 100%; }
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   min-width: 0;
   transition: margin-left .3s;
 }
@@ -353,6 +354,8 @@ img { max-width: 100%; }
   flex: 1;
   max-width: 100%;
   overflow-x: hidden;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .embedded-page-wrap {

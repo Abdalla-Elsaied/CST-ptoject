@@ -18,6 +18,7 @@ import {
     getOrders,
     getCustomerName,
     getSellerName,
+    resolveOrderSellerId,
     statusBadge,
     formatPrice,
     escapeHTML
@@ -328,8 +329,8 @@ function renderRecentOrders(allOrders) {
         const fullId  = String(o.id || '');
         const shortId = fullId.length > 6 ? '#' + fullId.slice(-6) : '#' + fullId;
 
-        // Customer — no avatar if name not resolved
-        const customerName    = getCustomerName(o.customerId);
+        // Customer — support both userId (Cart.js) and customerId field names
+        const customerName    = getCustomerName(o.customerId || o.userId);
         const customerDisplay = customerName === '—'
             ? `<span class="text-muted">—</span>`
             : `<div class="d-flex align-items-center gap-2">
@@ -339,14 +340,8 @@ function renderRecentOrders(allOrders) {
                    <span>${customerName}</span>
                </div>`;
 
-        // Seller — resolve from items first
-        let rawSellerId = null;
-        if (o.items && o.items.length > 0) {
-            const ids = [...new Set(o.items.map(i => i.sellerId).filter(Boolean))];
-            rawSellerId = ids.length === 1 ? ids[0] : ids.length > 1 ? 'multiple' : null;
-        } else if (o.sellerId) {
-            rawSellerId = o.sellerId;
-        }
+        // Seller — resolve via helper (handles missing sellerId by product lookup)
+        const rawSellerId = resolveOrderSellerId(o);
 
         let sellerDisplay;
         if (rawSellerId === 'multiple') {
