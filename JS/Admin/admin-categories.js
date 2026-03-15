@@ -4,41 +4,116 @@
 // Depends on: admin-helpers.js, Constants.js
 // ============================================================
 
-import { KEY_CATEGORIES } from '../Core/Constants.js';
-import { showToast, showConfirm, escapeHTML } from './admin-helpers.js';
+import { getLS, setLS } from '../Core/Storage.js';
+import { KEY_CATEGORIES, KEY_PRODUCTS, KEY_CURRENT_USER } from '../Core/Constants.js';
+import {
+    showToast,
+    showConfirm,
+    escapeHTML,
+    renderTableEmptyState
+} from './admin-helpers.js';
+
+const MAX_CATEGORY_NAME_LENGTH = 50;
+const MAX_DESCRIPTION_LENGTH = 200;
+
+const getCategories = () => getLS(KEY_CATEGORIES) || [];
+const saveCategories = (cats) => setLS(KEY_CATEGORIES, cats);
+const getProducts = () => getLS(KEY_PRODUCTS) || [];
+const saveProducts = (prods) => setLS(KEY_PRODUCTS, prods);
+const getCurrentAdmin = () => getLS(KEY_CURRENT_USER);
 
 /**
- * Main entry point for category requests.
+ * ✅ FIX: Calculate actual product count for each category
  */
+function syncCategoryProductCounts() {
+    const categories = getCategories();
+    const products = getProducts();
+    
+    categories.forEach(cat => {
+        const count = products.filter(p => 
+            (p.category === cat.name || p.productCategory === cat.name)
+        ).length;
+        cat.products = count;
+    });
+    
+    saveCategories(categories);
+}
+
+/**
+ * ✅ FIX: Ensure all categories have proper source tracking
+ */
+function ensureCategoryMetadata() {
+    const categories = getCategories();
+    const admin = getCurrentAdmin();
+    let changed = false;
+    
+    const updated = categories.map(cat => {
+        if (!cat.source) {
+            changed = true;
+            return {
+                ...cat,
+                source: 'admin',
+                suggestedBy: null,
+                createdBy: admin?.id || 'system',
+                createdAt: cat.createdAt || new Date().toISOString()
+            };
+        }
+        return cat;
+    });
+    
+    if (changed) {
+        saveCategories(updated);
+    }
+}
+
+/**
+ * ✅ FIX: Validate category name with proper rules
+ */
+function validateCategoryName(name, excludeId = null) {
+    const trimmed = (name || '').trim();
+    
+    if (!trimmed) {
+        return { valid: false, error: 'Category name is required' };
+    }
+    
+    if (trimmed.length > MAX_CATEGORY_NAME_LENGTH) {
+        return { valid: false, error: `Name must be ${MAX_CATEGORY_NAME_LENGTH} characters or less` };
+    }
+    
+    if (!/^[a-zA-Z0-9\s&\-_]+$/.test(trimmed)) {
+        return { valid: false, error: 'Name can only contain letters, numbers, spaces, &, -, and _' };
+    }
+    
+    const categories = getCategories();
+    const duplicate = categories.find(c => 
+        c.name.toLowerCase() === trimmed.toLowerCase() && 
+        c.id !== excludeId
+    );
+    
+    if (duplicate) {
+        return { valid: false, error: 'A category with this name already exists' };
+    }
+    
+    return { valid: true, value: trimmed };
+}
+
 export function renderCategories() {
+    // ✅ FIX: Sync product counts and metadata before rendering
+    syncCategoryProductCounts();
+    ensureCategoryMetadata();
+    
     renderCategoryRequestsTable();
     renderAllCategoriesTable();
     bindCategoryEvents();
 }
 
 /**
- * Utility to safely load categories from LocalStorage
- */
-function getCategories() {
-    try {
-        const parsed = JSON.parse(localStorage.getItem(KEY_CATEGORIES));
-        if (Array.isArray(parsed)) return parsed;
-    } catch (e) { }
-    return [];
-}
-
-/**
- * Utility to save categories back
- */
-function saveCategories(cats) {
-    localStorage.setItem(KEY_CATEGORIES, JSON.stringify(cats));
-}
-
-/**
- * Renders the table of all categories (active, hidden, draft)
+ * ✅ FIX: Render all categories with accurate product counts and better UI
  */
 function renderAllCategoriesTable() {
-    const categories = getCategories();
+    const categories = getCategories().filter(c => 
+        c.visibility !== 'draft' || c.source === 'admin'
+    );
     const tbody = document.getElementById('allCategoriesTableBody');
     if (!tbody) return;
 
@@ -47,7 +122,8 @@ function renderAllCategoriesTable() {
             <tr>
                 <td colspan="5" class="empty-state">
                     <i class="bi bi-collection fs-1 text-muted d-block mb-2"></i>
-                    No categories found. Sellers can suggest new ones from their dashboard.
+                    <strong>No Categories Yet</strong>
+                    <p class="text-muted mb-0">Create a category or approve seller suggestions.</p>
                 </td>
             </tr>`;
         return;
@@ -61,28 +137,26 @@ function renderAllCategoriesTable() {
 
     tbody.innerHTML = categories.map(cat => `
         <tr>
-            <td><strong>${escapeHTML(cat.name || '')}</strong></td>
-            <td>${typeof cat.products === 'number' ? cat.products : 0}</td>
+            <td>
+                <strong>${escapeHTML(cat.name || '')}</strong>
+                ${cat.source === 'seller' ? '<small class="text-muted d-block">From Seller</small>' : ''}
+            </td>
+            <td><span class="badge bg-light text-dark">${cat.products || 0}</span></td>
             <td>${visibilityBadge(cat.visibility)}</td>
-            <td>${escapeHTML(cat.updated || '—')}</td>
+            <td><small>${escapeHTML(cat.updated || '—')}</small></td>
             <td class="text-center">
                 <div class="d-flex gap-2 justify-content-center flex-wrap">
-                    <button class="btn-action btn-edit" data-id="${cat.id}" data-action="edit-cat" title="Edit name & description">
+                    <button class="btn-action btn-edit btn-sm" data-id="${cat.id}" data-action="edit-cat" title="Edit category">
                         <i class="bi bi-pencil"></i> Edit
                     </button>
-                    ${cat.visibility !== 'active' ? `
-                    <button class="btn-action btn-success" data-id="${cat.id}" data-action="set-active" title="Set Active">
-                        <i class="bi bi-eye"></i> Activate
-                    </button>` : ''}
-                    ${cat.visibility !== 'hidden' ? `
-                    <button class="btn-action btn-warn" data-id="${cat.id}" data-action="set-hidden" title="Hide from storefront">
+                    ${cat.visibility === 'active' ? `
+                    <button class="btn-action btn-warn btn-sm" data-id="${cat.id}" data-action="set-hidden" title="Hide from storefront">
                         <i class="bi bi-eye-slash"></i> Hide
-                    </button>` : ''}
-                    ${cat.visibility !== 'draft' ? `
-                    <button class="btn-action btn-view" data-id="${cat.id}" data-action="set-draft" title="Mark as draft">
-                        <i class="bi bi-file-earmark-text"></i> Draft
-                    </button>` : ''}
-                    <button class="btn-action btn-delete" data-id="${cat.id}" data-action="delete-cat" title="Delete category">
+                    </button>` : `
+                    <button class="btn-action btn-success btn-sm" data-id="${cat.id}" data-action="set-active" title="Make active">
+                        <i class="bi bi-eye"></i> Activate
+                    </button>`}
+                    <button class="btn-action btn-delete btn-sm" data-id="${cat.id}" data-action="delete-cat" title="Delete category">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
@@ -95,8 +169,7 @@ function renderAllCategoriesTable() {
  * Renders the table of pending category suggestions
  */
 export function renderCategoryRequestsTable() {
-    const categories = getCategories();
-    // 'draft' visibility is used for pending approval from sellers
+    const categories  = getCategories();
     const pendingCats = categories.filter(c => c.visibility === 'draft');
 
     const countEl = document.getElementById('categoryRequestsCount');
@@ -163,19 +236,140 @@ function saveEditCategoryAndApprove() {
     const idx = categories.findIndex(c => c.id === id);
     if (idx === -1) return;
 
-    const wasDraft = categories[idx].visibility === 'draft';
-
+    const cat = categories[idx];
     categories[idx].name = name;
     categories[idx].description = description;
-    if (wasDraft) {
+    categories[idx].updated = new Date().toLocaleDateString('en-US', {
+        month: 'short', day: '2-digit', year: 'numeric'
+    });
+
+    if (cat.visibility === 'draft') {
         categories[idx].visibility = 'active';
+        categories[idx].approvedAt = new Date().toISOString();
+        showToast(`Suggestion "${name}" updated and approved!`, 'success');
+    } else {
+        showToast(`Category "${name}" updated successfully.`, 'success');
     }
+
     saveCategories(categories);
 
     bootstrap.Modal.getInstance(document.getElementById('editCategoryModal')).hide();
-    showToast(`Category "${name}" updated${wasDraft ? ' and approved' : ''}!`, 'success');
     renderCategoryRequestsTable();
     renderAllCategoriesTable();
+}
+
+/**
+ * Opens modal to add a new category (saves as draft)
+ */
+export function openAddCategoryModal() {
+    // Create modal if it doesn't exist
+    if (!document.getElementById('addCategoryModal')) {
+        document.body.insertAdjacentHTML('beforeend', `
+            <div class="modal fade" id="addCategoryModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="bi bi-tags"></i> Add New Category
+                            </h5>
+                            <button type="button" class="btn-close"
+                                data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    Category Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control"
+                                    id="newCategoryName"
+                                    placeholder="e.g. Sports & Fitness">
+                                <div class="invalid-feedback">
+                                    Please enter a category name.
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">
+                                    Description
+                                    <span class="text-muted small">(optional)</span>
+                                </label>
+                                <textarea class="form-control"
+                                    id="newCategoryDesc"
+                                    rows="3"
+                                    placeholder="Short description..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary"
+                                data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn-primary-green"
+                                id="saveNewCategoryBtn">
+                                <i class="bi bi-send"></i> Submit for Review
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>`);
+
+        document.getElementById('saveNewCategoryBtn')
+            .addEventListener('click', saveNewCategory);
+    }
+
+    // Reset fields
+    document.getElementById('newCategoryName').value = '';
+    document.getElementById('newCategoryDesc').value = '';
+    document.getElementById('newCategoryName').classList.remove('is-invalid');
+
+    new bootstrap.Modal(document.getElementById('addCategoryModal')).show();
+}
+
+/**
+ * Saves new category as draft
+ */
+export function saveNewCategory() {
+    const name = (document.getElementById('newCategoryName').value || '').trim();
+    const desc = (document.getElementById('newCategoryDesc').value || '').trim();
+
+    // Validate name
+    if (!name) {
+        document.getElementById('newCategoryName').classList.add('is-invalid');
+        return;
+    }
+
+    const categories = getCategories();
+
+    // Block duplicate name
+    if (categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+        showToast(`Category "${name}" already exists.`, 'error');
+        return;
+    }
+
+    // Save as draft → will appear in Suggestions tab for review
+    const newCategory = {
+        id:          'cat-' + Date.now().toString(36),
+        name,
+        description: desc,
+        visibility:  'draft',    // ← goes to Suggestions tab
+        products:    0,
+        updated:     new Date().toLocaleDateString('en-US', {
+            month: 'short', day: '2-digit', year: 'numeric'
+        })
+    };
+
+    categories.push(newCategory);
+    saveCategories(categories);
+
+    // Close modal
+    bootstrap.Modal.getInstance(
+        document.getElementById('addCategoryModal')
+    )?.hide();
+
+    showToast(`"${name}" added to suggestions for review.`, 'success');
+
+    // Re-render — new category appears in Suggestions tab immediately
+    renderCategoryRequestsTable();
+
+    // Update sidebar badge
+    window.updateSidebarBadges?.();
 }
 
 /**
@@ -190,7 +384,7 @@ function bindCategoryEvents() {
 
             const id = btn.dataset.id;
             const action = btn.dataset.action;
-            const categories = getCategories();
+            const categories = getLS(KEY_CATEGORIES) || [];
             const catIndex = categories.findIndex(c => c.id === id);
 
             if (catIndex === -1) return;
@@ -198,16 +392,24 @@ function bindCategoryEvents() {
             if (action === 'approve-cat') {
                 showConfirm(`Approve category "${categories[catIndex].name}"? It will go live immediately.`, () => {
                     categories[catIndex].visibility = 'active';
-                    saveCategories(categories);
+                    categories[catIndex].approvedAt = new Date().toISOString();
+                    categories[catIndex].updated = new Date().toLocaleDateString('en-US', {
+                        month: 'short', day: '2-digit', year: 'numeric'
+                    });
+
+                    setLS(KEY_CATEGORIES, categories);
                     showToast('Category approved successfully!', 'success');
                     renderCategoryRequestsTable();
+                    renderAllCategoriesTable();
+                    window.updateSidebarBadges?.();
                 });
             } else if (action === 'reject-cat') {
                 showConfirm(`Reject and delete category suggestion "${categories[catIndex].name}"?`, () => {
                     categories.splice(catIndex, 1);
-                    saveCategories(categories);
+                    setLS(KEY_CATEGORIES, categories);
                     showToast('Category suggestion rejected.', 'error');
                     renderCategoryRequestsTable();
+                    window.updateSidebarBadges?.();
                 });
             } else if (action === 'edit-approve-cat') {
                 openEditCategoryModal(categories[catIndex]);
@@ -223,7 +425,7 @@ function bindCategoryEvents() {
 
             const id = btn.dataset.id;
             const action = btn.dataset.action;
-            const categories = getCategories();
+            const categories = getLS(KEY_CATEGORIES) || [];
             const idx = categories.findIndex(c => c.id === id);
             if (idx === -1) return;
 
@@ -234,7 +436,7 @@ function bindCategoryEvents() {
             } else if (action === 'set-active') {
                 showConfirm(`Set category "${cat.name}" to Active?`, () => {
                     categories[idx].visibility = 'active';
-                    saveCategories(categories);
+                    setLS(KEY_CATEGORIES, categories);
                     showToast('Category set to Active.', 'success');
                     renderCategoryRequestsTable();
                     renderAllCategoriesTable();
@@ -242,27 +444,38 @@ function bindCategoryEvents() {
             } else if (action === 'set-hidden') {
                 showConfirm(`Hide category "${cat.name}" from storefront?`, () => {
                     categories[idx].visibility = 'hidden';
-                    saveCategories(categories);
+                    setLS(KEY_CATEGORIES, categories);
                     showToast('Category hidden from storefront.', 'warning');
                     renderCategoryRequestsTable();
                     renderAllCategoriesTable();
                 });
-            } else if (action === 'set-draft') {
-                showConfirm(`Mark category "${cat.name}" as Draft?`, () => {
-                    categories[idx].visibility = 'draft';
-                    saveCategories(categories);
-                    showToast('Category marked as Draft.', 'info');
-                    renderCategoryRequestsTable();
-                    renderAllCategoriesTable();
-                });
             } else if (action === 'delete-cat') {
-                showConfirm(`Delete category "${cat.name}"? Products using this category will keep the old name.`, () => {
-                    categories.splice(idx, 1);
-                    saveCategories(categories);
-                    showToast('Category deleted.', 'error');
-                    renderCategoryRequestsTable();
-                    renderAllCategoriesTable();
-                });
+                // ✅ MINOR: Check if products exist in this category before deletion
+                const products = getLS(KEY_PRODUCTS) || [];
+                const productsInCategory = products.filter(p => 
+                    (p.category === cat.name || p.productCategory === cat.name)
+                );
+                
+                if (productsInCategory.length > 0) {
+                    showConfirm(
+                        `Category "${cat.name}" has ${productsInCategory.length} product(s). Delete anyway? Products will keep their category name but it won't be in the category list.`,
+                        () => {
+                            categories.splice(idx, 1);
+                            setLS(KEY_CATEGORIES, categories);
+                            showToast('Category deleted. Products retain their category name.', 'info');
+                            renderCategoryRequestsTable();
+                            renderAllCategoriesTable();
+                        }
+                    );
+                } else {
+                    showConfirm(`Delete category "${cat.name}"? This category has no products.`, () => {
+                        categories.splice(idx, 1);
+                        setLS(KEY_CATEGORIES, categories);
+                        showToast('Category deleted.', 'success');
+                        renderCategoryRequestsTable();
+                        renderAllCategoriesTable();
+                    });
+                }
             }
         };
     }
@@ -293,5 +506,7 @@ function bindCategoryEvents() {
     }
 }
 
-// Expose for modal button
+// Expose for modal buttons and HTML onclick handlers
 window.saveEditCategoryAndApprove = saveEditCategoryAndApprove;
+window.openAddCategoryModal = openAddCategoryModal;
+window.saveNewCategory = saveNewCategory;

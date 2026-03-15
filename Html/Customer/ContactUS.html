@@ -159,7 +159,7 @@
         const currentUser = getCurrentUser();
 
         if (!currentUser) {
-          alert("You must be logged in first.");
+          window.location.href = "Login.html?redirect=ContactUS.html#becomeSeller";
           return;
         }
 
@@ -175,12 +175,13 @@
         form.classList.remove("was-validated");
 
         // Close modal
-        const modal = bootstrap.Modal.getInstance(
-          document.getElementById("becomeSellerModal"),
-        );
-        modal.hide();
+        const modalEl = document.getElementById("becomeSellerModal");
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
 
-        alert("Your seller application has been submitted!");
+        // Redirect to homepage to see the "Pending" banner
+        alert("Your seller application has been submitted! You can track the status on your homepage.");
+        window.location.href = "CustomerHomePage.html";
       });
     });
   </script>

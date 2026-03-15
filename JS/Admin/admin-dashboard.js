@@ -1,55 +1,74 @@
+// ============================================================
+// admin-dashboard.js
+// Dashboard — KPI cards, Recent Sellers, Recent Orders.
+//
+// REQUIRES: initUsers() called first in admin-panel.js
+//           otherwise getCustomerName/getSellerName return '—'
+// ============================================================
+
+import { KEY_APPROVAL, KEY_CATEGORIES }      from '../Core/Constants.js';
+import { getLS }                              from '../Core/Storage.js';
+import { updateSidebarBadges }                from './admin-profile.js';
+import { saveMetricsSnapshot, getAllTrends }  from './admin-metrics.js';
+import { fetchProducts }                      from './admin-data-products.js';
+import { fetchOrders }                        from './admin-data-orders.js';
 import {
     getSellers,
     getUsers,
     getOrders,
-    getSellerName,
     getCustomerName,
-    formatPrice,
+    getSellerName,
     statusBadge,
-    escapeHTML,
-    debounce
+    formatPrice,
+    escapeHTML
 } from './admin-helpers.js';
 
-import { fetchProducts } from './admin-data-products.js';
-import { fetchOrders } from './admin-data-orders.js';
 
-import { getLS, initUsers } from '../Core/Storage.js';
-import { updateSidebarBadges } from './admin-profile.js';
+// ─── MAIN ENTRY POINT ────────────────────────────────────────
 
-/**
- * Main function for the dashboard section.
- * Called every time the user clicks "Dashboard" in the sidebar.
- */
 export async function renderDashboard() {
-    updateSidebarBadges(); // Update badges when dashboard loads
+    updateSidebarBadges();
     renderActionAlerts();
-    
-    // Use async fetchers from service layer to ensure data is synced
+
+    await saveMetricsSnapshot();
+
     const [products, orders] = await Promise.all([
         fetchProducts(),
         fetchOrders()
     ]);
 
-    renderKPICards(products, orders);
+    await renderKPICards(products, orders);
     renderRecentSellers();
     renderRecentOrders(orders);
+
+    if (!window._dashboardOrdersListenerAdded) {
+        window.addEventListener('storage', async (e) => {
+            if (e.key === 'ls_orders') {
+                const updated = await fetchOrders();
+                renderRecentOrders(updated);
+            }
+        });
+        window._dashboardOrdersListenerAdded = true;
+    }
 }
 
-/**
- * Renders action alerts banner showing pending items that need attention.
- */
-function renderActionAlerts() {
-    const alertsContainer = document.getElementById('actionAlerts');
-    if (!alertsContainer) return;
 
-    const requests = getLS('ls_sellerRequests') || getLS('ls_approval') || [];
-    const pendingRequests = requests.filter(r => r.status === 'pending').length;
-    
-    const categories = getLS('ls_categoryRequests') || getLS('ls_categories') || [];
-    const pendingCategories = categories.filter(c => c.status === 'pending' || c.visibility === 'draft').length;
+// ─── ACTION ALERTS ───────────────────────────────────────────
+
+function renderActionAlerts() {
+    const container = document.getElementById('actionAlerts');
+    if (!container) return;
+
+    const requests         = getLS(KEY_APPROVAL) || [];
+    const pendingRequests  = requests.filter(r => r.status === 'pending').length;
+
+    const categories        = getLS(KEY_CATEGORIES) || [];
+    const pendingCategories = categories.filter(
+        c => c.visibility === 'draft'
+    ).length;
 
     const alerts = [];
-    
+
     if (pendingRequests > 0) {
         alerts.push({
             icon: 'bi-person-check',
@@ -58,7 +77,7 @@ function renderActionAlerts() {
             section: 'requests'
         });
     }
-    
+
     if (pendingCategories > 0) {
         alerts.push({
             icon: 'bi-tags',
@@ -69,34 +88,28 @@ function renderActionAlerts() {
     }
 
     if (alerts.length === 0) {
-        alertsContainer.innerHTML = '';
+        container.innerHTML = '';
         return;
     }
 
-    alertsContainer.innerHTML = `
+    container.innerHTML = `
         <div class="action-alerts">
-            ${alerts.map(alert => `
+            ${alerts.map(a => `
                 <div class="alert-item">
-                    <i class="bi ${alert.icon}"></i>
-                    <span class="alert-text">⚠️ ${alert.text}</span>
-                    <button class="alert-action" data-section="${alert.section}">
-                        ${alert.action} →
+                    <i class="bi ${a.icon}"></i>
+                    <span class="alert-text">⚠️ ${a.text}</span>
+                    <button class="alert-action" data-section="${a.section}">
+                        ${a.action} →
                     </button>
                 </div>
             `).join('')}
-        </div>
-    `;
+        </div>`;
 
-    // Bind click events to alert action buttons
-    alertsContainer.querySelectorAll('.alert-action[data-section]').forEach(btn => {
+    container.querySelectorAll('.alert-action[data-section]').forEach(btn => {
         btn.addEventListener('click', () => {
-            const section = btn.dataset.section;
-            if (window.activateSection) {
-                window.activateSection(section);
-            } else {
-                const navLink = document.querySelector(`[data-section="${section}"]`);
-                if (navLink) navLink.click();
-            }
+            window.activateSection
+                ? window.activateSection(btn.dataset.section)
+                : document.querySelector(`[data-section="${btn.dataset.section}"]`)?.click();
         });
     });
 }
@@ -104,59 +117,22 @@ function renderActionAlerts() {
 
 // ─── KPI CARDS ───────────────────────────────────────────────
 
-/**
- * Builds and injects the 4 KPI stat cards into #kpiRow.
- * Reads live data from localStorage on every call.
- */
-/**
- * Builds and injects the 4 KPI stat cards into #kpiRow.
- */
-function renderKPICards(products, orders) {
-    const sellers = getSellers();
-    const users = getUsers();
-
-    // Count customers only (exclude admin and seller)
+async function renderKPICards(products, orders) {
+    const sellers       = getSellers();
+    const users         = getUsers();
     const customerCount = users.filter(u => (u.role || '').toLowerCase() === 'customer').length;
 
-    // Total platform revenue = sum of all order totals
-    const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.subtotal) || Number(o.total) || Number(o.totalPrice) || 0), 0);
+    const totalRevenue = orders.reduce((sum, o) => {
+        return sum + (Number(o.total) || Number(o.subtotal) || Number(o.totalPrice) || 0);
+    }, 0);
 
-    // Calculate trends (mock data for demo - in real app, compare with previous period)
-    const trends = calculateTrends(sellers.length, customerCount, products.length, totalRevenue);
+    const trends = await getAllTrends();
 
     const cards = [
-        {
-            label: 'Total Sellers',
-            value: sellers.length,
-            icon: 'bi-shop',
-            section: 'sellers',
-            trend: trends.sellers,
-            iconClass: 'sellers'
-        },
-        {
-            label: 'Total Customers',
-            value: customerCount,
-            icon: 'bi-people',
-            section: 'customers',
-            trend: trends.customers,
-            iconClass: 'customers'
-        },
-        {
-            label: 'Total Products',
-            value: products.filter(p => p.isActive !== false).length,
-            icon: 'bi-box-seam',
-            section: 'products',
-            trend: trends.products,
-            iconClass: 'products'
-        },
-        {
-            label: 'Total Revenue',
-            value: formatPrice(totalRevenue),
-            icon: 'bi-cash-stack',
-            section: 'orders',
-            trend: trends.revenue,
-            iconClass: 'orders'
-        }
+        { label: 'Total Sellers',   value: sellers.length,                              icon: 'bi-shop',      section: 'sellers',   trend: trends.sellers,   iconClass: 'sellers'   },
+        { label: 'Total Customers', value: customerCount,                               icon: 'bi-people',    section: 'customers', trend: trends.customers, iconClass: 'customers' },
+        { label: 'Total Products',  value: products.filter(p => p.isActive !== false).length, icon: 'bi-box-seam', section: 'products',  trend: trends.products,  iconClass: 'products'  },
+        { label: 'Total Revenue',   value: formatPrice(totalRevenue),                   icon: 'bi-cash-stack', section: 'orders',   trend: trends.revenue,   iconClass: 'orders'    }
     ];
 
     const container = document.getElementById('kpiRow');
@@ -169,234 +145,188 @@ function renderKPICards(products, orders) {
                     <i class="bi ${card.icon}"></i>
                 </div>
                 ${card.trend ? `
-                    <div class="kpi-trend ${card.trend.direction === 'up' ? 'positive' : 'negative'}">
-                        ${card.trend.icon} ${card.trend.percentage || Math.floor(Math.random() * 15) + 5}%
-                    </div>
-                ` : ''}
+                <div class="kpi-trend ${card.trend.direction === 'up' ? 'positive' : card.trend.direction === 'down' ? 'negative' : 'neutral'}">
+                    ${card.trend.icon} ${card.trend.percentage}%
+                </div>` : ''}
             </div>
             <div class="kpi-content">
                 <div class="kpi-label">${card.label}</div>
                 <div class="kpi-value">${card.value}</div>
                 ${card.trend ? `
-                    <div class="kpi-change ${card.trend.direction === 'up' ? 'positive' : 'negative'}">
-                        <span class="kpi-change-icon">${card.trend.icon}</span>
-                        ${card.trend.text}
-                    </div>
-                ` : ''}
+                <div class="kpi-change ${card.trend.direction === 'up' ? 'positive' : card.trend.direction === 'down' ? 'negative' : 'neutral'}">
+                    <span class="kpi-change-icon">${card.trend.icon}</span>
+                    ${card.trend.text}
+                </div>` : ''}
             </div>
         </div>
     `).join('');
 
-    // Make KPI cards clickable - navigate to their section
     container.querySelectorAll('.kpi-card[data-section]').forEach(card => {
-        card.addEventListener('click', () => {
-            const section = card.dataset.section;
-            if (section) {
-                // Add hover effect classes
-                card.style.cursor = 'pointer';
-                
-                // Navigate to section
-                if (window.activateSection) {
-                    window.activateSection(section);
-                } else {
-                    const navLink = document.querySelector(`[data-section="${section}"]`);
-                    if (navLink) navLink.click();
-                }
-            }
-        });
-        
-        // Add hover effects
         card.style.cursor = 'pointer';
+        card.addEventListener('click', () => {
+            window.activateSection
+                ? window.activateSection(card.dataset.section)
+                : document.querySelector(`[data-section="${card.dataset.section}"]`)?.click();
+        });
     });
 }
 
-/**
- * Calculates trend indicators for KPI cards.
- * In a real app, this would compare current vs previous period data.
- */
-function calculateTrends(sellersCount, customersCount, productsCount, revenue) {
-    // Mock trend data - in real app, get from analytics/historical data
-    const trends = {
-        sellers: sellersCount > 0 ? { 
-            direction: 'up', 
-            icon: '↗', 
-            text: '+2 this week',
-            percentage: Math.floor(Math.random() * 20) + 5
-        } : null,
-        customers: customersCount > 2 ? { 
-            direction: 'up', 
-            icon: '↗', 
-            text: '+5 this week',
-            percentage: Math.floor(Math.random() * 25) + 8
-        } : customersCount > 0 ? { 
-            direction: 'up', 
-            icon: '↗', 
-            text: '+1 this week',
-            percentage: Math.floor(Math.random() * 15) + 3
-        } : null,
-        products: productsCount > 3 ? { 
-            direction: 'up', 
-            icon: '↗', 
-            text: '+3 this week',
-            percentage: Math.floor(Math.random() * 18) + 6
-        } : productsCount > 0 ? { 
-            direction: 'up', 
-            icon: '↗', 
-            text: '+1 this week',
-            percentage: Math.floor(Math.random() * 12) + 2
-        } : null,
-        revenue: revenue > 100 ? { 
-            direction: 'up', 
-            icon: '↗', 
-            text: '+12% this week',
-            percentage: Math.floor(Math.random() * 30) + 10
-        } : revenue > 0 ? { 
-            direction: 'up', 
-            icon: '↗', 
-            text: 'First sales!',
-            percentage: 100
-        } : null
-    };
 
-    return trends;
-}
+// ─── RECENT SELLERS ──────────────────────────────────────────
 
-
-
-// ─── RECENT SELLERS TABLE ────────────────────────────────────
-
-/**
- * Shows the last 5 added sellers in the recent sellers table.
- * Since sellers have no createdAt, we use the last 5 by array position.
- */
 function renderRecentSellers() {
-    const sellers = getSellers().slice(-5).reverse(); // last 5, newest first
-    const tbody = document.getElementById('recentSellersBody');
-
+    const tbody   = document.getElementById('recentSellersBody');
     if (!tbody) return;
+
+    const sellers = getSellers().slice(-5).reverse();
+
+    const header = document.querySelector('.data-card:has(#recentSellersBody) .data-card-header');
+    if (header) {
+        header.innerHTML = `Recent Sellers <span class="badge rounded-pill bg-light text-dark ms-2 border">${sellers.length}</span>`;
+    }
 
     if (sellers.length === 0) {
         tbody.innerHTML = `
-            <tr>
-                <td colspan="5" class="empty-state">
+            <tr><td colspan="5">
+                <div class="empty-state">
                     <i class="bi bi-shop empty-icon"></i>
-                    <p>No sellers registered yet</p>
+                    <p class="empty-title">No sellers registered yet</p>
                     <p class="empty-sub">Add your first seller to get started</p>
-                    <button class="btn-primary-green" onclick="openAddSellerModal()">
+                    <button class="btn-primary-green mt-3" onclick="openAddSellerModal()">
                         <i class="bi bi-plus-lg"></i> Onboard Seller
                     </button>
-                </td>
-            </tr>`;
+                </div>
+            </td></tr>`;
         return;
     }
 
-    tbody.innerHTML = sellers.map(s => `
-        <tr>
-            <td>${escapeHTML(s.fullName || s.name)}</td>
-            <td>${escapeHTML(s.storeName)}</td>
-            <td>${escapeHTML(s.city)}</td>
-            <td>${escapeHTML(s.paymentMethod)}</td>
-            <td class="text-center">
-                <div class="d-flex gap-1 justify-content-center">
-                    <button class="btn-action btn-info btn-sm" onclick="viewSellerDetails('${s.id}')" title="View Details">
-                        <i class="bi bi-eye"></i>
-                    </button>
-                    <button class="btn-action btn-edit btn-sm" onclick="editSeller('${s.id}')" title="Edit">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = sellers.map(s => {
+        const name    = s.fullName || s.name || '—';
+        const initial = name.charAt(0).toUpperCase();
+        return `
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="table-avatar">${initial}</span>
+                        <span>${escapeHTML(name)}</span>
+                    </div>
+                </td>
+                <td>${escapeHTML(s.storeName || '—')}</td>
+                <td>${escapeHTML(s.city || '—')}</td>
+                <td><small class="text-muted">${escapeHTML(s.paymentMethod || '—')}</small></td>
+                <td class="text-center">
+                    <div class="d-flex gap-1 justify-content-center">
+                        <button class="btn-action btn-info btn-sm" onclick="viewSellerDetails('${s.id}')" title="View">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn-action btn-edit btn-sm" onclick="editSeller('${s.id}')" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>`;
+    }).join('');
 }
 
-/**
- * View seller details - navigate to sellers section and highlight the seller
- */
-window.viewSellerDetails = function(sellerId) {
-    // Navigate to sellers section
-    const sellersLink = document.querySelector('[data-section="sellers"]');
-    if (sellersLink) {
-        sellersLink.click();
-        // Highlight the seller row after a short delay
-        setTimeout(() => {
-            const sellerRow = document.querySelector(`[data-seller-id="${sellerId}"]`);
-            if (sellerRow) {
-                sellerRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                sellerRow.style.backgroundColor = 'var(--green-light-bg)';
-                setTimeout(() => {
-                    sellerRow.style.backgroundColor = '';
-                }, 2000);
-            }
-        }, 300);
-    }
+window.viewSellerDetails = function (sellerId) {
+    document.querySelector('[data-section="sellers"]')?.click();
+    setTimeout(() => {
+        const row = document.querySelector(`[data-seller-id="${sellerId}"]`);
+        if (row) {
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            row.style.backgroundColor = 'var(--green-light-bg)';
+            setTimeout(() => { row.style.backgroundColor = ''; }, 2000);
+        }
+    }, 300);
 };
 
-/**
- * Edit seller - open edit modal (assumes openEditSellerModal exists)
- */
-window.editSeller = function(sellerId) {
-    if (window.openEditSellerModal) {
-        window.openEditSellerModal(sellerId);
-    } else {
-        // Fallback: navigate to sellers section
-        const sellersLink = document.querySelector('[data-section="sellers"]');
-        if (sellersLink) sellersLink.click();
-    }
+window.editSeller = function (sellerId) {
+    window.openEditSellerModal
+        ? window.openEditSellerModal(sellerId)
+        : document.querySelector('[data-section="sellers"]')?.click();
 };
 
 
-// ─── RECENT ORDERS TABLE ─────────────────────────────────────
+// ─── RECENT ORDERS ───────────────────────────────────────────
 
-/**
- * Shows the last 5 orders placed on the platform.
- */
 function renderRecentOrders(allOrders) {
-    const orders = (allOrders || getOrders()).slice(-5).reverse(); // last 5, newest first
-    const tbody = document.getElementById('recentOrdersBody');
-
+    const orders = (allOrders || getOrders()).slice(-5).reverse();
+    const tbody  = document.getElementById('recentOrdersBody');
     if (!tbody) return;
+
+    const header = document.querySelector('.data-card:has(#recentOrdersBody) .data-card-header');
+    if (header) {
+        header.innerHTML = `Recent Orders <span class="badge rounded-pill bg-light text-dark ms-2 border">${orders.length}</span>`;
+    }
 
     if (orders.length === 0) {
         tbody.innerHTML = `
-            <tr>
-                <td colspan="5" class="empty-state">
+            <tr><td colspan="5">
+                <div class="empty-state">
                     <i class="bi bi-receipt empty-icon"></i>
-                    <p>No orders placed yet</p>
+                    <p class="empty-title">No orders yet</p>
                     <p class="empty-sub">Orders will appear here once customers start purchasing</p>
-                    <button class="btn-outline-green" onclick="if(window.activateSection) window.activateSection('products'); else document.querySelector('[data-section=\\"products\\"]').click()">
-                        <i class="bi bi-box-seam"></i> View Products
-                    </button>
-                </td>
-            </tr>`;
+                </div>
+            </td></tr>`;
         return;
     }
 
     tbody.innerHTML = orders.map(o => {
-        // Handle multiple sellers in one order
-        let sellerText = '—';
+
+        // Short Order ID
+        const fullId  = String(o.id || '');
+        const shortId = fullId.length > 6 ? '#' + fullId.slice(-6) : '#' + fullId;
+
+        // Customer — no avatar if name not resolved
+        const customerName    = getCustomerName(o.customerId);
+        const customerDisplay = customerName === '—'
+            ? `<span class="text-muted">—</span>`
+            : `<div class="d-flex align-items-center gap-2">
+                   <span class="table-avatar" style="width:28px;height:28px;font-size:11px;flex-shrink:0;">
+                       ${customerName.charAt(0).toUpperCase()}
+                   </span>
+                   <span>${customerName}</span>
+               </div>`;
+
+        // Seller — resolve from items first
+        let rawSellerId = null;
         if (o.items && o.items.length > 0) {
-            const uniqueSellerIds = [...new Set(o.items.map(item => item.sellerId).filter(Boolean))];
-            if (uniqueSellerIds.length === 0) {
-                sellerText = '—';
-            } else if (uniqueSellerIds.length > 1) {
-                sellerText = 'Multiple Sellers';
-            } else {
-                sellerText = getSellerName(uniqueSellerIds[0]);
-            }
+            const ids = [...new Set(o.items.map(i => i.sellerId).filter(Boolean))];
+            rawSellerId = ids.length === 1 ? ids[0] : ids.length > 1 ? 'multiple' : null;
         } else if (o.sellerId) {
-            // Fallback to order-level sellerId if items not available
-            sellerText = getSellerName(o.sellerId);
+            rawSellerId = o.sellerId;
+        }
+
+        let sellerDisplay;
+        if (rawSellerId === 'multiple') {
+            sellerDisplay = `<span class="text-muted small">Multiple Sellers</span>`;
+        } else {
+            const sellerName = rawSellerId ? getSellerName(rawSellerId) : '—';
+            sellerDisplay = sellerName === '—'
+                ? `<span class="text-muted">—</span>`
+                : `<div class="d-flex align-items-center gap-2">
+                       <span class="table-avatar" style="width:28px;height:28px;font-size:11px;flex-shrink:0;background:linear-gradient(135deg,#3b82f6,#2563eb);">
+                           ${sellerName.charAt(0).toUpperCase()}
+                       </span>
+                       <span>${sellerName}</span>
+                   </div>`;
+        }
+
+        // Total — try all field names then calculate from items
+        let total = Number(o.subtotal) || Number(o.total) || Number(o.totalPrice) || 0;
+        if (total === 0 && o.items && o.items.length > 0) {
+            total = o.items.reduce((sum, item) => {
+                return sum + ((Number(item.price) || 0) * (Number(item.quantity) || 1));
+            }, 0);
         }
 
         return `
-        <tr>
-            <td class="order-id">${o.id || 'N/A'}</td>
-            <td>${getCustomerName(o.customerId)}</td>
-            <td>${sellerText}</td>
-            <td>${formatPrice(o.subtotal || o.total || o.totalPrice)}</td>
-            <td>${statusBadge(o.status)}</td>
-        </tr>
-    `;
+            <tr data-id="${escapeHTML(fullId)}">
+                <td><span class="order-id" title="${escapeHTML(fullId)}">${escapeHTML(shortId)}</span></td>
+                <td>${customerDisplay}</td>
+                <td>${sellerDisplay}</td>
+                <td class="text-end fw-bold">${formatPrice(total)}</td>
+                <td>${statusBadge(o.status)}</td>
+            </tr>`;
     }).join('');
 }
