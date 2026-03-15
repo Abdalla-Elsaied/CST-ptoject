@@ -19,6 +19,9 @@ import {
     debounce
 } from './admin-helpers.js';
 
+import { getLS, setLS } from '../Core/Storage.js';
+import { KEY_PRODUCTS } from '../Core/Constants.js';
+
 import { 
     fetchOrders, 
     getFilteredOrders, 
@@ -388,6 +391,12 @@ export function confirmChangeOrderStatus(orderId, newStatus, selectElement) {
         // Confirmed
         if (updateOrderStatus(orderId, newStatus)) {
             logAdminAction('changed_order_status', `Order #${orderId} (${currentStatus} → ${newStatus})`, orderId);
+            
+            // ✅ MAJOR: Restore inventory when order is cancelled or refunded
+            if (newStatus === 'Cancelled' || newStatus === 'Refunded') {
+                restoreOrderInventory(orderId);
+            }
+            
             renderOrdersTable();
             showToast(`Order #${orderId} marked as ${newStatus}.`, 'success');
         } else {
@@ -412,6 +421,46 @@ export function confirmChangeOrderStatus(orderId, newStatus, selectElement) {
             modalEl.removeEventListener('hidden.bs.modal', resetDropdown);
         };
         modalEl.addEventListener('hidden.bs.modal', resetDropdown);
+    }
+}
+
+// ─── INVENTORY RESTORATION ───────────────────────────────────
+
+/**
+ * Restores product inventory when an order is cancelled or refunded.
+ * Adds back the quantities that were deducted when the order was placed.
+ * @param {string|number} orderId - The order ID
+ */
+function restoreOrderInventory(orderId) {
+    try {
+        const orders = getOrders();
+        const order = orders.find(o => String(o.id) === String(orderId));
+        
+        if (!order || !order.items || order.items.length === 0) {
+            return;
+        }
+
+        const products = getLS(KEY_PRODUCTS) || [];
+        let restoredCount = 0;
+
+        order.items.forEach(item => {
+            const productId = item.productId || item.id;
+            const quantity = item.quantity || item.qty || 1;
+            
+            const productIndex = products.findIndex(p => String(p.id) === String(productId));
+            if (productIndex !== -1) {
+                products[productIndex].stock = (products[productIndex].stock || 0) + quantity;
+                restoredCount++;
+                console.log(`[INVENTORY] Restored ${quantity} units to product ${productId} (Order #${orderId})`);
+            }
+        });
+
+        if (restoredCount > 0) {
+            setLS(KEY_PRODUCTS, products);
+            console.log(`[INVENTORY] Restored inventory for ${restoredCount} product(s) from Order #${orderId}`);
+        }
+    } catch (err) {
+        console.error('[INVENTORY] Error restoring inventory:', err);
     }
 }
 

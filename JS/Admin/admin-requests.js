@@ -16,16 +16,12 @@ import { KEY_APPROVAL, KEY_SELLER_OUTCOMES } from '../Core/Constants.js';
 import {
     showToast,
     showConfirm,
-    escapeHTML
+    escapeHTML,
+    getCustomerName,
+    getCustomerEmail
 } from './admin-helpers.js';
 
 import { logAdminAction } from './admin-profile.js';
-
-function saveRejectedOutcome(userId, storeName) {
-    const outcomes = getLS(KEY_SELLER_OUTCOMES) || [];
-    outcomes.push({ userId, storeName, status: 'rejected', at: new Date().toISOString() });
-    setLS(KEY_SELLER_OUTCOMES, outcomes);
-}
 
 /**
  * Main entry point for the seller requests section.
@@ -60,7 +56,7 @@ export function renderRequestsTable() {
     if (requests.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" class="empty-state">
+                <td colspan="8" class="empty-state">
                     <i class="bi bi-check-circle fs-1 text-success d-block mb-2"></i>
                     <strong>All caught up!</strong> No pending seller applications.
                 </td>
@@ -74,6 +70,12 @@ export function renderRequestsTable() {
                 <input type="checkbox" class="request-check-item" value="${escapeHTML(req.id)}">
             </td>
             <td><strong>${escapeHTML(req.storeName)}</strong></td>
+            <td>
+                <div class="d-flex flex-column">
+                    <span>${getCustomerName(req.userId)}</span>
+                    <small class="text-muted">${getCustomerEmail(req.userId)}</small>
+                </div>
+            </td>
             <td>${escapeHTML(req.city)}</td>
             <td>${escapeHTML(req.category)}</td>
             <td>${escapeHTML(req.phone)}</td>
@@ -117,26 +119,29 @@ function bindRequestsEvents() {
 
             if (action === 'approve') {
                 showConfirm(`Approve this seller application?`, () => {
-                    const requests = getAllCustomerToApproved();
-                    const req = requests.find(r => r.id === id);
                     acceptCustomerSellerRequest(id);
+                    const requests = getAllCustomerToApproved();
+                    const req = requests.find(r => r.id === id); // Re-find if needed for logging
                     if (req) {
                         logAdminAction('approved_seller', req.storeName || req.fullName || 'Unknown', id);
                     }
                     showToast('Seller request approved!', 'success');
                     renderRequests();
+                    // Update main panel badges
+                    if (window.updateSidebarBadges) window.updateSidebarBadges();
                 });
             } else if (action === 'reject') {
-                const requests = getAllCustomerToApproved();
-                const req = requests.find(r => r.id === id);
                 showConfirm(`Reject and delete this application?`, () => {
-                    if (req?.userId) saveRejectedOutcome(req.userId, req.storeName || '');
+                    const requests = getAllCustomerToApproved();
+                    const req = requests.find(r => r.id === id);
                     rejectCustomerSellerRequest(id);
                     if (req) {
                         logAdminAction('rejected_seller', req.storeName || req.fullName || 'Unknown', id);
                     }
                     showToast('Application rejected.', 'error');
                     renderRequests();
+                    // Update main panel badges
+                    if (window.updateSidebarBadges) window.updateSidebarBadges();
                 });
             }
         };
@@ -150,16 +155,10 @@ function bindRequestsEvents() {
             if (selected.length === 0) return showToast('Please select at least one request', 'warning');
 
             showConfirm(`Approve ${selected.length} selected applications?`, () => {
-                const requests = getAllCustomerToApproved();
-                selected.forEach(id => {
-                    const req = requests.find(r => r.id === id);
-                    acceptCustomerSellerRequest(id);
-                    if (req) {
-                        logAdminAction('approved_seller', req.storeName || req.fullName || 'Unknown', id);
-                    }
-                });
+                selected.forEach(id => acceptCustomerSellerRequest(id));
                 showToast('Selected applications approved!', 'success');
                 renderRequests();
+                if (window.updateSidebarBadges) window.updateSidebarBadges();
             });
         };
     }
@@ -171,17 +170,10 @@ function bindRequestsEvents() {
             if (selected.length === 0) return showToast('Please select at least one request', 'warning');
 
             showConfirm(`Reject and delete ${selected.length} selected applications?`, () => {
-                const requests = getAllCustomerToApproved();
-                selected.forEach(id => {
-                    const req = requests.find(r => r.id === id);
-                    if (req?.userId) saveRejectedOutcome(req.userId, req.storeName || '');
-                    rejectCustomerSellerRequest(id);
-                    if (req) {
-                        logAdminAction('rejected_seller', req.storeName || req.fullName || 'Unknown', id);
-                    }
-                });
+                selected.forEach(id => rejectCustomerSellerRequest(id));
                 showToast('Selected applications rejected.', 'error');
                 renderRequests();
+                if (window.updateSidebarBadges) window.updateSidebarBadges();
             });
         };
     }
