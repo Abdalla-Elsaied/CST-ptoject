@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadingEl = document.getElementById('pageLoading');
     const loadingTextEl = document.getElementById('pageLoadingText');
 
-    const colorBoxes = document.querySelectorAll('.color');
+    const colorInputs = document.querySelectorAll('input[name="colors"]');
     let messageTimer = null;
 
     const showLoading = (isLoading, text) => {
@@ -55,25 +55,20 @@ document.addEventListener('DOMContentLoaded', () => {
         expirationStartInput.value = today;
     }
 
-    if (colorBoxes.length > 0) {
-        const firstBox = colorBoxes[0];
-        const input = firstBox.querySelector('input[type="checkbox"]');
-        if (input) {
-            input.checked = true;
-            firstBox.classList.add('selected');
-        }
-    }
-
-    colorBoxes.forEach(box => {
-        box.addEventListener('click', (e) => {
-            e.preventDefault();
-
-            const input = box.querySelector('input[type="checkbox"]');
-            if (!input) return;
-
-            box.classList.toggle('selected');
-            input.checked = box.classList.contains('selected');
+    const syncColorSelection = () => {
+        colorInputs.forEach(input => {
+            const label = input.closest('.color');
+            if (label) label.classList.toggle('selected', input.checked);
         });
+    };
+
+    if (colorInputs.length > 0 && !Array.from(colorInputs).some(input => input.checked)) {
+        colorInputs[0].checked = true;
+    }
+    syncColorSelection();
+
+    colorInputs.forEach(input => {
+        input.addEventListener('change', syncColorSelection);
     });
 
     const loadCategories = () => {
@@ -146,6 +141,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
             
 
+        const selectedColors = Array.from(colorInputs)
+            .filter(input => input.checked)
+            .map(input => input.value);
+
         const product = {
             name: formData.get('productName')?.trim() || '(no name)',
             description: formData.get('description')?.trim() || '',
@@ -158,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
             stockStatus: formData.get('stockStatus'),
             category: categorySelect?.value || "",
             tag: document.getElementById("tagSelect").value || "",
-            colors: colorBoxes,
+            colors: selectedColors,
             createdAt: new Date().toISOString(),
             sellerId,
             images: []
@@ -172,11 +171,15 @@ document.addEventListener('DOMContentLoaded', () => {
             await saveProductToDisk(product, imageFiles);
 
             showLoading(false);
-            showMessage('Product saved successfully!', 'success');
+            showMessage('Product saved successfully! Please wait for admin approval.', 'success');
 
             form.reset();
             previewContainer.innerHTML = '';
             fileInput.value = '';
+            if (colorInputs.length > 0) {
+                colorInputs[0].checked = true;
+            }
+            syncColorSelection();
 
         } catch (err) {
 

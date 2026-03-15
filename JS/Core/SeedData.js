@@ -1,16 +1,17 @@
-import { getLS, setLS } from './Storage.js';
+import { getLS, setLS, setLSAsync } from './Storage.js';
 import { KEY_USERS, KEY_CATEGORIES } from './Constants.js';
+import {ROLES} from "./Auth.js"
 
 /**
  * Seeds the admin user if one does not already exist, ensuring an admin is always available.
  */
-export function seedAdmin() {
+export async function seedAdmin() {
     const users = getLS(KEY_USERS) || [];
-    const hasAdmin = users.some(u => u.role === 'admin');
+    const hasAdmin = users.some(u => u.role === ROLES.ADMIN);
 
     if (!hasAdmin) {
         const newAdmin = {
-            id: 'admin-001',
+            id: '1',
             fullName: 'Platform Administrator',
             name: 'Admin',
             email: 'admin@cst.com',
@@ -19,7 +20,7 @@ export function seedAdmin() {
             createdAt: new Date().toISOString()
         };
         const newSeller = {
-            id: 'seller-001',
+            id: '2',
             fullName: 'Platform Seller',
             name: 'Seller',
             email: 'seller@cst.com',
@@ -28,7 +29,7 @@ export function seedAdmin() {
             createdAt: new Date().toISOString()
         };
         const newSeller2003 = {
-            id: 'seller-0012033',
+            id: '3',
             fullName: 'Platform Seller 2003',
             name: 'Seller2003',
             email: 'seller3@cst.com',
@@ -37,12 +38,9 @@ export function seedAdmin() {
             createdAt: new Date().toISOString()
         };
 
-
-        users.push(newAdmin);
-        users.push(newSeller);
-        users.push(newSeller2003);
-        setLS(KEY_USERS, users);
-        console.log('default Users had been Seeded successfully ');
+        users.push(newAdmin, newSeller, newSeller2003);
+        await setLSAsync(KEY_USERS, users); // ✅ await so POSTs finish sequentially
+        console.log('default Users had been Seeded successfully');
     }
 }
 

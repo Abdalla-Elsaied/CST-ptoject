@@ -31,6 +31,15 @@ export function setLS(key, value) {
     }
 }
 
+export async function setLSAsync(key, value) {
+    if (key === KEY_USERS) return await setUsers(value); // ✅ now actually waits
+    try {
+        localStorage.setItem(key, JSON.stringify(value));
+    } catch (err) {
+        console.error(`Error writing to localStorage key "${key}":`, err);
+    }
+}
+
 /**
  * Remove item from localStorage
  * @param {string} key 
@@ -125,22 +134,44 @@ export async function initUsers() {
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 function getUsers() {
-    return _usersCache || [];
+    console.log(_usersCache)
+    return _usersCache ? [..._usersCache] : [];
 }
 
 function setUsers(users) {
     const newUsers = Array.isArray(users) ? users : [users];
 
-    // Update cache immediately so getLS returns fresh data right away
-    _usersCache = [...(_usersCache || []), ...newUsers];
+    const existingIds = new Set((_usersCache || []).map(u => u.id));
+    const brandNewUsers = newUsers.filter(u => !existingIds.has(u.id));
+    const updatedUsers = newUsers.filter(u => existingIds.has(u.id));
 
-    // Sync to MockAPI silently in the background — doesn't block anything
-    newUsers.forEach(user => {
+    // ✅ Cache is source of truth — update it immediately (sync)
+    _usersCache = [...newUsers];
+
+    // 🔁 Background POST — swap internal id with real MockAPI id when response comes back
+    brandNewUsers.forEach(user => {
         fetch(`${BASE_URL}/users`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(user)
-        }).catch(err => console.error('Failed to sync user to MockAPI:', err));
+        })
+            .then(res => res.json())
+            .then(createdUser => {
+                const index = _usersCache.findIndex(u => u.id === user.id);
+                if (index !== -1) _usersCache[index].id = createdUser.id;
+            })
+            .catch(err => console.error('Failed to add user to MockAPI:', err));
     });
+
+    // 🔁 Background PUT — cache already has real MockAPI ids so this will work
+    if (updatedUsers.length > 0) {
+        updatedUsers.forEach(user => {
+            fetch(`${BASE_URL}/users/${user.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(user)
+            }).catch(err => console.error('Failed to update user in MockAPI:', err));
+        });
+    }
 }
 

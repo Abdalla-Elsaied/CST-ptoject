@@ -13,9 +13,8 @@ import {
 import { fetchProducts } from './admin-data-products.js';
 import { fetchOrders } from './admin-data-orders.js';
 
-import { getLS } from '../Core/Storage.js';
+import { getLS, initUsers } from '../Core/Storage.js';
 import { updateSidebarBadges } from './admin-profile.js';
-
 
 /**
  * Main function for the dashboard section.

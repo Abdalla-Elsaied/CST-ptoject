@@ -379,6 +379,14 @@ color:var(--text-primary);
 font-size:.78rem;
 color:var(--text-sec);
 }
+.product-media-note{
+padding:8px 10px;
+border:1px dashed var(--border);
+border-radius:10px;
+background:rgba(148,163,184,.12);
+color:var(--text-sec);
+font-size:.82rem;
+}
 .btn-secondary{
 background:transparent;
 color:var(--text-sec);
@@ -405,6 +413,14 @@ cursor:pointer;
 border-color:var(--green);
 color:var(--green-dark);
 background:var(--green-light);
+}
+.btn-inline.disabled,
+.btn-inline:disabled{
+cursor:not-allowed;
+opacity:.6;
+border-color:var(--border);
+color:var(--text-sec);
+background:transparent;
 }
 .toast-container{
 position:fixed;

@@ -316,3 +316,114 @@
   from { transform: translateY(20px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
 }
+
+/* =====================================================
+   ORDER CARDS – required by updated profile.js
+   ===================================================== */
+
+.order-card {
+  background: #fff;
+  border: 1.5px solid var(--border, #e5e7eb);
+  border-radius: var(--radius, 12px);
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  transition: box-shadow 0.2s;
+}
+.order-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+
+.order-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.order-card-id { display: flex; align-items: center; gap: 8px; }
+
+.order-id-link {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--green-dark, #16a34a);
+  text-decoration: none;
+  font-family: monospace;
+}
+.order-id-link:hover { text-decoration: underline; }
+
+.order-card-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  color: var(--text-secondary, #6b7280);
+  margin-bottom: 12px;
+}
+.order-card-total { font-weight: 800; color: var(--text-primary, #1f2937); }
+
+.order-card-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+.btn-order-details {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--green-dark, #16a34a);
+  border: 1.5px solid var(--green-primary, #22c55e);
+  background: var(--green-light, #ecfdf5);
+  border-radius: 8px;
+  padding: 5px 14px;
+  text-decoration: none;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+}
+.btn-order-details:hover {
+  background: var(--green-primary, #22c55e);
+  color: #fff;
+}
+
+.btn-order-cancel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--danger, #ef4444);
+  border: 1.5px solid var(--danger, #ef4444);
+  background: #fef2f2;
+  border-radius: 8px;
+  padding: 5px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.btn-order-cancel:hover { background: var(--danger, #ef4444); color: #fff; }
+
+.btn-order-delete {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary, #6b7280);
+  border: 1.5px solid var(--border, #e5e7eb);
+  background: transparent;
+  border-radius: 8px;
+  padding: 5px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.btn-order-delete:hover {
+  background: #fef2f2;
+  border-color: var(--danger, #ef4444);
+  color: var(--danger, #ef4444);
+}
+
+/* order status badges (used in both profile + orderDetails) */
+.order-status {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.order-status--pending   { background: #fef3c7; color: #92400e; }
+.order-status--shipped   { background: #dbeafe; color: #1e40af; }
+.order-status--delivered { background: #d1fae5; color: #065f46; }
+.order-status--cancelled { background: #fee2e2; color: #991b1b; }
