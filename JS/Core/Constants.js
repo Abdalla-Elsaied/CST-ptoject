@@ -9,3 +9,4 @@ export const KEY_WISHLIST      = 'ls_wishlist';
 export const KEY_LOCATION      = 'ls_location';
 export const KEY_CATEGORIES    = 'ls_categories';
 export const KEY_SELLER_OUTCOMES = 'ls_sellerRequestOutcomes';
+export const KEY_METRICS_HISTORY = 'ls_metricsHistory';
