@@ -20,7 +20,8 @@ import {
     renderTableEmptyState,
     debounce,
     formatDate,
-    getCurrentUser
+    getCurrentUser,
+    applyTableCardLabels
 } from './admin-helpers.js';
 
 import { getLS, setLS } from '../Core/Storage.js';
@@ -174,45 +175,73 @@ export function renderProductsTable() {
                     onerror="this.outerHTML='<div class=\\'no-img\\'><i class=\\'bi bi-image\\'></i></div>'">`
             : `<div class="no-img"><i class="bi bi-image"></i></div>`;
 
-        const catHtml = `<span style="background:var(--green-light-bg,#f0fdf4);color:var(--green-dark,#166534);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:600;white-space:nowrap;">${escapeHTML(p.category || p.productCategory || '—')}</span>`;
+        const catHtml = `<span class="prod-cat-pill">${escapeHTML(p.category || p.productCategory || '—')}</span>`;
+        const isActive = p.isActive !== false;
+        const sellerName = getSellerName(p.sellerId);
+        const stock = getProductStock(p);
 
         return `
-        <tr>
-            <td class="col-index"><span class="text-muted small fw-bold">${startIdx + i + 1}</span></td>
-            <td class="col-thumb">${imgCell}</td>
-            <td class="col-product-name">
+        <tr data-product-id="${p.id}">
+            <td class="col-num hide-tablet" data-label="#"><span class="text-muted small fw-bold">${startIdx + i + 1}</span></td>
+            <td class="col-thumb" data-label="Image">${imgCell}</td>
+            <td class="col-name" data-label="Product">
                 <div class="product-name-cell">
                     <div class="name">${escapeHTML(p.name || p.productName || '—')}</div>
                     <div class="pid">ID: ${String(p.id).slice(-8)}</div>
                 </div>
             </td>
-            <td class="col-seller" style="font-size:12px;">${getSellerName(p.sellerId)}</td>
-            <td class="col-category">${catHtml}</td>
-            <td class="col-price">${formatPrice(p.price)}</td>
-            <td class="col-stock">
+            <td class="col-seller hide-tablet" data-label="Seller" style="font-size:12px;">${escapeHTML(sellerName)}</td>
+            <td class="col-category hide-tablet" data-label="Category">${catHtml}</td>
+            <td class="col-price" data-label="Price"><span class="prod-price">${formatPrice(p.price)}</span></td>
+            <td class="col-stock hide-mobile-lg" data-label="Stock">
                 <div class="stock-cell">
-                    ${stockBadge(getProductStock(p))}
-                    <button class="btn-action btn-edit" style="width:28px;height:28px;font-size:11px;" title="Adjust Stock" data-id="${p.id}" data-action="editStock">
+                    ${stockBadge(stock)}
+                    <button class="btn-action btn-edit" style="width:26px;height:26px;font-size:11px;" title="Adjust Stock" data-id="${p.id}" data-action="editStock">
                         <i class="bi bi-pencil-square"></i>
                     </button>
                 </div>
             </td>
-            <td class="col-toggle">
+            <td class="col-toggle" data-label="Active">
                 <div class="form-check form-switch d-flex justify-content-center mb-0">
                     <input class="form-check-input product-status-toggle" type="checkbox" role="switch"
                            data-id="${p.id}"
-                           ${p.isActive !== false ? 'checked' : ''}
+                           ${isActive ? 'checked' : ''}
                            style="cursor:pointer;width:40px;height:20px;"
-                           title="${p.isActive !== false ? 'Click to deactivate' : 'Click to activate'}">
+                           title="${isActive ? 'Click to deactivate' : 'Click to activate'}">
                 </div>
             </td>
-            <td class="col-actions">
-                <div class="action-group">
-                    <button class="btn-action btn-view" title="View Details" data-id="${p.id}" data-action="view"><i class="bi bi-eye"></i></button>
-                    <button class="btn-action btn-delete" title="Delete" data-id="${p.id}" data-action="delete"><i class="bi bi-trash"></i></button>
+            <td class="col-actions" data-label="Actions">
+                <div class="um-action-cell">
+                    <button class="um-btn-primary" data-id="${p.id}" data-action="view">
+                        <i class="bi bi-eye"></i> View
+                    </button>
+                    <div class="um-overflow-wrap">
+                        <button class="um-btn-more" data-id="${p.id}" aria-label="More actions" aria-expanded="false">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <div class="um-dropdown" role="menu">
+                            <button class="um-drop-item" data-id="${p.id}" data-action="editStock" role="menuitem">
+                                <i class="bi bi-pencil-square"></i> Adjust Stock
+                            </button>
+                            ${isActive
+                                ? `<button class="um-drop-item um-drop-warn" data-id="${p.id}" data-action="deactivate" role="menuitem">
+                                        <i class="bi bi-toggle-off"></i> Deactivate
+                                   </button>`
+                                : `<button class="um-drop-item um-drop-success" data-id="${p.id}" data-action="activate" role="menuitem">
+                                        <i class="bi bi-toggle-on"></i> Activate
+                                   </button>`
+                            }
+                            <div class="um-drop-divider"></div>
+                            <button class="um-drop-item um-drop-danger" data-id="${p.id}" data-action="delete" role="menuitem">
+                                <i class="bi bi-trash"></i> Delete Product
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </td>
         </tr>`; }).join('');
+
+    applyTableCardLabels('productsTable');
 
     // Bind toggle switches
     document.querySelectorAll('.product-status-toggle').forEach(toggle => {
@@ -277,19 +306,44 @@ function bindProductsEvents() {
     // Table buttons via event delegation
     const tbody = document.getElementById('productsTableBody');
     if (tbody) {
-        tbody.onclick = (e) => {
+        tbody.addEventListener('click', (e) => {
+            // Handle ⋯ toggle
+            const moreBtn = e.target.closest('.um-btn-more');
+            if (moreBtn) {
+                e.stopPropagation();
+                const wrap = moreBtn.closest('.um-overflow-wrap');
+                const dropdown = wrap.querySelector('.um-dropdown');
+                const isOpen = dropdown.classList.contains('open');
+
+                document.querySelectorAll('.um-dropdown.open').forEach(d => {
+                    d.classList.remove('open');
+                    d.closest('.um-overflow-wrap')?.querySelector('.um-btn-more')?.setAttribute('aria-expanded', 'false');
+                });
+
+                if (!isOpen) {
+                    dropdown.classList.add('open');
+                    moreBtn.setAttribute('aria-expanded', 'true');
+                }
+                return;
+            }
+
             const btn = e.target.closest('[data-action]');
             if (!btn) return;
 
-            const id = btn.dataset.id;  // product.id may be string or number
+            document.querySelectorAll('.um-dropdown.open').forEach(d => {
+                d.classList.remove('open');
+                d.closest('.um-overflow-wrap')?.querySelector('.um-btn-more')?.setAttribute('aria-expanded', 'false');
+            });
+
+            const id = btn.dataset.id;
             const action = btn.dataset.action;
 
             if (action === 'view') openProductDetailsModal(id);
             if (action === 'editStock') openStockAdjustmentModal(id);
             if (action === 'activate') toggleProductStatus(id, true);
-            if (action === 'deactivate') confirmDeactivateProduct(id);
+            if (action === 'deactivate') confirmDeactivateProduct(id, document.querySelector(`.product-status-toggle[data-id="${id}"]`));
             if (action === 'delete') confirmDeleteProduct(id);
-        };
+        });
     }
 }
 

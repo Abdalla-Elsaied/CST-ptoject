@@ -20,7 +20,8 @@ import {
     renderPagination,
     renderTableEmptyState,
     debounce,
-    invalidateCaches
+    invalidateCaches,
+    applyTableCardLabels
 } from './admin-helpers.js';
 
 import { 
@@ -240,8 +241,8 @@ export function renderCustomersTable() {
             <td class="col-check">
                 ${isAdmin ? '' : `<input type="checkbox" class="form-check-input user-checkbox" value="${c.id}">`}
             </td>
-            <td class="col-index">${start + i + 1}</td>
-            <td class="col-user-name">
+            <td class="col-num hide-tablet">${start + i + 1}</td>
+            <td class="col-user">
                 <div class="user-cell">
                     <div class="um-avatar" style="background:${avatarGradient}">${escapeHTML(initials)}</div>
                     <div class="user-meta">
@@ -250,7 +251,7 @@ export function renderCustomersTable() {
                     </div>
                 </div>
             </td>
-            <td class="col-contact">
+            <td class="col-contact hide-mobile-lg">
                 <div class="contact-cell">
                     <div class="email" title="${escapeHTML(c.email || '')}">
                         <i class="bi bi-envelope"></i>${escapeHTML(c.email || '—')}
@@ -260,29 +261,56 @@ export function renderCustomersTable() {
             </td>
             <td class="col-role">${rolePill}</td>
             <td class="col-status">${statusPill}</td>
-            <td class="col-joined">
+            <td class="col-joined hide-tablet">
                 <div class="joined-cell">
                     <div class="date">${formatDate(c.createdAt)}</div>
                     <div class="last-login">${c.lastLoginAt ? `Last: ${formatDate(c.lastLoginAt)}` : 'Never logged in'}</div>
                 </div>
             </td>
-            <td class="col-orders">${ordersCell}</td>
+            <td class="col-orders hide-tablet">${ordersCell}</td>
             <td class="col-actions">
                 ${isAdmin
                     ? `<span class="um-protected-badge"><i class="bi bi-shield-lock-fill"></i> Protected</span>`
-                    : `<div class="action-group">
-                        <button class="btn-action btn-view"   title="View Details"    data-id="${c.id}" data-action="viewDetails"><i class="bi bi-eye"></i></button>
-                        ${isBanned
-                            ? `<button class="btn-action btn-success" title="Unban" data-id="${c.id}" data-action="unban"><i class="bi bi-check-circle"></i></button>`
-                            : `<button class="btn-action btn-warn"    title="Ban"   data-id="${c.id}" data-action="ban"><i class="bi bi-slash-circle"></i></button>`}
-                        ${isSeller ? `<button class="btn-action btn-warn" title="Remove Seller Role → Customer" data-id="${c.id}" data-action="revertToCustomer" style="color:#f59e0b"><i class="bi bi-person-dash"></i></button>` : ''}
-                        <button class="btn-action btn-key"    title="Reset Password" data-id="${c.id}" data-action="resetPassword"><i class="bi bi-key"></i></button>
-                        <button class="btn-action btn-delete" title="Delete"         data-id="${c.id}" data-action="delete"><i class="bi bi-trash"></i></button>
+                    : `<div class="um-action-cell">
+                        <button class="um-btn-primary" data-id="${c.id}" data-action="viewDetails">
+                            <i class="bi bi-eye"></i> View
+                        </button>
+                        <div class="um-overflow-wrap">
+                            <button class="um-btn-more" data-id="${c.id}" aria-label="More actions" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <div class="um-dropdown" role="menu">
+                                ${isBanned
+                                    ? `<button class="um-drop-item um-drop-success" data-id="${c.id}" data-action="unban" role="menuitem">
+                                            <i class="bi bi-check-circle"></i> Unban User
+                                       </button>`
+                                    : `<button class="um-drop-item um-drop-warn" data-id="${c.id}" data-action="ban" role="menuitem">
+                                            <i class="bi bi-slash-circle"></i> Ban User
+                                       </button>`
+                                }
+                                <button class="um-drop-item" data-id="${c.id}" data-action="resetPassword" role="menuitem">
+                                    <i class="bi bi-key"></i> Reset Password
+                                </button>
+                                ${isSeller
+                                    ? `<button class="um-drop-item um-drop-warn" data-id="${c.id}" data-action="revertToCustomer" role="menuitem">
+                                            <i class="bi bi-person-dash"></i> Remove Seller Role
+                                       </button>`
+                                    : ''
+                                }
+                                <div class="um-drop-divider"></div>
+                                <button class="um-drop-item um-drop-danger" data-id="${c.id}" data-action="delete" role="menuitem">
+                                    <i class="bi bi-trash"></i> Delete User
+                                </button>
+                            </div>
+                        </div>
                     </div>`
                 }
             </td>
         </tr>`;
     }).join('');
+
+    // Apply card labels for mobile layout
+    applyTableCardLabels('usersTable');
 
     // Render Pagination
     renderPagination(totalItems, customerPagination.limit, customerPagination.page, 'customersPagination', (newPage) => {
@@ -355,9 +383,36 @@ function bindCustomersEvents() {
 
     const tbody = document.getElementById('customersTableBody');
     if (tbody) {
-        tbody.onclick = (e) => {
+        // Toggle ⋯ dropdown
+        tbody.addEventListener('click', (e) => {
+            const moreBtn = e.target.closest('.um-btn-more');
+            if (moreBtn) {
+                e.stopPropagation();
+                const wrap = moreBtn.closest('.um-overflow-wrap');
+                const dropdown = wrap.querySelector('.um-dropdown');
+                const isOpen = dropdown.classList.contains('open');
+
+                // Close all other open dropdowns first
+                document.querySelectorAll('.um-dropdown.open').forEach(d => {
+                    d.classList.remove('open');
+                    d.closest('.um-overflow-wrap')?.querySelector('.um-btn-more')?.setAttribute('aria-expanded', 'false');
+                });
+
+                if (!isOpen) {
+                    dropdown.classList.add('open');
+                    moreBtn.setAttribute('aria-expanded', 'true');
+                }
+                return;
+            }
+
             const btn = e.target.closest('[data-action]');
             if (!btn) return;
+
+            // Close any open dropdown
+            document.querySelectorAll('.um-dropdown.open').forEach(d => {
+                d.classList.remove('open');
+                d.closest('.um-overflow-wrap')?.querySelector('.um-btn-more')?.setAttribute('aria-expanded', 'false');
+            });
 
             const id = btn.dataset.id;
             const action = btn.dataset.action;
@@ -369,12 +424,19 @@ function bindCustomersEvents() {
             if (action === 'resetPassword') {
                 const users = getUsers();
                 const user = users.find(u => String(u.id) === String(id));
-                const type = user && user.role === ROLES.SELLER ? 'seller' : 'customer';
                 openResetPasswordModal(id, 'customer');
             }
             if (action === 'delete') confirmDeleteCustomer(id);
-        };
+        });
     }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.um-dropdown.open').forEach(d => {
+            d.classList.remove('open');
+            d.closest('.um-overflow-wrap')?.querySelector('.um-btn-more')?.setAttribute('aria-expanded', 'false');
+        });
+    });
 
     // Bulk actions button
     const bulkBtn = document.getElementById('bulkActionsBtn');

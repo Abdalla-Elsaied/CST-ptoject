@@ -103,16 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('wishlistNavBtn')?.style.setProperty('display', 'none');
       document.querySelector('a[href="Cart.html"]')?.style.setProperty('display', 'none');
 
-      // Inject top banner
-      if (!document.getElementById('adminViewBanner')) {
-        const banner = document.createElement('div');
-        banner.id = 'adminViewBanner';
-        banner.innerHTML = `
-          <i class="bi bi-eye me-1"></i>
-          You are viewing the storefront as Admin — profile is managed in the Admin Panel.
-          <a href="../Admin/admin-panel.html">← Back to Admin Panel</a>`;
-        document.body.insertBefore(banner, document.body.firstChild);
-      }
+
       return;
     }
 
