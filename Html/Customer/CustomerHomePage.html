@@ -404,116 +404,6 @@
   </div>
 </section>
 
-<!-- ===== FOOTER ===== -->
-<!-- ===== BECOME A SELLER MODAL (from ContactUS.html) ===== -->
-<div class="modal fade" id="becomeSellerModal" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content seller-modal-content">
-      <div class="modal-header seller-modal-header">
-        <div>
-          <h5 class="modal-title fw-800">
-            <i class="bi bi-shop me-2"></i>Apply to Become a Seller
-          </h5>
-          <p class="text-muted small mb-0 mt-1">Join thousands of sellers on DEALPORT</p>
-        </div>
-        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-
-      <form id="becomeSellerForm" class="needs-validation" novalidate>
-        <div class="modal-body p-4">
-
-          <!-- Store Information -->
-          <div class="seller-form-section mb-4">
-            <div class="seller-section-label">
-              <i class="bi bi-shop-window me-2"></i>Store Information
-            </div>
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="profile-label">Store Name *</label>
-                <input type="text" class="form-control profile-input" id="storeName"
-                       placeholder="e.g. TechHub Store" required/>
-                <div class="invalid-feedback">Please enter your store name.</div>
-              </div>
-              <div class="col-md-6">
-                <label class="profile-label">City *</label>
-                <input type="text" class="form-control profile-input" id="storeCity"
-                       placeholder="e.g. Cairo" required/>
-                <div class="invalid-feedback">Please enter your city.</div>
-              </div>
-              <div class="col-12">
-                <label class="profile-label">Store Description *</label>
-                <textarea class="form-control profile-input" id="storeDescription"
-                          rows="3" placeholder="Describe what you sell and your brand story..." required></textarea>
-                <div class="invalid-feedback">Please describe your store.</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Business Information -->
-          <div class="seller-form-section mb-4">
-            <div class="seller-section-label">
-              <i class="bi bi-briefcase me-2"></i>Business Information
-            </div>
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="profile-label">Business Category *</label>
-                <select class="form-select profile-input" id="storeCategory" required>
-                  <option value="" disabled selected>Select Category</option>
-                  <option>Electronics</option>
-                  <option>Fashion</option>
-                  <option>Home & Kitchen</option>
-                  <option>Beauty</option>
-                  <option>Sports</option>
-                  <option>Grocery</option>
-                  <option>Toys</option>
-                  <option>Automotive</option>
-                </select>
-                <div class="invalid-feedback">Please select a category.</div>
-              </div>
-              <div class="col-md-6">
-                <label class="profile-label">Phone Number *</label>
-                <input type="tel" class="form-control profile-input" id="storePhone"
-                       placeholder="+20 100 000 0000" required/>
-                <div class="invalid-feedback">Please enter a phone number.</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Payout Preferences -->
-          <div class="seller-form-section">
-            <div class="seller-section-label">
-              <i class="bi bi-credit-card me-2"></i>Payout Preferences
-            </div>
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="profile-label">Payment Method *</label>
-                <select class="form-select profile-input" id="paymentMethod" required>
-                  <option value="" disabled selected>Select method</option>
-                  <option>Bank Transfer</option>
-                  <option>Vodafone Cash</option>
-                  <option>InstaPay</option>
-                  <option>PayPal</option>
-                </select>
-                <div class="invalid-feedback">Please select a payment method.</div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        <div class="modal-footer border-0 px-4 pb-4 gap-2">
-          <button class="btn btn-cancel flex-grow-1" type="button" data-bs-dismiss="modal">
-            Cancel
-          </button>
-          <button class="btn btn-save flex-grow-1" type="submit">
-            <i class="bi bi-send me-1"></i> Submit Application
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
 
 <!-- ===== FOOTER (minimised) ===== -->
 <footer class="site-footer-mini">
@@ -535,7 +425,7 @@
         <a href="CustomerHomePage.html">Home</a>
         <a href="profile.html">My Profile</a>
         <a href="Cart.html">Cart</a>
-        <a href="#" data-bs-toggle="modal" data-bs-target="#becomeSellerModal">Become a Seller</a>
+        <a href="ContactUS.html#becomeSeller">Become a Seller</a>
         <a href="#">Help Center</a>
         <a href="#">Returns Policy</a>
         <a href="#">Privacy Policy</a>

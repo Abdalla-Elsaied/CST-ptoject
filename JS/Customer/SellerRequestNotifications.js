@@ -99,7 +99,7 @@ function renderNotification() {
           <strong>Want to sell on Dealport?</strong>
           <span>Join thousands of sellers and reach more customers.</span>
         </div>
-        <a href="#" class="seller-notif-link" data-bs-toggle="modal" data-bs-target="#becomeSellerModal">Become a Seller</a>
+        <a href="ContactUS.html#becomeSeller" class="seller-notif-link">Become a Seller</a>
         <button class="seller-notif-dismiss" aria-label="Dismiss" data-dismiss="seller-cta">&times;</button>
       </div>`;
   }

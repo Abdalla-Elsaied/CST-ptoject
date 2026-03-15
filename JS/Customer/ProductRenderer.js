@@ -57,27 +57,27 @@ function resolveOldPrice(p) {
 /* ── Field normaliser ────────────────────────────────────────── */
 function normalise(p) {
   return {
-    id:            p.id           || p.ID           || Math.random(),
-    sellerId:      p.sellerId     || p.seller_id    || p.userId || null,  // Feature 2
-    name:          p.name         || p.title        || p.productName || p.product_name || 'Untitled Product',
-    category:      p.category     || p.Category     || p.type   || p.Type || 'Other',
-    price:         resolveCurrentPrice(p),
-    oldPrice:      resolveOldPrice(p),
-    image:         resolveImage(p),
-    rating:        parseFloat(p.rating || p.rate || p.stars || 0),
-    reviews:       parseInt(p.reviews  || p.reviewCount || p.numReviews || 0),
-    discount:      resolveDiscount(p),
-    description:   p.description  || p.desc || p.details || '',
-    stock:         resolveStock(p),
+    id: p.id || p.ID || Math.random(),
+    sellerId: p.sellerId || p.seller_id || p.userId || null,  // Feature 2
+    name: p.name || p.title || p.productName || p.product_name || 'Untitled Product',
+    category: p.category || p.Category || p.type || p.Type || 'Other',
+    price: resolveCurrentPrice(p),
+    oldPrice: resolveOldPrice(p),
+    image: resolveImage(p),
+    rating: parseFloat(p.rating || p.rate || p.stars || 0),
+    reviews: parseInt(p.reviews || p.reviewCount || p.numReviews || 0),
+    discount: resolveDiscount(p),
+    description: p.description || p.desc || p.details || '',
+    stock: resolveStock(p),
     stockQuantity: typeof p.stockQuantity === 'number' ? p.stockQuantity : null,
-    tag:           p.tag || p.badge || null,
+    tag: p.tag || p.badge || null,
   };
 }
 
 /* ── Star HTML ───────────────────────────────────────────────── */
 function starsHTML(rating) {
-  const full  = Math.floor(rating);
-  const half  = rating % 1 >= 0.4 ? 1 : 0;
+  const full = Math.floor(rating);
+  const half = rating % 1 >= 0.4 ? 1 : 0;
   const empty = 5 - full - half;
   return (
     '<i class="bi bi-star-fill"></i>'.repeat(full) +
@@ -158,8 +158,8 @@ function categorySectionHTML(category, products, sectionIndex) {
   const bgClass = sectionIndex % 2 === 0 ? '' : 'bg-page';
   // Show only first 4 products as preview
   const preview = products.slice(0, 4);
-  const cards   = preview.map(productCardHTML).join('');
-  const catId   = `cat-${category.replace(/\s+/g, '-').toLowerCase()}`;
+  const cards = preview.map(productCardHTML).join('');
+  const catId = `cat-${category.replace(/\s+/g, '-').toLowerCase()}`;
   const catEncoded = encodeURIComponent(category);
 
   return `
@@ -290,9 +290,9 @@ function populateCategoryNav(sortedCategories) {
 
   const moreItems = more.length
     ? more.map(cat => {
-        const enc = encodeURIComponent(cat);
-        return `<li><a class="dropdown-item" href="categoryProducts.html?category=${enc}">${cat}</a></li>`;
-      }).join('')
+      const enc = encodeURIComponent(cat);
+      return `<li><a class="dropdown-item" href="categoryProducts.html?category=${enc}">${cat}</a></li>`;
+    }).join('')
     : '<li><a class="dropdown-item text-muted" href="#">No more categories</a></li>';
 
   scroll.innerHTML = `
