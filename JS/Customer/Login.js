@@ -11,6 +11,14 @@ $(document).ready(async function () {
     await seedAdmin();        // ② seed defaults if no admin found
     seedCategories();
 
+    // Show ban/suspend message if redirected from requireRole()
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('banned') === '1') {
+        alert('Your account has been banned. Please contact support.');
+    } else if (params.get('suspended') === '1') {
+        alert('Your seller account has been suspended. Please contact support.');
+    }
+
     $("#togglePassword").on("click", function () {
         const $input = $("#floatingPassword");
         const type = $input.attr("type") === "password" ? "text" : "password";
@@ -48,16 +56,10 @@ $(document).ready(async function () {
             return;
         }
 
-        // ✅ Update last login through your abstraction, not raw localStorage
+        // Update last login timestamp
         updateItem(KEY_USERS, user.id, { lastLoginAt: new Date().toISOString() });
         user.lastLoginAt = new Date().toISOString();
         setLS('ls_currentUser', user);
-
-        if (user.isSuspended) {
-            alert("Your account has been suspended. Please contact support.");
-            localStorage.removeItem('ls_currentUser');
-            return;
-        }
 
         if (user.role === ROLES.SELLER && user.isApproved === false) {
             alert("Your seller account is pending approval. Please wait for admin approval.");

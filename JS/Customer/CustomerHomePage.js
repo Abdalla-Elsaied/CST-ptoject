@@ -18,19 +18,16 @@ import {
   getTestimonials, addTestimonial, hasUserTestimonial,
   starsHTML as reviewStarsHTML, formatDate,
 } from './Reviews.js';
+import { seedTestimonials } from '../Core/SeedData.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
 
   /* ══════════════════════════════════════════════════
      FEATURE 2 – Role-based access control
-     Admin must NOT access the customer home page.
-     Seller and Customer are allowed.
+     All roles (admin, seller, customer) can view the storefront.
+     Admins access it via the "View Storefront" link in the admin panel.
   ══════════════════════════════════════════════════ */
   const currentUser = getCurrentUser();
-  if (currentUser && currentUser.role === ROLES.ADMIN) {
-    window.location.replace('/Html/Admin/admin-panel.html');
-    return; // stop all further execution
-  }
 
   /* ══════════════════════════════════════════════════
      1. SWIPERS
@@ -63,6 +60,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   const accountDropdown = document.getElementById('accountDropdownMenu');
   const accountLabel    = document.getElementById('accountNavLabel');
 
+  function escapeHTML(text) {
+    if (!text) return '';
+    return String(text).replace(/[&<>"']/g, c =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c])
+    );
+  }
+
   function renderAccountMenu() {
     const user = getCurrentUser();
     if (!user) {
@@ -71,36 +75,76 @@ document.addEventListener('DOMContentLoaded', async () => {
         <li><h6 class="dropdown-header">Hello, Guest</h6></li>
         <li><a class="dropdown-item" href="Login.html"><i class="bi bi-box-arrow-in-right me-2 text-success"></i>Login</a></li>
         <li><a class="dropdown-item" href="Register.html"><i class="bi bi-person-plus me-2 text-success"></i>Register</a></li>`;
-    } else {
-      const initials = user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-      accountLabel.textContent = user.name.split(' ')[0];
-      accountDropdown.innerHTML = `
-        <li>
-          <div class="dropdown-user-header">
-            <div class="dropdown-user-avatar">${initials}</div>
-            <div>
-              <div class="dropdown-user-name">${user.name}</div>
-              <div class="dropdown-user-email">${user.email}</div>
-            </div>
-          </div>
-        </li>
-        <li><hr class="dropdown-divider my-1"></li>
-        <li><a class="dropdown-item" href="profile.html"><i class="bi bi-person-circle me-2 text-success"></i>My Profile</a></li>
-        <li><a class="dropdown-item" href="profile.html#orders"><i class="bi bi-bag-check me-2 text-success"></i>My Orders</a></li>
-        <li><a class="dropdown-item" id="navWishlistLink" href="#"><i class="bi bi-heart me-2 text-danger"></i>Wishlist <span id="dropWishCount" class="badge bg-danger ms-1">0</span></a></li>
-        <li><hr class="dropdown-divider my-1"></li>
-        <li><a class="dropdown-item text-danger" id="navLogoutBtn" href="#"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>`;
-
-      document.getElementById('navLogoutBtn')?.addEventListener('click', e => {
-        e.preventDefault();
-        logoutUser();
-      });
-      document.getElementById('navWishlistLink')?.addEventListener('click', e => {
-        e.preventDefault();
-        openWishlistDrawer();
-      });
-      updateDropWishCount();
+      return;
     }
+
+    // ── ADMIN: show read-only badge + back-to-panel link ──────────────────
+    if (user.role === ROLES.ADMIN || user.role === 'admin') {
+      const adminName = escapeHTML(user.name || 'Admin');
+      const initial   = (user.name || 'A').charAt(0).toUpperCase();
+
+      // Replace the dropdown button with a static admin badge row
+      const dropdownWrapper = accountDropdown.closest('.dropdown');
+      if (dropdownWrapper) {
+        dropdownWrapper.outerHTML = `
+          <div class="admin-storefront-badge d-none d-md-flex align-items-center gap-2" id="adminNavBadge">
+            <div class="admin-nav-avatar">${initial}</div>
+            <span class="admin-nav-name" title="Viewing as Admin — profile managed in Admin Panel">
+              ${adminName}
+            </span>
+            <span class="admin-nav-pill">Admin</span>
+            <a href="../Admin/admin-panel.html" class="admin-nav-back-btn">
+              <i class="bi bi-arrow-left-circle me-1"></i>Admin Panel
+            </a>
+          </div>`;
+      }
+
+      // Hide customer-only nav items
+      document.getElementById('wishlistNavBtn')?.style.setProperty('display', 'none');
+      document.querySelector('a[href="Cart.html"]')?.style.setProperty('display', 'none');
+
+      // Inject top banner
+      if (!document.getElementById('adminViewBanner')) {
+        const banner = document.createElement('div');
+        banner.id = 'adminViewBanner';
+        banner.innerHTML = `
+          <i class="bi bi-eye me-1"></i>
+          You are viewing the storefront as Admin — profile is managed in the Admin Panel.
+          <a href="../Admin/admin-panel.html">← Back to Admin Panel</a>`;
+        document.body.insertBefore(banner, document.body.firstChild);
+      }
+      return;
+    }
+
+    // ── Customer / Seller: normal dropdown ───────────────────────────────
+    const initials = user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    accountLabel.textContent = user.name.split(' ')[0];
+    accountDropdown.innerHTML = `
+      <li>
+        <div class="dropdown-user-header">
+          <div class="dropdown-user-avatar">${initials}</div>
+          <div>
+            <div class="dropdown-user-name">${user.name}</div>
+            <div class="dropdown-user-email">${user.email}</div>
+          </div>
+        </div>
+      </li>
+      <li><hr class="dropdown-divider my-1"></li>
+      <li><a class="dropdown-item" href="profile.html"><i class="bi bi-person-circle me-2 text-success"></i>My Profile</a></li>
+      <li><a class="dropdown-item" href="profile.html#orders"><i class="bi bi-bag-check me-2 text-success"></i>My Orders</a></li>
+      <li><a class="dropdown-item" id="navWishlistLink" href="#"><i class="bi bi-heart me-2 text-danger"></i>Wishlist <span id="dropWishCount" class="badge bg-danger ms-1">0</span></a></li>
+      <li><hr class="dropdown-divider my-1"></li>
+      <li><a class="dropdown-item text-danger" id="navLogoutBtn" href="#"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>`;
+
+    document.getElementById('navLogoutBtn')?.addEventListener('click', e => {
+      e.preventDefault();
+      logoutUser();
+    });
+    document.getElementById('navWishlistLink')?.addEventListener('click', e => {
+      e.preventDefault();
+      openWishlistDrawer();
+    });
+    updateDropWishCount();
   }
   renderAccountMenu();
 
@@ -144,6 +188,24 @@ document.addEventListener('DOMContentLoaded', async () => {
           <a class="mobile-nav-item" href="Login.html"><i class="bi bi-box-arrow-in-right me-2"></i>Login</a>
           <a class="mobile-nav-item" href="Register.html"><i class="bi bi-person-plus me-2"></i>Register</a>
           <a class="mobile-nav-item" href="Cart.html"><i class="bi bi-cart3 me-2"></i>Cart</a>`;
+      } else if (user.role === ROLES.ADMIN || user.role === 'admin') {
+        // Admin mobile menu — no customer actions
+        const initial = (user.name || 'A').charAt(0).toUpperCase();
+        mobileMenu.innerHTML = `
+          <div class="mobile-nav-user">
+            <div class="mobile-nav-avatar" style="background:linear-gradient(135deg,#f59e0b,#d97706)">${initial}</div>
+            <div>
+              <div class="mobile-nav-name">${escapeHTML(user.name || 'Admin')}</div>
+              <div class="mobile-nav-email" style="color:#f59e0b;font-weight:600;font-size:11px">Administrator</div>
+            </div>
+          </div>
+          <a class="mobile-nav-item" href="../Admin/admin-panel.html">
+            <i class="bi bi-arrow-left-circle me-2 text-warning"></i>Back to Admin Panel
+          </a>
+          <hr class="my-1"/>
+          <a class="mobile-nav-item text-danger" id="mobileLogoutBtn" href="#">
+            <i class="bi bi-box-arrow-right me-2"></i>Logout
+          </a>`;
       } else {
         const initials = user.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
         mobileMenu.innerHTML = `
@@ -578,6 +640,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const testiCommentIn = document.getElementById('testiComment');
   const testiError     = document.getElementById('testiError');
   const submitTestiBtn = document.getElementById('submitTestiBtn');
+
+  // Seed default testimonials on first visit (no-op if already seeded)
+  seedTestimonials();
 
   function renderTestimonials() {
     if (!testiGrid) return;

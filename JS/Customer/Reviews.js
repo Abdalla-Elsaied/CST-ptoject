@@ -10,7 +10,7 @@ import { getLS, setLS } from '../Core/Storage.js';
 // import { seedTestimonials } from '../Core/SeedData.js'; 
 
 export const KEY_TESTIMONIALS    = 'ls_testimonials';
-export const KEY_PRODUCT_REVIEWS = 'ls_product_reviews';
+export const KEY_PRODUCT_REVIEWS = 'ls_productReviews';
 
 /* ── Testimonials (home page) ──────────────────────── */
 
