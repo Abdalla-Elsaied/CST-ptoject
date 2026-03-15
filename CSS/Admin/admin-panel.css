@@ -121,7 +121,415 @@
 }
 
 
-/* ─── RESET & BASE ─────────────────────────────────────────── */
+/* ─── USER MANAGEMENT TABLE IMPROVEMENTS ──────────────────── */
+
+/* Better spacing and alignment for user management table */
+.users-table {
+    font-size: 13px;
+}
+
+.users-table th {
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 14px 12px;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.users-table td {
+    padding: 16px 12px;
+    vertical-align: middle;
+}
+
+/* User avatar styling */
+.user-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    color: white;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-avatar.banned {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+}
+
+/* User info column */
+.user-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-role-text {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* Contact info column */
+.contact-info {
+    min-width: 200px;
+}
+
+.user-email {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    word-break: break-word;
+}
+
+.user-phone {
+    font-size: 12px;
+}
+
+/* Date info column */
+.date-info {
+    min-width: 120px;
+}
+
+.join-date {
+    font-size: 13px;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.last-login {
+    font-size: 11px;
+}
+
+/* Orders info column */
+.orders-info {
+    min-width: 70px;
+}
+
+/* Banned row styling */
+.banned-row {
+    background-color: var(--danger-light);
+    opacity: 0.85;
+}
+
+[data-theme="dark"] .banned-row {
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* Action buttons improvements */
+.action-buttons {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+/* ─── TABLE CHECKBOXES ────────────────────────────────────── */
+.data-card .table input[type="checkbox"],
+.data-card .table .form-check-input {
+    width: 13px !important;
+    height: 13px !important;
+    margin: 0 !important;
+    cursor: pointer;
+    border: 1px solid #94a3b8 !important;
+    border-radius: 3px !important;
+    accent-color: var(--green-primary);
+    vertical-align: middle;
+    flex-shrink: 0;
+    box-shadow: none !important;
+}
+
+/* ─── UNIVERSAL TABLE STANDARDS ───────────────────────────── */
+
+/* Headers */
+.data-card .table thead th {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted) !important;
+    padding: 10px 16px !important;
+    border-bottom: 2px solid var(--border) !important;
+    white-space: nowrap;
+    user-select: none;
+    background: var(--table-header-bg) !important;
+}
+[data-theme="dark"] .data-card .table thead th {
+    background-color: #0d1321 !important;
+    color: #64748b !important;
+    border-bottom-color: #1e293b !important;
+}
+
+/* Rows */
+.data-card .table:not(.sellers-table):not(.products-table):not(.users-table) tbody tr {
+    height: 64px;
+    vertical-align: middle;
+    transition: background-color 0.15s ease;
+    border-bottom: 1px solid var(--border);
+}
+.data-card .table tbody tr:last-child { border-bottom: none; }
+.data-card .table tbody tr:hover {
+    background-color: var(--hover-bg) !important;
+    cursor: default;
+}
+[data-theme="dark"] .data-card .table tbody tr:hover {
+    background-color: rgba(34,197,94,0.05) !important;
+}
+.data-card .table tbody tr:nth-child(even) {
+    background-color: rgba(0,0,0,0.015);
+}
+[data-theme="dark"] .data-card .table tbody tr:nth-child(even) {
+    background-color: rgba(255,255,255,0.02);
+}
+
+/* Cells */
+.data-card .table tbody td {
+    padding: 12px 16px !important;
+    font-size: 13px;
+    color: var(--text-primary);
+    vertical-align: middle;
+}
+
+/* ─── AVATAR COMPONENT ─────────────────────────────────────── */
+.table-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+    color: #fff;
+    background: linear-gradient(135deg, var(--green-primary), #10b981);
+}
+.table-avatar.seller-avatar  { background: linear-gradient(135deg,#3b82f6,#2563eb); }
+.table-avatar.customer-avatar{ background: linear-gradient(135deg,#8b5cf6,#7c3aed); }
+.table-avatar.admin-avatar   { background: linear-gradient(135deg,#f59e0b,#d97706); }
+
+/* ─── ACTION BUTTONS ───────────────────────────────────────── */
+.btn-action {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 13px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+.btn-action:hover  { transform: translateY(-1px); filter: brightness(0.93); }
+.btn-action:active { transform: translateY(0); }
+
+.btn-action.btn-view    { background:#eff6ff; color:#3b82f6; border-color:#bfdbfe; }
+.btn-action.btn-edit    { background:#fefce8; color:#ca8a04; border-color:#fde68a; }
+.btn-action.btn-success { background:#f0fdf4; color:#16a34a; border-color:#bbf7d0; }
+.btn-action.btn-warn    { background:#fff7ed; color:#ea580c; border-color:#fed7aa; }
+.btn-action.btn-delete  { background:#fef2f2; color:#dc2626; border-color:#fecaca; }
+.btn-action.btn-key     { background:#f5f3ff; color:#7c3aed; border-color:#ddd6fe; }
+.btn-action.btn-info    { background:#eff6ff; color:#3b82f6; border-color:#bfdbfe; }
+
+[data-theme="dark"] .btn-action.btn-view    { background:rgba(59,130,246,0.15);  color:#60a5fa; border-color:rgba(59,130,246,0.3);  }
+[data-theme="dark"] .btn-action.btn-edit    { background:rgba(234,179,8,0.15);   color:#facc15; border-color:rgba(234,179,8,0.3);   }
+[data-theme="dark"] .btn-action.btn-success { background:rgba(34,197,94,0.15);   color:#4ade80; border-color:rgba(34,197,94,0.3);   }
+[data-theme="dark"] .btn-action.btn-warn    { background:rgba(234,88,12,0.15);   color:#fb923c; border-color:rgba(234,88,12,0.3);   }
+[data-theme="dark"] .btn-action.btn-delete  { background:rgba(220,38,38,0.15);   color:#f87171; border-color:rgba(220,38,38,0.3);   }
+[data-theme="dark"] .btn-action.btn-key     { background:rgba(124,58,237,0.15);  color:#a78bfa; border-color:rgba(124,58,237,0.3);  }
+[data-theme="dark"] .btn-action.btn-info    { background:rgba(59,130,246,0.15);  color:#60a5fa; border-color:rgba(59,130,246,0.3);  }
+
+/* ─── STATUS PILLS ─────────────────────────────────────────── */
+.status-pill {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    display: inline-block;
+    white-space: nowrap;
+}
+.status-active    { background:#dcfce7; color:#14532d; }
+.status-pending   { background:#fef3c7; color:#92400e; }
+.status-suspended { background:#fee2e2; color:#991b1b; }
+.status-hidden    { background:#f1f5f9; color:#475569; }
+.status-processing{ background:#dbeafe; color:#1e40af; }
+.status-shipped   { background:#ede9fe; color:#5b21b6; }
+.status-delivered { background:#dcfce7; color:#14532d; }
+.status-cancelled { background:#fee2e2; color:#991b1b; }
+.status-refunded  { background:#f1f5f9; color:#475569; }
+
+[data-theme="dark"] .status-active    { background:rgba(34,197,94,0.15);   color:#4ade80; }
+[data-theme="dark"] .status-pending   { background:rgba(245,158,11,0.15);  color:#fbbf24; }
+[data-theme="dark"] .status-suspended { background:rgba(239,68,68,0.15);   color:#f87171; }
+[data-theme="dark"] .status-hidden    { background:rgba(100,116,139,0.15); color:#94a3b8; }
+[data-theme="dark"] .status-processing{ background:rgba(59,130,246,0.15);  color:#60a5fa; }
+[data-theme="dark"] .status-shipped   { background:rgba(139,92,246,0.15);  color:#a78bfa; }
+[data-theme="dark"] .status-delivered { background:rgba(34,197,94,0.15);   color:#4ade80; }
+[data-theme="dark"] .status-cancelled { background:rgba(239,68,68,0.15);   color:#f87171; }
+[data-theme="dark"] .status-refunded  { background:rgba(100,116,139,0.15); color:#94a3b8; }
+
+/* ─── STATUS DOTS ──────────────────────────────────────────── */
+.status-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; flex-shrink:0; }
+.dot-green  { background:#22c55e; }
+.dot-red    { background:#ef4444; }
+.dot-amber  { background:#f59e0b; }
+
+/* ─── ROW TINTS ────────────────────────────────────────────── */
+.row-suspended { background:rgba(239,68,68,0.05) !important; }
+.row-pending   { background:rgba(245,158,11,0.05) !important; }
+[data-theme="dark"] .row-suspended { background:rgba(239,68,68,0.08) !important; }
+[data-theme="dark"] .row-pending   { background:rgba(245,158,11,0.08) !important; }
+
+/* ─── ORDER ID PILL ────────────────────────────────────────── */
+.order-id-pill {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 11px;
+    background: var(--page-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    color: var(--text-secondary);
+    cursor: default;
+    white-space: nowrap;
+}
+
+/* ─── PRODUCT THUMBNAIL ────────────────────────────────────── */
+.product-thumb {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+.no-img {
+    width: 44px; height: 44px;
+    background: var(--border);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); font-size: 18px;
+}
+
+/* ─── SHIMMER SKELETON ─────────────────────────────────────── */
+@keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+.skeleton {
+    background: linear-gradient(90deg, var(--border) 25%, var(--hover-bg) 50%, var(--border) 75%);
+    background-size: 200% 100%;
+    border-radius: 6px;
+    animation: shimmer 1.5s infinite;
+}
+.skeleton-text { height: 14px; }
+.skeleton-img  { width: 44px; height: 44px; border-radius: 8px; }
+.skeleton-btn  { width: 34px; height: 34px; border-radius: 8px; }
+
+/* ─── ORDER STATUS SELECT ──────────────────────────────────── */
+.order-status-select {
+    font-size: 11px; font-weight: 600;
+    padding: 4px 8px; border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text-primary);
+    cursor: pointer;
+    min-width: 120px;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+.empty-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.empty-state i      { opacity: 0.3; margin-bottom: 16px; }
+.empty-state strong { font-size: 16px; color: var(--text-primary); margin-bottom: 8px; display: block; }
+.empty-state p      { color: var(--text-muted); font-size: 14px; max-width: 400px; margin: 0 auto; }
+
+/* Table responsive */
+@media (max-width: 1400px) {
+    .users-table { font-size: 12px; }
+    .btn-action  { width: 30px; height: 30px; font-size: 12px; }
+}
+
+/* Ensure table doesn't break on smaller screens */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.table-responsive::-webkit-scrollbar       { height: 8px; }
+.table-responsive::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.table-responsive::-webkit-scrollbar-track { background: var(--border-light); }
+
+/* Row highlight animation */
+.row-highlight { animation: highlightRow 2s ease; }
+@keyframes highlightRow {
+    0%, 100% { background-color: transparent; }
+    50% {
+        background-color: var(--green-light-bg);
+    }
+}
+
+/* Comment text styling in reviews */
+.comment-text {
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+
+/* Recent sellers table improvements */
+.recent-seller-row {
+    transition: var(--transition);
+}
+
+.recent-seller-row:hover {
+    background-color: var(--table-hover-bg);
+}
+
+.table-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 13px;
+    color: white;
+}
+
+.seller-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* Order ID styling */
+.order-id {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
 *,
 *::before,
 *::after {
@@ -560,6 +968,98 @@ a {
 }
 
 
+/* ── Storefront external link — visually distinct from nav items ── */
+.nav-link-external {
+    border: 1px dashed rgba(34, 197, 94, 0.3) !important;
+    background: rgba(34, 197, 94, 0.04) !important;
+    color: var(--green-primary) !important;
+    margin-top: 4px;
+    position: relative;
+    z-index: 1002 !important; /* Above other nav links */
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+.nav-link-external * {
+    pointer-events: auto !important; /* Ensure all children are clickable */
+}
+
+.nav-link-external .nav-icon {
+    color: var(--green-primary);
+    opacity: 1;
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.nav-link-external .nav-link-text {
+    color: var(--green-primary);
+    font-weight: 500;
+}
+
+.nav-link-external:hover {
+    background: rgba(34, 197, 94, 0.1) !important;
+    border-color: var(--green-primary) !important;
+    color: #fff !important;
+    transform: translateX(2px);
+}
+
+.nav-link-external:hover .nav-icon {
+    background: rgba(34, 197, 94, 0.2);
+}
+
+.nav-link-external:hover .nav-link-text {
+    color: #fff;
+}
+
+/* Never show active state on the storefront link */
+.nav-link-external.active {
+    background: rgba(34, 197, 94, 0.04) !important;
+    color: var(--green-primary) !important;
+    border-color: rgba(34, 197, 94, 0.3) !important;
+}
+
+/* Collapsed sidebar — keep icon tinted green */
+#adminSidebar.collapsed .nav-link-external {
+    border-color: rgba(34, 197, 94, 0.2) !important;
+}
+
+/* Ensure the external link icon is visible */
+.nav-link-external .bi-arrow-up-right {
+    opacity: 0.5;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.nav-link-external:hover .bi-arrow-up-right {
+    opacity: 1;
+    transform: translateX(2px) translateY(-2px);
+}
+
+/* Tooltip for collapsed state */
+#adminSidebar.collapsed .nav-link-external::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: calc(100% + 14px);
+    top: 50%;
+    transform: translateY(-50%) scale(0.95);
+    background: #1e293b;
+    color: #f1f5f9;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    z-index: 9999;
+}
+
+#adminSidebar.collapsed .nav-link-external:hover::after {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+}
+
 /* ── Review & Category tabs ──────────────────── */
 .cat-tab.active,
 .rev-tab.active {
@@ -576,6 +1076,37 @@ a {
     transition: var(--transition);
 }
 
+/* ── Review badges ───────────────────────────── */
+.rev-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 2px 8px;
+}
+.rev-badge.rev-featured {
+    background: #fef3c7;
+    color: #92400e;
+}
+.rev-badge.rev-plain {
+    color: var(--text-muted);
+}
+.rev-prod-badge {
+    display: inline-block;
+    background: var(--green-light-bg, #f0fdf4);
+    color: var(--green-dark, #166534);
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 6px;
+    padding: 3px 8px;
+    max-width: 160px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.rev-search-bar {
+    padding: 12px 16px 0;
+}
 
 /* ── Mobile sidebar overlay ──────────────────── */
 #sidebarOverlay {
@@ -596,6 +1127,17 @@ a {
     #sidebarOverlay {
         display: none !important;
     }
+}
+
+/* Ensure sidebar links are above any overlays */
+.sidebar-nav {
+    position: relative;
+    z-index: 1000;
+}
+
+.sidebar-nav .nav-link {
+    position: relative;
+    z-index: 1001;
 }
 
 
@@ -699,7 +1241,7 @@ a {
     transition: var(--transition);
 }
 
-.topbar-search input:focus ~ .search-icon {
+.topbar-search:focus-within .search-icon {
     color: var(--green-primary);
 }
 
@@ -1784,6 +2326,9 @@ a {
     letter-spacing: 0.3px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     transition: var(--transition);
+    flex-shrink: 0;
+    max-width: none;
+    overflow: visible;
 }
 
 .status-badge::before {
@@ -1793,6 +2338,7 @@ a {
     border-radius: 50%;
     display: inline-block;
     animation: badgePulse 2s ease-in-out infinite;
+    flex-shrink: 0;
 }
 
 @keyframes badgePulse {
@@ -2672,19 +3218,14 @@ input[type="checkbox"]:focus {
     margin: 0;
 }
 
-/* Table responsive improvements */
+/* Table responsive — allow horizontal scroll as fallback */
 .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
 }
 
 .table-responsive::-webkit-scrollbar {
-    height: 8px;
-}
-
-.table-responsive::-webkit-scrollbar-track {
-    background: var(--page-bg);
-    border-radius: 4px;
+    height: 4px;
 }
 
 .table-responsive::-webkit-scrollbar-thumb {
@@ -2692,8 +3233,8 @@ input[type="checkbox"]:focus {
     border-radius: 4px;
 }
 
-.table-responsive::-webkit-scrollbar-thumb:hover {
-    background: var(--text-muted);
+.table-responsive::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 
@@ -2896,9 +3437,7 @@ input[type="checkbox"]:focus {
         display: none;
     }
 
-    .topbar-date {
-        display: none;
-    }
+    /* topbar-date hidden at 576px via new responsive block */
 
     /* KPI cards */
     .kpi-row {
@@ -2962,40 +3501,6 @@ input[type="checkbox"]:focus {
         padding: 12px 20px;
     }
 
-    /* Action buttons - stack vertically on mobile */
-    .actions-col {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .btn-action {
-        width: 100%;
-        justify-content: center;
-    }
-
-    /* Section header - stack on mobile */
-    .section-header {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .section-header > div {
-        width: 100%;
-    }
-
-    .section-header .btn-primary-green {
-        width: 100%;
-        justify-content: center;
-    }
-
-    /* Toast positioning on mobile */
-    .admin-toast {
-        left: 16px;
-        right: 16px;
-        min-width: unset;
-        max-width: unset;
-    }
-
     /* Table responsive improvements */
     .data-card .table {
         font-size: 12px;
@@ -3053,6 +3558,18 @@ input[type="checkbox"]:focus {
         padding: 10px 12px;
         font-size: 12px;
     }
+}
+
+/* ─── ROW HIGHLIGHT ANIMATION ──────────────────────────────── */
+/* Used by viewSellerDetails() to pulse a row after navigation */
+@keyframes rowPulse {
+    0%   { background-color: var(--green-light-bg); }
+    60%  { background-color: var(--green-light-bg); }
+    100% { background-color: transparent; }
+}
+
+.row-highlight {
+    animation: rowPulse 2s ease forwards;
 }
 
 /* ─── USER MANAGEMENT SPECIFIC STYLES ──────────────────────── */
@@ -3410,41 +3927,7 @@ input[type="checkbox"]:focus {
     }
 }
 
-/* Responsive improvements */
-@media (max-width: 768px) {
-    .users-table {
-        font-size: 12px;
-    }
-    
-    .users-table thead th,
-    .users-table tbody td {
-        padding: 12px 8px;
-    }
-    
-    .user-avatar {
-        width: 32px;
-        height: 32px;
-        font-size: 12px;
-    }
-    
-    .action-buttons {
-        flex-direction: column;
-        gap: 2px !important;
-    }
-    
-    .action-buttons .btn-action {
-        width: 100%;
-        justify-content: center;
-    }
-    
-    /* Hide some columns on mobile */
-    .users-table th:nth-child(4),
-    .users-table td:nth-child(4),
-    .users-table th:nth-child(7),
-    .users-table td:nth-child(7) {
-        display: none;
-    }
-}
+/* Responsive improvements handled in unified breakpoint section below */
 
 /* ─── PAGINATION ───────────────────────────────────────────── */
 .pagination-container {
@@ -4142,10 +4625,10 @@ textarea:focus-visible {
 
 /* ── 22. Table-responsive scrollbar ───────────────────────── */
 [data-theme="dark"] .table-responsive::-webkit-scrollbar-track {
-    background: var(--page-bg);
+    background: transparent;
 }
 [data-theme="dark"] .table-responsive::-webkit-scrollbar-thumb {
-    background: var(--border);
+    background: transparent;
 }
 
 /* ── 23. Modal table (user orders inside user detail modal) ── */
@@ -4246,9 +4729,8 @@ body,
     font-size:      14px;
     font-weight:    500;
     white-space:    nowrap;
-    flex-shrink:    0;
-    overflow:       hidden;
-    text-overflow:  ellipsis;
+    flex-shrink:    1;
+    min-width:      0;
 }
 
 .topbar-title strong {
@@ -4287,14 +4769,12 @@ body,
         font-size: 11px;
     }
     .topbar-title {
-        max-width:     180px;
-        overflow:      hidden;
-        text-overflow: ellipsis;
+        font-size: 13px;
     }
 }
 
 @media (max-width: 480px) {
-    .topbar-title  { font-size: 12px; max-width: 130px; }
+    .topbar-title  { font-size: 12px; }
     .topbar-date   { font-size: 10px; }
 }
 
@@ -4319,25 +4799,18 @@ body,
 }
 
 /* Consistent row height across all tables */
-.data-card .table tbody tr {
+.data-card .table:not(.sellers-table):not(.products-table):not(.users-table) tbody tr {
     height:         64px;
     vertical-align: middle;
 }
 
 
 /* ─── FIX: Users table contact column ──────────────────────── */
-.users-table th:nth-child(4),
-.users-table td:nth-child(4) {
-    min-width: 220px;
-    max-width: 280px;
-}
-
 .user-email {
     font-size:     13px;
     white-space:   nowrap;
     overflow:      hidden;
     text-overflow: ellipsis;
-    max-width:     250px;
     display:       block;
     cursor:        default;
 }
@@ -4347,7 +4820,6 @@ body,
     white-space:   nowrap;
     overflow:      hidden;
     text-overflow: ellipsis;
-    max-width:     250px;
     display:       block;
 }
 
@@ -4376,15 +4848,20 @@ body,
 
 
 /* ─── FIX: Table cell text truncation ──────────────────────── */
+/* Tables use auto layout so columns size to content naturally */
+.data-card .table {
+    width: 100%;
+    table-layout: auto;
+}
+
 .data-card .table td,
 .data-card .table th {
     overflow:      hidden;
     text-overflow: ellipsis;
     white-space:   nowrap;
-    max-width:     200px;
 }
 
-/* Allow wrapping for action columns */
+/* Action column — never truncate, always visible */
 .data-card .table td:last-child,
 .data-card .table th:last-child {
     white-space: nowrap;
@@ -4392,46 +4869,259 @@ body,
     max-width:   unset;
 }
 
-/* Allow wrapping for description/comment columns */
+/* Comment/description columns — clamp to 2 lines */
 .data-card .table .comment-text {
-    white-space:   normal;
-    overflow:      hidden;
-    text-overflow: ellipsis;
-    display:       -webkit-box;
+    white-space:        normal;
+    overflow:           hidden;
+    text-overflow:      ellipsis;
+    display:            -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
-    max-width:     350px;
+}
+
+/* Users table — fixed layout with defined column widths */
+.users-table {
+    table-layout: auto;
+    width: 100%;
+}
+
+/* Dashboard mini-tables — auto layout (short, few columns) */
+#recentSellersBody,
+#recentOrdersBody {
+    table-layout: auto;
+}
+.row.g-3 .data-card .table {
+    table-layout: auto;
+}
+
+/* ─── Recent Sellers mini-table ─────────────────────────────── */
+#recentSellersBody tr.recent-seller-row td {
+    padding: 10px 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border);
+}
+#recentSellersBody tr.recent-seller-row:last-child td {
+    border-bottom: none;
+}
+#recentSellersBody tr.recent-seller-row:hover {
+    background: var(--green-light-bg);
+}
+/* Column widths for the 4-column layout */
+#recentSellersBody tr.recent-seller-row td:nth-child(1) { width: 38%; }
+#recentSellersBody tr.recent-seller-row td:nth-child(2) { width: 30%; }
+#recentSellersBody tr.recent-seller-row td:nth-child(3) { width: 14%; }
+#recentSellersBody tr.recent-seller-row td:nth-child(4) { width: 18%; }
+
+/* Match header to body */
+#recentSellersBody ~ thead th,
+.data-card table thead th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 10px 12px;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
 }
 
 
-/* ─── FIX: Responsive table improvements ───────────────────── */
+/* ─── TABLE COLUMN MIN-WIDTHS ───────────────────────────────── */
+/* Prevent columns from collapsing; table-responsive handles overflow */
+
+/* Sellers table */
+#sellersSection .table th:nth-child(1),
+#sellersTableBody td:nth-child(1) { min-width: 36px;  width: 36px; }   /* # */
+#sellersSection .table th:nth-child(2),
+#sellersTableBody td:nth-child(2) { min-width: 140px; }                 /* Full Name */
+#sellersSection .table th:nth-child(3),
+#sellersTableBody td:nth-child(3) { min-width: 180px; }                 /* Email */
+#sellersSection .table th:nth-child(4),
+#sellersTableBody td:nth-child(4) { min-width: 120px; }                 /* Phone */
+#sellersSection .table th:nth-child(5),
+#sellersTableBody td:nth-child(5) { min-width: 130px; }                 /* Store Name */
+#sellersSection .table th:nth-child(6),
+#sellersTableBody td:nth-child(6) { min-width: 100px; }                 /* City */
+#sellersSection .table th:nth-child(7),
+#sellersTableBody td:nth-child(7) { min-width: 110px; }                 /* Payment */
+#sellersSection .table th:nth-child(8),
+#sellersTableBody td:nth-child(8) { min-width: 160px; width: 160px; }  /* Actions */
+
+/* Requests table */
+#requestsSection .table th:nth-child(1),
+#requestsTableBody td:nth-child(1) { min-width: 36px;  width: 36px; }  /* Checkbox */
+#requestsSection .table th:nth-child(2),
+#requestsTableBody td:nth-child(2) { min-width: 140px; }                /* Store Name */
+#requestsSection .table th:nth-child(3),
+#requestsTableBody td:nth-child(3) { min-width: 140px; }                /* User */
+#requestsSection .table th:nth-child(4),
+#requestsTableBody td:nth-child(4) { min-width: 100px; }                /* City */
+#requestsSection .table th:nth-child(5),
+#requestsTableBody td:nth-child(5) { min-width: 120px; }                /* Category */
+#requestsSection .table th:nth-child(6),
+#requestsTableBody td:nth-child(6) { min-width: 120px; }                /* Phone */
+#requestsSection .table th:nth-child(7),
+#requestsTableBody td:nth-child(7) { min-width: 130px; }                /* Payment */
+#requestsSection .table th:nth-child(8),
+#requestsTableBody td:nth-child(8) { min-width: 140px; width: 140px; } /* Actions */
+
+/* Products table */
+#productsSection .table th:nth-child(1),
+#productsTableBody td:nth-child(1) { min-width: 36px;  width: 36px; }  /* # */
+#productsSection .table th:nth-child(2),
+#productsTableBody td:nth-child(2) { min-width: 52px;  width: 52px; }  /* Image */
+#productsSection .table th:nth-child(3),
+#productsTableBody td:nth-child(3) { min-width: 160px; }                /* Product Name */
+#productsSection .table th:nth-child(4),
+#productsTableBody td:nth-child(4) { min-width: 120px; }                /* Seller */
+#productsSection .table th:nth-child(5),
+#productsTableBody td:nth-child(5) { min-width: 110px; }                /* Category */
+#productsSection .table th:nth-child(6),
+#productsTableBody td:nth-child(6) { min-width: 90px; }                 /* Price */
+#productsSection .table th:nth-child(7),
+#productsTableBody td:nth-child(7) { min-width: 80px; }                 /* Stock */
+#productsSection .table th:nth-child(8),
+#productsTableBody td:nth-child(8) { min-width: 90px; }                 /* Status */
+#productsSection .table th:nth-child(9),
+#productsTableBody td:nth-child(9) { min-width: 120px; width: 120px; } /* Actions */
+
+/* Orders table */
+#ordersSection .table th:nth-child(1),
+#ordersTableBody td:nth-child(1) { min-width: 36px;  width: 36px; }    /* # */
+#ordersSection .table th:nth-child(2),
+#ordersTableBody td:nth-child(2) { min-width: 110px; }                  /* Order ID */
+#ordersSection .table th:nth-child(3),
+#ordersTableBody td:nth-child(3) { min-width: 130px; }                  /* Customer */
+#ordersSection .table th:nth-child(4),
+#ordersTableBody td:nth-child(4) { min-width: 120px; }                  /* Seller */
+#ordersSection .table th:nth-child(5),
+#ordersTableBody td:nth-child(5) { min-width: 60px; }                   /* Items */
+#ordersSection .table th:nth-child(6),
+#ordersTableBody td:nth-child(6) { min-width: 90px; }                   /* Total */
+#ordersSection .table th:nth-child(7),
+#ordersTableBody td:nth-child(7) { min-width: 110px; }                  /* Status */
+#ordersSection .table th:nth-child(8),
+#ordersTableBody td:nth-child(8) { min-width: 100px; }                  /* Date */
+#ordersSection .table th:nth-child(9),
+#ordersTableBody td:nth-child(9) { min-width: 140px; }                  /* Change Status */
+#ordersSection .table th:nth-child(10),
+#ordersTableBody td:nth-child(10){ min-width: 80px;  width: 80px; }    /* Details */
+
+/* Users table column min-widths */
+.users-table th:nth-child(1),
+.users-table td:nth-child(1) { min-width: 36px;  width: 36px; }        /* Checkbox */
+.users-table th:nth-child(2),
+.users-table td:nth-child(2) { min-width: 40px;  width: 40px; }        /* # */
+.users-table th:nth-child(3),
+.users-table td:nth-child(3) { min-width: 160px; }                      /* User */
+.users-table th:nth-child(4),
+.users-table td:nth-child(4) { min-width: 200px; }                      /* Contact */
+.users-table th:nth-child(5),
+.users-table td:nth-child(5) { min-width: 90px; }                       /* Role */
+.users-table th:nth-child(6),
+.users-table td:nth-child(6) { min-width: 90px; }                       /* Status */
+.users-table th:nth-child(7),
+.users-table td:nth-child(7) { min-width: 110px; }                      /* Joined */
+.users-table th:nth-child(8),
+.users-table td:nth-child(8) { min-width: 70px; }                       /* Orders */
+.users-table th:nth-child(9),
+.users-table td:nth-child(9) { min-width: 160px; width: 160px; }       /* Actions */
+
+
+/* ─── RESPONSIVE TABLE STRATEGY ────────────────────────────── */
+/* Primary: hide low-priority columns at breakpoints            */
+/* Fallback: horizontal scroll via .table-responsive            */
+
+/* ── Tablet (≤992px) ── */
 @media (max-width: 992px) {
-    /* Sellers table — hide phone on tablet */
-    #sellersTableBody td:nth-child(4),
-    #sellersSection .table thead th:nth-child(4) {
-        display: none;
-    }
+    /* Sellers — hide Phone */
+    #sellersSection .table thead th:nth-child(4),
+    #sellersTableBody td:nth-child(4) { display: none; }
+
+    /* Orders — hide Seller */
+    #ordersSection .table thead th:nth-child(4),
+    #ordersTableBody td:nth-child(4) { display: none; }
+
+    /* Products — hide Seller */
+    #productsSection .table thead th:nth-child(4),
+    #productsTableBody td:nth-child(4) { display: none; }
+
+    /* Users — hide Contact */
+    .users-table th:nth-child(4),
+    .users-table td:nth-child(4) { display: none; }
 }
 
+/* ── Mobile (≤768px) ── */
 @media (max-width: 768px) {
-    /* Users table — hide Joined and Orders columns */
-    .users-table td:nth-child(7),
-    .users-table td:nth-child(8),
+    /* Users — hide Joined, Orders */
     .users-table th:nth-child(7),
-    .users-table th:nth-child(8) {
-        display: none;
-    }
+    .users-table td:nth-child(7),
+    .users-table th:nth-child(8),
+    .users-table td:nth-child(8) { display: none; }
+
+    /* Sellers — hide City, Payment */
+    #sellersSection .table thead th:nth-child(6),
+    #sellersTableBody td:nth-child(6),
+    #sellersSection .table thead th:nth-child(7),
+    #sellersTableBody td:nth-child(7) { display: none; }
+
+    /* Orders — hide Items, Date */
+    #ordersSection .table thead th:nth-child(5),
+    #ordersTableBody td:nth-child(5),
+    #ordersSection .table thead th:nth-child(8),
+    #ordersTableBody td:nth-child(8) { display: none; }
+
+    /* Products — hide Category, Stock */
+    #productsSection .table thead th:nth-child(5),
+    #productsTableBody td:nth-child(5),
+    #productsSection .table thead th:nth-child(7),
+    #productsTableBody td:nth-child(7) { display: none; }
+
+    /* Requests — hide City, Phone, Payment */
+    #requestsSection .table thead th:nth-child(4),
+    #requestsTableBody td:nth-child(4),
+    #requestsSection .table thead th:nth-child(6),
+    #requestsTableBody td:nth-child(6),
+    #requestsSection .table thead th:nth-child(7),
+    #requestsTableBody td:nth-child(7) { display: none; }
+
+    /* Reviews — hide Date */
+    #testimonialsCard .table thead th:nth-child(4),
+    #testimonialsCard .table tbody td:nth-child(4),
+    #productReviewsCard .table thead th:nth-child(5),
+    #productReviewsCard .table tbody td:nth-child(5) { display: none; }
 
     /* Smaller action buttons on mobile */
+    .btn-action,
     .btn-action.btn-sm {
         width:  30px;
         height: 30px;
+        font-size: 12px;
     }
 
     /* Stack dashboard cards vertically on mobile */
     .row.g-3 > .col-lg-6 > .data-card.h-100 {
         min-height: 280px;
     }
+}
+
+/* ── Small mobile (≤480px) ── */
+@media (max-width: 480px) {
+    /* Users — also hide Role */
+    .users-table th:nth-child(5),
+    .users-table td:nth-child(5) { display: none; }
+
+    /* Orders — hide Total */
+    #ordersSection .table thead th:nth-child(6),
+    #ordersTableBody td:nth-child(6) { display: none; }
+
+    /* Products — hide Price */
+    #productsSection .table thead th:nth-child(6),
+    #productsTableBody td:nth-child(6) { display: none; }
+
+    /* Sellers — hide Email */
+    #sellersSection .table thead th:nth-child(3),
+    #sellersTableBody td:nth-child(3) { display: none; }
 }
 
 
@@ -5017,4 +5707,1318 @@ h6.section-heading {
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
     }
+}
+
+
+/* ============================================================
+   UX IMPROVEMENTS - March 2026
+   Comprehensive fixes for buttons, spacing, and layout
+   ============================================================ */
+
+/* ─── BUTTON UX IMPROVEMENTS ──────────────────────────────── */
+
+/* Fix: Action buttons should never stack vertically in tables */
+.action-buttons {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Fix: Compact icon-only buttons in tables */
+.btn-action.btn-sm {
+    width: 34px !important;
+    height: 34px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+}
+
+/* Fix: Better hover states for action buttons */
+.btn-action.btn-sm:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Fix: Icon-only buttons should hide text */
+.btn-action.btn-sm i {
+    margin: 0 !important;
+}
+
+/* Fix: Primary green button spacing */
+.btn-primary-green {
+    padding: 11px 24px !important;
+    gap: 8px !important;
+    white-space: nowrap !important;
+}
+
+.btn-primary-green i {
+    font-size: 16px !important;
+}
+
+/* Fix: Outline button spacing */
+.btn-outline-green {
+    padding: 10px 22px !important;
+    gap: 8px !important;
+}
+
+/* ─── TABLE SPACING IMPROVEMENTS ──────────────────────────── */
+
+/* Fix: Better table cell padding */
+.table > :not(caption) > * > * {
+    padding: 14px 12px !important;
+}
+
+/* Fix: Table header spacing */
+.table thead th {
+    padding: 16px 12px !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* Fix: Actions column should be narrower and centered */
+.table th:last-child,
+.table td:last-child {
+    text-align: center !important;
+    width: 160px !important;
+    min-width: 160px !important;
+}
+
+/* Fix: Better row spacing */
+.table tbody tr {
+    transition: all 0.2s ease !important;
+}
+
+.table tbody tr:hover {
+    background-color: var(--table-hover-bg) !important;
+    transform: scale(1.001) !important;
+}
+
+/* Fix: Avatar spacing in tables */
+.table-avatar {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    flex-shrink: 0 !important;
+}
+
+/* Fix: User info in tables */
+.user-info {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+}
+
+.user-name {
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    color: var(--text-primary) !important;
+}
+
+.user-role-text {
+    font-size: 12px !important;
+    color: var(--text-muted) !important;
+}
+
+/* Fix: Contact info spacing */
+.contact-info {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+}
+
+.user-email {
+    font-size: 13px !important;
+    color: var(--text-primary) !important;
+    max-width: 250px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.user-phone {
+    font-size: 12px !important;
+}
+
+/* Fix: Date info spacing */
+.date-info {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+}
+
+.join-date {
+    font-size: 13px !important;
+    color: var(--text-primary) !important;
+}
+
+.last-login {
+    font-size: 11px !important;
+}
+
+/* Fix: Orders info spacing */
+.orders-info {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 2px !important;
+}
+
+/* ─── STATUS BADGE IMPROVEMENTS ───────────────────────────── */
+
+/* Fix: Better badge spacing and sizing */
+.status-badge {
+    padding: 6px 12px !important;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    white-space: nowrap !important;
+}
+
+.status-badge i {
+    font-size: 12px !important;
+}
+
+/* Fix: Status badge colors */
+.status-badge.status-active {
+    background: var(--success-light) !important;
+    color: var(--green-dark) !important;
+    border: 1px solid rgba(34, 197, 94, 0.3) !important;
+}
+
+.status-badge.status-pending {
+    background: var(--warning-light) !important;
+    color: #b45309 !important;
+    border: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+
+.status-badge.status-cancelled,
+.status-badge.status-banned {
+    background: var(--danger-light) !important;
+    color: var(--danger-dark) !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+.status-badge.status-shipped {
+    background: var(--info-light) !important;
+    color: var(--info-dark) !important;
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+}
+
+/* ─── FILTER BAR IMPROVEMENTS ─────────────────────────────── */
+
+/* Fix: Better filter bar spacing */
+.filter-bar {
+    display: flex !important;
+    gap: 12px !important;
+    margin-bottom: 24px !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+}
+
+.filter-input,
+.filter-select {
+    flex: 1 !important;
+    min-width: 200px !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--border) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+.filter-input {
+    padding: 10px 14px 10px 40px !important;
+}
+
+.filter-select {
+    padding: 10px 14px !important;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+    border-color: var(--green-primary) !important;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12) !important;
+    outline: none !important;
+}
+
+/* ─── PRODUCT IMAGE IMPROVEMENTS ──────────────────────────── */
+
+.product-thumb {
+    width: 48px !important;
+    height: 48px !important;
+    object-fit: cover !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--border-light) !important;
+}
+
+.no-img-placeholder {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 48px !important;
+    height: 48px !important;
+    background: var(--page-bg) !important;
+    border: 1px dashed var(--border) !important;
+    border-radius: 8px !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    color: var(--text-muted) !important;
+    text-transform: uppercase !important;
+}
+
+/* ─── TOGGLE SWITCH IMPROVEMENTS ──────────────────────────── */
+
+.form-check-input {
+    width: 44px !important;
+    height: 24px !important;
+    cursor: pointer !important;
+}
+
+.form-check-input:checked {
+    background-color: var(--green-primary) !important;
+    border-color: var(--green-primary) !important;
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12) !important;
+}
+
+/* ─── USER AVATAR IMPROVEMENTS ────────────────────────────── */
+
+.user-avatar {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    color: white !important;
+    flex-shrink: 0 !important;
+    background: linear-gradient(135deg, var(--green-primary), #10b981) !important;
+}
+
+.user-avatar.banned {
+    background: linear-gradient(135deg, var(--danger), #dc2626) !important;
+}
+
+/* ─── BANNED ROW STYLING ──────────────────────────────────── */
+
+.banned-row {
+    background-color: rgba(239, 68, 68, 0.05) !important;
+}
+
+.banned-row:hover {
+    background-color: rgba(239, 68, 68, 0.08) !important;
+}
+
+/* ─── ORDER ID STYLING ────────────────────────────────────── */
+
+.order-id {
+    font-family: 'Courier New', monospace !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    color: var(--text-primary) !important;
+}
+
+/* ─── COMMENT TEXT STYLING ────────────────────────────────── */
+
+.comment-text {
+    line-height: 1.5 !important;
+    color: var(--text-secondary) !important;
+}
+
+/* ─── RESPONSIVE IMPROVEMENTS ─────────────────────────────── */
+
+@media (max-width: 768px) {
+    /* Fix: Stack buttons on mobile */
+    .section-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    
+    .section-header .btn-primary-green {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    
+    /* Fix: Better table scrolling on mobile */
+    .table-responsive {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    /* Fix: Smaller action buttons on mobile */
+    .btn-action.btn-sm {
+        width: 30px !important;
+        height: 30px !important;
+        font-size: 12px !important;
+    }
+    
+    /* Fix: Filter bar stacks on mobile */
+    .filter-bar {
+        flex-direction: column !important;
+    }
+    
+    .filter-input,
+    .filter-select {
+        width: 100% !important;
+    }
+}
+
+/* ─── DARK MODE IMPROVEMENTS ──────────────────────────────── */
+
+[data-theme="dark"] .btn-action.btn-sm {
+    border: 1px solid var(--border) !important;
+}
+
+[data-theme="dark"] .table tbody tr:hover {
+    background-color: rgba(34, 197, 94, 0.05) !important;
+}
+
+[data-theme="dark"] .status-badge {
+    border-width: 1px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   END OF UX IMPROVEMENTS
+   ═══════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════
+   ADMIN TABLE LAYOUT — Seller, Product & User Management
+   Consistent column sizing, spacing, and visual hierarchy
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Shared column width tokens ─────────────────────────── */
+.col-index       { width: 44px;  min-width: 44px;  text-align: center; }
+.col-check       { width: 40px;  min-width: 40px;  text-align: center; }
+.col-thumb       { width: 60px;  min-width: 60px;  text-align: center; }
+.col-status      { width: 120px; min-width: 110px; white-space: nowrap; }
+.col-toggle      { width: 80px;  min-width: 72px;  }
+.col-orders      { width: 80px;  min-width: 72px;  }
+.col-joined      { width: 120px; min-width: 110px; }
+.col-price       { width: 100px; min-width: 90px;  white-space: nowrap; }
+.col-actions     { width: 190px; min-width: 180px; white-space: nowrap; }
+
+/* ── Shared table base ───────────────────────────────────── */
+.sellers-table,
+.products-table,
+.users-table {
+    width: 100%;
+    table-layout: auto;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+}
+
+/* ── Header row ─────────────────────────────────────────── */
+.sellers-table thead th,
+.products-table thead th,
+.users-table thead th {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: var(--table-header-color) !important;
+    background: var(--table-header-bg) !important;
+    padding: 10px 14px !important;
+    border-bottom: 2px solid var(--border) !important;
+    white-space: nowrap;
+    vertical-align: middle;
+    user-select: none;
+}
+
+[data-theme="dark"] .sellers-table thead th,
+[data-theme="dark"] .products-table thead th,
+[data-theme="dark"] .users-table thead th {
+    background: #0d1321 !important;
+    color: #64748b !important;
+    border-bottom-color: #1e293b !important;
+}
+
+/* ── Body rows ──────────────────────────────────────────── */
+.sellers-table tbody tr,
+.products-table tbody tr,
+.users-table tbody tr {
+    transition: background-color 0.15s ease;
+    border-bottom: 1px solid var(--table-border);
+}
+
+.sellers-table tbody tr:last-child,
+.products-table tbody tr:last-child,
+.users-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.sellers-table tbody tr:hover,
+.products-table tbody tr:hover,
+.users-table tbody tr:hover {
+    background-color: var(--table-hover-bg) !important;
+}
+
+[data-theme="dark"] .sellers-table tbody tr:hover,
+[data-theme="dark"] .products-table tbody tr:hover,
+[data-theme="dark"] .users-table tbody tr:hover {
+    background-color: rgba(34, 197, 94, 0.05) !important;
+}
+
+/* Zebra stripe */
+.sellers-table tbody tr:nth-child(even),
+.products-table tbody tr:nth-child(even),
+.users-table tbody tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.015);
+}
+
+[data-theme="dark"] .sellers-table tbody tr:nth-child(even),
+[data-theme="dark"] .products-table tbody tr:nth-child(even),
+[data-theme="dark"] .users-table tbody tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* ── Body cells ─────────────────────────────────────────── */
+.sellers-table tbody td,
+.products-table tbody td,
+.users-table tbody td {
+    padding: 9px 14px !important;
+    vertical-align: middle;
+    color: var(--table-text);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+/* Override the global 64px fixed row height for these tables */
+.data-card .table.sellers-table tbody tr,
+.data-card .table.products-table tbody tr,
+.data-card .table.users-table tbody tr {
+    height: unset !important;
+    line-height: normal;
+}
+
+/* ── Index cell ─────────────────────────────────────────── */
+.sellers-table td.col-index,
+.products-table td.col-index,
+.users-table td.col-index,
+.sellers-table tbody td:first-child,
+.products-table tbody td:first-child {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* ── Checkbox cell ──────────────────────────────────────── */
+.users-table tbody td:first-child {
+    text-align: center;
+    padding: 9px 6px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SELLER MANAGEMENT TABLE
+   ═══════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════
+   SELLER MANAGEMENT TABLE
+   ═══════════════════════════════════════════════════════════ */
+
+.col-seller-name { width: 200px; min-width: 180px; max-width: 200px; }
+.col-phone       { width: 130px; min-width: 120px; white-space: nowrap; }
+.col-store       { width: 180px; min-width: 140px; max-width: 180px; }
+.col-city        { width: 110px; min-width: 100px; }
+.col-payment     { width: 130px; min-width: 120px; }
+
+/* Seller avatar — same system as users table */
+.sm-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    color: #fff;
+    flex-shrink: 0;
+    letter-spacing: 0.3px;
+}
+
+/* Seller name + email stacked cell */
+.sellers-table .seller-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+}
+
+.sellers-table .seller-cell .sm-avatar {
+    flex-shrink: 0;
+}
+
+.sellers-table .seller-cell .seller-meta {
+    min-width: 0;
+    flex: 1;
+}
+
+.sellers-table .seller-cell .seller-meta .name {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+}
+
+.sellers-table .seller-cell .seller-meta .email {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+    margin-top: 1px;
+}
+
+/* City — truncate with tooltip */
+.sellers-table .col-city {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 110px;
+}
+
+/* Payment method */
+.sellers-table .payment-cell {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PRODUCT CATALOG TABLE
+   ═══════════════════════════════════════════════════════════ */
+
+.col-product-name { min-width: 180px; max-width: 260px; }
+.col-seller       { width: 130px;    min-width: 120px; }
+.col-category     { width: 130px;    min-width: 120px; }
+
+/* Product thumbnail cell */
+.products-table .col-thumb {
+    padding: 8px 10px !important;
+}
+
+.products-table .product-thumb {
+    width: 46px;
+    height: 46px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    display: block;
+}
+
+.products-table .no-img {
+    width: 46px;
+    height: 46px;
+    background: var(--border-light);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 18px;
+}
+
+/* Product name + ID stacked */
+.products-table .product-name-cell .name {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 220px;
+}
+
+.products-table .product-name-cell .pid {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    font-family: 'Courier New', monospace;
+}
+
+/* Price — right-aligned, bold */
+.products-table .col-price {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text-primary);
+    text-align: right;
+}
+
+/* Stock cell — badge + edit button side by side */
+.products-table .stock-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+}
+
+/* Toggle switch cell */
+.products-table .col-toggle {
+    text-align: center;
+}
+
+.products-table .form-check.form-switch {
+    margin: 0;
+    padding-left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   USER MANAGEMENT TABLE
+   ═══════════════════════════════════════════════════════════ */
+
+.col-user-name { min-width: 180px; max-width: 220px; }
+.col-contact   { min-width: 190px; max-width: 230px; }
+.col-role      { width: 130px;    min-width: 120px; white-space: nowrap; }
+
+/* User name + subtitle stacked */
+.users-table .user-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+}
+
+.users-table .user-cell .table-avatar {
+    flex-shrink: 0;
+}
+
+.users-table .user-cell .user-meta {
+    min-width: 0;
+    flex: 1;
+}
+
+.users-table .user-cell .user-meta .name {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+}
+
+.users-table .user-cell .user-meta .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 1px;
+}
+
+/* Contact cell — email + phone stacked */
+.users-table .contact-cell .email {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.users-table .contact-cell .phone {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* Joined date cell */
+.users-table .joined-cell .date {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.users-table .joined-cell .last-login {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* Orders count cell */
+.users-table .col-orders {
+    text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ACTION BUTTONS — Consistent sizing across all three tables
+   ═══════════════════════════════════════════════════════════ */
+
+.sellers-table .col-actions,
+.products-table .col-actions,
+.users-table .col-actions {
+    text-align: center;
+    padding: 8px 10px !important;
+}
+
+/* Action button group wrapper */
+.sellers-table .action-group,
+.products-table .action-group,
+.users-table .action-group {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+}
+
+/* Uniform icon-only action buttons */
+.sellers-table .btn-action,
+.products-table .btn-action,
+.users-table .btn-action {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    font-size: 13px;
+    border-radius: 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
+}
+
+.sellers-table .btn-action:hover,
+.products-table .btn-action:hover,
+.users-table .btn-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+}
+
+.sellers-table .btn-action:active,
+.products-table .btn-action:active,
+.users-table .btn-action:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 1400px) {
+    .col-seller-name,
+    .col-product-name,
+    .col-user-name  { max-width: 180px; }
+    .col-contact    { max-width: 190px; }
+    .col-store      { max-width: 150px; }
+}
+
+@media (max-width: 1200px) {
+    .sellers-table,
+    .products-table,
+    .users-table {
+        font-size: 12px;
+    }
+
+    .sellers-table tbody td,
+    .products-table tbody td,
+    .users-table tbody td {
+        padding: 8px 10px !important;
+    }
+
+    .sellers-table thead th,
+    .products-table thead th,
+    .users-table thead th {
+        padding: 8px 10px !important;
+    }
+
+    .sellers-table .btn-action,
+    .products-table .btn-action,
+    .users-table .btn-action {
+        width: 29px;
+        height: 29px;
+        font-size: 12px;
+    }
+
+    .col-city,
+    .col-payment { display: none; }
+}
+
+@media (max-width: 992px) {
+    .col-joined,
+    .col-orders { display: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   END OF TABLE LAYOUT IMPROVEMENTS
+   ═══════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════
+   USER MANAGEMENT TABLE — Reference Design
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Avatar ─────────────────────────────────────────────── */
+.um-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    color: #fff;
+    flex-shrink: 0;
+    letter-spacing: 0.3px;
+}
+
+/* ── Role pills — outlined border style ─────────────────── */
+.um-role-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1.5px solid;
+    white-space: nowrap;
+    line-height: 1;
+}
+
+.um-role-admin {
+    background: rgba(245,158,11,0.12);
+    color: #92400e;
+    border-color: rgba(245,158,11,0.35);
+}
+
+.um-role-seller {
+    background: rgba(59,130,246,0.1);
+    color: #1e40af;
+    border-color: rgba(59,130,246,0.3);
+}
+
+.um-role-customer {
+    background: rgba(34,197,94,0.1);
+    color: #14532d;
+    border-color: rgba(34,197,94,0.3);
+}
+
+[data-theme="dark"] .um-role-admin {
+    background: rgba(245,158,11,0.15);
+    color: #fbbf24;
+    border-color: rgba(245,158,11,0.35);
+}
+
+[data-theme="dark"] .um-role-seller {
+    background: rgba(59,130,246,0.15);
+    color: #60a5fa;
+    border-color: rgba(59,130,246,0.35);
+}
+
+[data-theme="dark"] .um-role-customer {
+    background: rgba(34,197,94,0.15);
+    color: #4ade80;
+    border-color: rgba(34,197,94,0.35);
+}
+
+/* ── Status pills — dot + text ──────────────────────────── */
+.um-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    line-height: 1;
+    border: 1.5px solid;
+}
+
+.um-status-active {
+    background: rgba(34,197,94,0.1);
+    color: #166534;
+    border-color: rgba(34,197,94,0.3);
+}
+
+.um-status-banned {
+    background: rgba(239,68,68,0.1);
+    color: #991b1b;
+    border-color: rgba(239,68,68,0.3);
+}
+
+[data-theme="dark"] .um-status-active {
+    background: rgba(34,197,94,0.12);
+    color: #4ade80;
+    border-color: rgba(34,197,94,0.3);
+}
+
+[data-theme="dark"] .um-status-banned {
+    background: rgba(239,68,68,0.12);
+    color: #f87171;
+    border-color: rgba(239,68,68,0.3);
+}
+
+/* Status dot */
+.um-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: inline-block;
+}
+
+.um-dot-green { background: #22c55e; }
+.um-dot-red   { background: #ef4444; }
+
+@keyframes um-pulse {
+    0%, 100% { opacity: 1;   transform: scale(1);   }
+    50%       { opacity: 0.5; transform: scale(1.4); }
+}
+.um-dot-pulse { animation: um-pulse 2s ease-in-out infinite; }
+
+/* ── Orders cell ────────────────────────────────────────── */
+.um-orders-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    line-height: 1.2;
+}
+
+.um-orders-count {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.um-orders-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+/* ── Protected badge (admin row) ────────────────────────── */
+.um-protected-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--page-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    white-space: nowrap;
+}
+
+.um-protected-badge i { color: #f59e0b; }
+
+/* ── Contact cell icons ─────────────────────────────────── */
+.users-table .contact-cell .email,
+.users-table .contact-cell .phone {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.users-table .contact-cell .email i,
+.users-table .contact-cell .phone i {
+    font-size: 10px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+/* ── Selected row highlight ─────────────────────────────── */
+.users-table tbody tr:has(.user-checkbox:checked) {
+    background-color: rgba(34,197,94,0.06) !important;
+}
+
+[data-theme="dark"] .users-table tbody tr:has(.user-checkbox:checked) {
+    background-color: rgba(34,197,94,0.08) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   END USER MANAGEMENT REDESIGN
+   ═══════════════════════════════════════════════════════════ */
+
+
+/* ============================================================
+   RESPONSIVE DESIGN — COMPLETE OVERHAUL
+   Breakpoints: 1200px | 992px | 768px | 576px | 480px
+   ============================================================ */
+
+/* ── Base: date inputs ──────────────────────────────────────── */
+.date-input {
+    max-width: 160px;
+    min-width: 130px;
+    flex: 1 1 130px;
+}
+
+/* ── Section header — always wraps on small screens ─────────── */
+.section-header {
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.section-header > div {
+    min-width: 0;
+    flex: 1 1 200px;
+}
+
+.section-header > button,
+.section-header > .d-flex {
+    flex-shrink: 0;
+}
+
+/* ── Chart cards — consistent height on all screens ─────────── */
+.chart-card {
+    min-height: 320px;
+}
+
+.chart-card canvas {
+    max-height: 280px;
+}
+
+/* ── Topbar right — hide logout text on small screens ───────── */
+@media (max-width: 640px) {
+    #logoutBtn .bi { margin-right: 0; }
+    #logoutBtn span,
+    #logoutBtn { font-size: 0; padding: 0; width: 40px; height: 40px;
+                 display: inline-flex; align-items: center; justify-content: center; }
+    #logoutBtn .bi { font-size: 16px; }
+}
+
+/* ── 1200px — Large tablet / small laptop ───────────────────── */
+@media (max-width: 1200px) {
+    .admin-section { padding: 24px 20px; }
+
+    .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+
+    .section-title { font-size: 22px; }
+
+    .topbar-right { gap: 10px; }
+
+    .profile-name { max-width: 110px; }
+
+    .chart-card { padding: 20px; min-height: 300px; }
+}
+
+/* ── 992px — Tablet ─────────────────────────────────────────── */
+@media (max-width: 992px) {
+    /* Sidebar hidden, hamburger shown */
+    #adminSidebar { transform: translateX(-100%); }
+    #adminSidebar.open { transform: translateX(0); }
+    #adminMain { margin-left: 0 !important; }
+    .hamburger-btn { display: flex !important; }
+    .sidebar-collapse-btn { display: none !important; }
+
+    /* Topbar */
+    .admin-topbar { padding: 0 20px; gap: 12px; }
+    .topbar-search { display: none; }
+    .profile-info { display: none; }
+    .profile-arrow { display: none; }
+
+    /* Section */
+    .admin-section { padding: 24px 16px; }
+    .section-title { font-size: 20px; }
+    .section-header { margin-bottom: 20px; padding-bottom: 16px; }
+
+    /* KPI */
+    .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 24px; }
+    .kpi-value { font-size: 26px; }
+    .kpi-icon-wrapper { width: 48px; height: 48px; font-size: 20px; }
+
+    /* Filter bar */
+    .filter-bar { gap: 10px; padding: 12px; }
+    .filter-input { min-width: 160px; }
+    .filter-select { min-width: 130px; }
+    .date-input { max-width: 140px; min-width: 120px; }
+
+    /* Charts — full width on tablet */
+    .chart-card { min-height: 280px; padding: 18px; }
+
+    /* Modals */
+    .modal-lg { max-width: calc(100vw - 32px) !important; }
+    .modal-dialog { margin: 16px auto; }
+}
+
+/* ── 768px — Mobile landscape / small tablet ────────────────── */
+@media (max-width: 768px) {
+    /* Topbar */
+    .admin-topbar { padding: 0 12px; height: auto; min-height: var(--topbar-height); flex-wrap: wrap; }
+    .topbar-right { gap: 8px; }
+    .btn-logout { padding: 6px 12px; font-size: 12px; }
+    .topbar-icon-btn { width: 36px; height: 36px; font-size: 14px; }
+
+    /* Section */
+    .admin-section { padding: 16px 12px; }
+    .section-title { font-size: 18px; }
+    .section-title::before { height: 24px; }
+    .section-subtitle { font-size: 13px; }
+    .section-header { margin-bottom: 16px; gap: 10px; }
+
+    /* KPI */
+    .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+    .kpi-card { padding: 16px; }
+    .kpi-value { font-size: 24px; }
+    .kpi-label { font-size: 12px; }
+    .kpi-icon-wrapper { width: 44px; height: 44px; font-size: 18px; border-radius: 12px; }
+    .kpi-trend { font-size: 10px; padding: 3px 8px; }
+    .kpi-change { font-size: 11px; }
+
+    /* Filter bar — stack vertically */
+    .filter-bar { flex-direction: column; gap: 8px; padding: 12px; }
+    .filter-input, .filter-select, .date-input {
+        width: 100% !important; min-width: unset !important; max-width: unset !important; flex: none;
+    }
+
+    /* Data card header */
+    .data-card-header { padding: 14px 16px; font-size: 14px; flex-wrap: wrap; gap: 8px; }
+    .header-actions { flex-wrap: wrap; gap: 6px; }
+
+    /* Tables */
+    .data-card .table { font-size: 12px; }
+    .data-card .table thead th,
+    .data-card .table tbody td { padding: 10px 8px !important; }
+    .data-card .table tbody tr { height: auto !important; }
+
+    /* Action buttons */
+    .btn-action, .btn-action.btn-sm { width: 30px; height: 30px; font-size: 12px; }
+    .action-group, .action-buttons, .actions-col { gap: 4px !important; }
+
+    /* Section header buttons — full width on very small */
+    .section-header .btn-primary-green,
+    .section-header .btn-delete,
+    .section-header .btn-outline-green { padding: 8px 14px; font-size: 12px; }
+
+    /* Bulk action buttons */
+    .section-header .d-flex { flex-wrap: wrap; gap: 6px; }
+
+    /* Charts */
+    .chart-card { min-height: 240px; padding: 14px; }
+    .chart-card canvas { max-height: 220px; }
+
+    /* Pagination */
+    .pagination-container { padding: 12px 16px; gap: 10px; }
+    .page-btn { width: 30px; height: 30px; font-size: 12px; }
+
+    /* Modals */
+    .modal-dialog { margin: 8px; max-width: calc(100vw - 16px) !important; }
+    .modal-body { padding: 16px; max-height: calc(100vh - 160px); }
+    .modal-header { padding: 16px 20px; }
+    .modal-footer { padding: 14px 20px; flex-direction: column; gap: 8px; }
+    .modal-footer .btn,
+    .modal-footer .btn-primary-green,
+    .modal-footer .btn-secondary,
+    .modal-footer .btn-delete { width: 100%; justify-content: center; }
+    .modal-title { font-size: 15px; }
+
+    /* Dashboard mini-tables — stack */
+    .row.g-3 > .col-lg-6.col-12 > .data-card.h-100 { min-height: 240px; }
+}
+
+/* ── 576px — Mobile portrait ────────────────────────────────── */
+@media (max-width: 576px) {
+    /* Hide date on small phones */
+    .topbar-date, .topbar-separator { display: none; }
+    /* KPI — single column */
+    .kpi-row { grid-template-columns: 1fr; gap: 10px; }
+    .kpi-card { padding: 14px; }
+    .kpi-card-header { margin-bottom: 12px; }
+    .kpi-value { font-size: 28px; }
+
+    /* Topbar — tighter */
+    .admin-topbar { padding: 0 10px; }
+    .topbar-right { gap: 6px; }
+    .topbar-icon-btn { width: 34px; height: 34px; }
+    .btn-logout { padding: 5px 10px; font-size: 11px; }
+
+    /* Section */
+    .admin-section { padding: 14px 10px; }
+    .section-title { font-size: 16px; }
+    .section-header { margin-bottom: 14px; }
+
+    /* Tables — tighter padding */
+    .data-card .table thead th,
+    .data-card .table tbody td { padding: 8px 6px !important; font-size: 11px; }
+
+    /* Status pills — compact */
+    .status-badge { padding: 3px 8px; font-size: 10px; }
+    .status-pill, .um-status-pill { padding: 2px 8px; font-size: 10px; }
+
+    /* Avatars — smaller */
+    .table-avatar, .user-avatar, .sm-avatar { width: 28px !important; height: 28px !important; font-size: 10px !important; }
+    .product-thumb { width: 32px !important; height: 32px !important; }
+
+    /* Filter bar */
+    .filter-bar { padding: 10px; gap: 6px; }
+
+    /* Data card header */
+    .data-card-header { padding: 12px 14px; font-size: 13px; }
+
+    /* Charts — full height on mobile */
+    .chart-card { min-height: 200px; padding: 12px; }
+    .chart-card canvas { max-height: 180px; }
+
+    /* Pagination */
+    .pagination-container { flex-direction: column; align-items: center; text-align: center; gap: 8px; }
+    .pagination-controls { flex-wrap: wrap; justify-content: center; }
+
+    /* Section header — stack title and button */
+    .section-header { flex-direction: column; align-items: flex-start; }
+    .section-header > button,
+    .section-header > .d-flex { width: 100%; }
+    .section-header .btn-primary-green,
+    .section-header .btn-delete,
+    .section-header .btn-outline-green { width: 100%; justify-content: center; }
+    .section-header .d-flex { flex-direction: column; }
+
+    /* Tab buttons (categories/reviews) */
+    .filter-bar .btn-outline-green.cat-tab,
+    .filter-bar .btn-outline-green.rev-tab { flex: 1; justify-content: center; font-size: 12px; padding: 8px 10px; }
+}
+
+/* ── 480px — Small phones ───────────────────────────────────── */
+@media (max-width: 480px) {
+    .admin-section { padding: 12px 8px; }
+    .section-title { font-size: 15px; }
+    .section-title::before { height: 20px; width: 4px; }
+
+    .kpi-value { font-size: 26px; }
+    .kpi-icon-wrapper { width: 40px; height: 40px; font-size: 16px; border-radius: 10px; }
+
+    .data-card .table thead th,
+    .data-card .table tbody td { padding: 7px 5px !important; font-size: 11px; }
+
+    .btn-action, .btn-action.btn-sm { width: 28px; height: 28px; font-size: 11px; }
+
+    .modal-body { padding: 12px; }
+    .modal-header { padding: 12px 16px; }
+    .modal-footer { padding: 12px 16px; }
 }
