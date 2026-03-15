@@ -39,9 +39,7 @@
             Track customer feedback by product and rating.
           </p>
         </div>
-        <div class="reviews-actions">
-          <button class="btn-filter-light" id="exportReviewsBtn">Export</button>
-        </div>
+
       </div>
 
       <section class="reviews-stats">
@@ -72,7 +70,10 @@
           <div class="reviews-filters">
             <div class="filter-field">
               <label for="reviewSearchInput">Search</label>
-              <input type="text" id="reviewSearchInput" placeholder="Search reviews, products, customers..." />
+              <div class="search-field-wrap">
+                <i class="bi bi-search search-field-icon"></i>
+                <input type="text" id="reviewSearchInput" placeholder="Search reviews, products, customers..." />
+              </div>
             </div>
             <div class="filter-field">
               <label for="reviewProductFilter">Product</label>

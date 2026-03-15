@@ -526,9 +526,9 @@
 
       if (!form.checkValidity()) return; /* stop – fields highlighted by Bootstrap */
 
-      /* Extra: validate phone is numeric + reasonable length */
+      /* Extra: validate phone matches Egyptian mobile format */
       const phoneVal = document.getElementById('storePhone').value.trim();
-      if (!/^[\d\s\+\-\(\)]{6,20}$/.test(phoneVal)) {
+      if (!/^(\+20|0)(10|11|12|15)[0-9]{8}$/.test(phoneVal)) {
         document.getElementById('storePhone').setCustomValidity('invalid');
         form.classList.add('was-validated');
         return;

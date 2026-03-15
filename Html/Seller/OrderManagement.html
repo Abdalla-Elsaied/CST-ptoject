@@ -52,12 +52,15 @@
 <div class="tab" onclick="filterStatus('Cancelled', this)">Canceled</div>
 </div>
 
-<input class="search" placeholder="Search order..." onkeyup="searchOrder(this.value)">
+<div class="search-wrap">
+  <i class="fa-solid fa-magnifying-glass search-icon-inner"></i>
+  <input class="search" placeholder="Search order..." onkeyup="searchOrder(this.value)">
+</div>
 
 </div>
 
 <div class="table-wrap">
-<table>
+<table class="orders-table">
 
 <thead>
 <tr>

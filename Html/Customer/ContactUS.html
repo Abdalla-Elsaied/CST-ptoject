@@ -153,13 +153,18 @@
           paymentMethod: document.getElementById("paymentMethod").value,
         };
 
-        console.log("Seller Request:", sellerRequest);
-
         // get logged-in user
         const currentUser = getCurrentUser();
 
         if (!currentUser) {
           window.location.href = "Login.html?redirect=ContactUS.html#becomeSeller";
+          return;
+        }
+
+        // Validate phone matches Egyptian mobile format
+        if (!/^(\+20|0)(10|11|12|15)[0-9]{8}$/.test(sellerRequest.phone)) {
+          alert("Invalid phone number. Use format: 01XXXXXXXXX or +201XXXXXXXXX");
+          document.getElementById("storePhone").focus();
           return;
         }
 
