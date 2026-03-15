@@ -5,7 +5,7 @@
 // ============================================================
 
 import { getLS, setLS } from '../Core/Storage.js';
-import { KEY_CATEGORIES, KEY_PRODUCTS, KEY_CURRENT_USER } from '../Core/Constants.js';
+import { KEY_CATEGORIES, KEY_PRODUCTS, KEY_CURRENT_USER, KEY_USERS } from '../Core/Constants.js';
 import {
     showToast,
     showConfirm,
@@ -80,13 +80,12 @@ function validateCategoryName(name, excludeId = null) {
         return { valid: false, error: `Name must be ${MAX_CATEGORY_NAME_LENGTH} characters or less` };
     }
     
-    if (!/^[a-zA-Z0-9\s&\-_]+$/.test(trimmed)) {
-        return { valid: false, error: 'Name can only contain letters, numbers, spaces, &, -, and _' };
-    }
-    
+    // REMOVED: ASCII-only regex that blocked Arabic/Unicode names
+    // Egyptian marketplace must support Arabic category names
+
     const categories = getCategories();
-    const duplicate = categories.find(c => 
-        c.name.toLowerCase() === trimmed.toLowerCase() && 
+    const duplicate = categories.find(c =>
+        c.name.toLowerCase() === trimmed.toLowerCase() &&
         c.id !== excludeId
     );
     
@@ -101,7 +100,8 @@ export function renderCategories() {
     // ✅ FIX: Sync product counts and metadata before rendering
     syncCategoryProductCounts();
     ensureCategoryMetadata();
-    
+
+    // ✅ FIX BUG 1: Prevent duplicate "Add Category" button
     renderCategoryRequestsTable();
     renderAllCategoriesTable();
     bindCategoryEvents();
@@ -111,9 +111,7 @@ export function renderCategories() {
  * ✅ FIX: Render all categories with accurate product counts and better UI
  */
 function renderAllCategoriesTable() {
-    const categories = getCategories().filter(c => 
-        c.visibility !== 'draft' || c.source === 'admin'
-    );
+    const categories = getCategories().filter(c => c.visibility !== 'draft');
     const tbody = document.getElementById('allCategoriesTableBody');
     if (!tbody) return;
 
@@ -129,40 +127,38 @@ function renderAllCategoriesTable() {
         return;
     }
 
-    const visibilityBadge = (vis) => {
-        if (vis === 'active') return '<span class="badge bg-success">Active</span>';
-        if (vis === 'hidden') return '<span class="badge bg-secondary">Hidden</span>';
-        return '<span class="badge bg-warning text-dark">Draft</span>';
-    };
+    tbody.innerHTML = categories.map(cat => {
+        const visHtml = cat.visibility === 'active'
+            ? '<span class="status-pill status-active">● Active</span>'
+            : '<span class="status-pill status-hidden">● Hidden</span>';
 
-    tbody.innerHTML = categories.map(cat => `
+        const dateStr = cat.createdAt
+            ? new Date(cat.createdAt).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+            : escapeHTML(cat.updated || '—');
+
+        return `
         <tr>
             <td>
-                <strong>${escapeHTML(cat.name || '')}</strong>
-                ${cat.source === 'seller' ? '<small class="text-muted d-block">From Seller</small>' : ''}
+                <div class="fw-semibold">${escapeHTML(cat.name || '')}</div>
+                ${cat.description ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${escapeHTML(cat.description.slice(0,60))}${cat.description.length>60?'…':''}</div>` : ''}
             </td>
-            <td><span class="badge bg-light text-dark">${cat.products || 0}</span></td>
-            <td>${visibilityBadge(cat.visibility)}</td>
-            <td><small>${escapeHTML(cat.updated || '—')}</small></td>
+            <td>
+                <span style="background:var(--page-bg);border:1px solid var(--border);border-radius:20px;padding:2px 10px;font-size:12px;font-weight:600;color:var(--text-secondary);">
+                    ${cat.products || 0} products
+                </span>
+            </td>
+            <td>${visHtml}</td>
+            <td><small style="color:var(--text-muted);">${dateStr}</small></td>
             <td class="text-center">
-                <div class="d-flex gap-2 justify-content-center flex-wrap">
-                    <button class="btn-action btn-edit btn-sm" data-id="${cat.id}" data-action="edit-cat" title="Edit category">
-                        <i class="bi bi-pencil"></i> Edit
-                    </button>
-                    ${cat.visibility === 'active' ? `
-                    <button class="btn-action btn-warn btn-sm" data-id="${cat.id}" data-action="set-hidden" title="Hide from storefront">
-                        <i class="bi bi-eye-slash"></i> Hide
-                    </button>` : `
-                    <button class="btn-action btn-success btn-sm" data-id="${cat.id}" data-action="set-active" title="Make active">
-                        <i class="bi bi-eye"></i> Activate
-                    </button>`}
-                    <button class="btn-action btn-delete btn-sm" data-id="${cat.id}" data-action="delete-cat" title="Delete category">
-                        <i class="bi bi-trash"></i>
-                    </button>
+                <div class="d-flex gap-1 justify-content-center flex-nowrap">
+                    <button class="btn-action btn-edit" data-id="${cat.id}" data-action="edit-cat" title="Edit"><i class="bi bi-pencil"></i></button>
+                    ${cat.visibility === 'active'
+                        ? `<button class="btn-action btn-warn" data-id="${cat.id}" data-action="set-hidden" title="Hide"><i class="bi bi-eye-slash"></i></button>`
+                        : `<button class="btn-action btn-success" data-id="${cat.id}" data-action="set-active" title="Make Active"><i class="bi bi-eye"></i></button>`}
+                    <button class="btn-action btn-delete" data-id="${cat.id}" data-action="delete-cat" title="Delete"><i class="bi bi-trash"></i></button>
                 </div>
             </td>
-        </tr>
-    `).join('');
+        </tr>`; }).join('');
 }
 
 /**
@@ -187,26 +183,42 @@ export function renderCategoryRequestsTable() {
         return;
     }
 
-    tbody.innerHTML = pendingCats.map(cat => `
+    tbody.innerHTML = pendingCats.map(cat => {
+        const sourceHtml = cat.source === 'seller'
+            ? `<span class="status-pill status-processing" style="font-size:10px;"><i class="bi bi-shop me-1"></i>Seller</span>`
+            : `<span class="status-pill status-active" style="font-size:10px;"><i class="bi bi-shield-check me-1"></i>Admin</span>`;
+
+        const suggestedBy = cat.suggestedBy
+            ? (() => {
+                const users = getLS(KEY_USERS) || [];
+                const u = users.find(u => String(u.id) === String(cat.suggestedBy));
+                const name = u ? (u.storeName || u.name || u.email || cat.suggestedBy) : cat.suggestedBy;
+                return `<small style="color:var(--text-muted);">${escapeHTML(name)}</small>`;
+              })()
+            : `<small style="color:var(--text-muted);">Admin</small>`;
+
+        const dateStr = cat.createdAt
+            ? new Date(cat.createdAt).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+            : escapeHTML(cat.updated || '—');
+
+        return `
         <tr>
-            <td><strong>${escapeHTML(cat.name)}</strong></td>
+            <td>
+                <div class="fw-semibold">${escapeHTML(cat.name)}</div>
+                ${cat.description ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${escapeHTML(cat.description.slice(0,60))}${cat.description.length>60?'…':''}</div>` : ''}
+            </td>
             <td>${escapeHTML(cat.description || '—')}</td>
-            <td>${escapeHTML(cat.updated)}</td>
+            <td>${sourceHtml}</td>
+            <td>${suggestedBy}</td>
+            <td><small style="color:var(--text-muted);">${dateStr}</small></td>
             <td class="text-center">
-                <div class="d-flex gap-2 justify-content-center">
-                    <button class="btn-action btn-success" data-id="${cat.id}" data-action="approve-cat" title="Approve">
-                        <i class="bi bi-check-lg"></i> Approve
-                    </button>
-                    <button class="btn-action btn-edit" data-id="${cat.id}" data-action="edit-approve-cat" title="Edit and Approve">
-                        <i class="bi bi-pencil"></i> Edit & Approve
-                    </button>
-                    <button class="btn-action btn-delete" data-id="${cat.id}" data-action="reject-cat" title="Reject">
-                        <i class="bi bi-x-lg"></i> Reject
-                    </button>
+                <div class="d-flex gap-1 justify-content-center flex-nowrap">
+                    <button class="btn-action btn-success" data-id="${cat.id}" data-action="approve-cat" title="Approve"><i class="bi bi-check-lg"></i></button>
+                    <button class="btn-action btn-edit" data-id="${cat.id}" data-action="edit-approve-cat" title="Edit & Approve"><i class="bi bi-pencil"></i></button>
+                    <button class="btn-action btn-delete" data-id="${cat.id}" data-action="reject-cat" title="Reject"><i class="bi bi-x-lg"></i></button>
                 </div>
             </td>
-        </tr>
-    `).join('');
+        </tr>`; }).join('');
 }
 
 /**
@@ -262,62 +274,20 @@ function saveEditCategoryAndApprove() {
  * Opens modal to add a new category (saves as draft)
  */
 export function openAddCategoryModal() {
-    // Create modal if it doesn't exist
-    if (!document.getElementById('addCategoryModal')) {
-        document.body.insertAdjacentHTML('beforeend', `
-            <div class="modal fade" id="addCategoryModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">
-                                <i class="bi bi-tags"></i> Add New Category
-                            </h5>
-                            <button type="button" class="btn-close"
-                                data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label class="form-label">
-                                    Category Name <span class="text-danger">*</span>
-                                </label>
-                                <input type="text" class="form-control"
-                                    id="newCategoryName"
-                                    placeholder="e.g. Sports & Fitness">
-                                <div class="invalid-feedback">
-                                    Please enter a category name.
-                                </div>
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label">
-                                    Description
-                                    <span class="text-muted small">(optional)</span>
-                                </label>
-                                <textarea class="form-control"
-                                    id="newCategoryDesc"
-                                    rows="3"
-                                    placeholder="Short description..."></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary"
-                                data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn-primary-green"
-                                id="saveNewCategoryBtn">
-                                <i class="bi bi-send"></i> Submit for Review
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>`);
-
-        document.getElementById('saveNewCategoryBtn')
-            .addEventListener('click', saveNewCategory);
-    }
-
     // Reset fields
-    document.getElementById('newCategoryName').value = '';
-    document.getElementById('newCategoryDesc').value = '';
-    document.getElementById('newCategoryName').classList.remove('is-invalid');
+    const nameInput = document.getElementById('newCategoryName');
+    const descInput = document.getElementById('newCategoryDesc');
+    
+    if (nameInput) nameInput.value = '';
+    if (descInput) descInput.value = '';
+    if (nameInput) nameInput.classList.remove('is-invalid');
+
+    // Bind save button if not already bound
+    const saveBtn = document.getElementById('saveNewCategoryBtn');
+    if (saveBtn && !saveBtn.hasAttribute('data-bound')) {
+        saveBtn.addEventListener('click', saveNewCategory);
+        saveBtn.setAttribute('data-bound', 'true');
+    }
 
     new bootstrap.Modal(document.getElementById('addCategoryModal')).show();
 }
@@ -450,32 +420,36 @@ function bindCategoryEvents() {
                     renderAllCategoriesTable();
                 });
             } else if (action === 'delete-cat') {
-                // ✅ MINOR: Check if products exist in this category before deletion
                 const products = getLS(KEY_PRODUCTS) || [];
-                const productsInCategory = products.filter(p => 
-                    (p.category === cat.name || p.productCategory === cat.name)
-                );
-                
-                if (productsInCategory.length > 0) {
-                    showConfirm(
-                        `Category "${cat.name}" has ${productsInCategory.length} product(s). Delete anyway? Products will keep their category name but it won't be in the category list.`,
-                        () => {
-                            categories.splice(idx, 1);
-                            setLS(KEY_CATEGORIES, categories);
-                            showToast('Category deleted. Products retain their category name.', 'info');
-                            renderCategoryRequestsTable();
-                            renderAllCategoriesTable();
-                        }
-                    );
-                } else {
-                    showConfirm(`Delete category "${cat.name}"? This category has no products.`, () => {
+                const affectedCount = products.filter(p =>
+                    p.category === cat.name || p.productCategory === cat.name
+                ).length;
+
+                const warningText = affectedCount > 0
+                    ? `\n\n⚠️ ${affectedCount} product(s) reference this category. They will be set to "Uncategorized".`
+                    : '';
+
+                showConfirm(
+                    `Delete category "${cat.name}"?${warningText}`,
+                    () => {
                         categories.splice(idx, 1);
                         setLS(KEY_CATEGORIES, categories);
-                        showToast('Category deleted.', 'success');
+
+                        if (affectedCount > 0) {
+                            const updatedProducts = products.map(p => {
+                                if (p.category === cat.name || p.productCategory === cat.name) {
+                                    return { ...p, category: 'Uncategorized', productCategory: 'Uncategorized' };
+                                }
+                                return p;
+                            });
+                            saveProducts(updatedProducts);
+                        }
+
+                        showToast(`Category deleted.${affectedCount > 0 ? ` ${affectedCount} product(s) set to Uncategorized.` : ''}`, 'success');
                         renderCategoryRequestsTable();
                         renderAllCategoriesTable();
-                    });
-                }
+                    }
+                );
             }
         };
     }
@@ -501,8 +475,14 @@ function bindCategoryEvents() {
             }
         };
 
-        tabSuggestions.onclick = () => activateTab('suggestions');
-        tabAll.onclick = () => activateTab('all');
+        // Clone to remove any previously stacked listeners
+        const newTabSuggestions = tabSuggestions.cloneNode(true);
+        const newTabAll = tabAll.cloneNode(true);
+        tabSuggestions.replaceWith(newTabSuggestions);
+        tabAll.replaceWith(newTabAll);
+
+        newTabSuggestions.onclick = () => activateTab('suggestions');
+        newTabAll.onclick = () => activateTab('all');
     }
 }
 
@@ -510,3 +490,4 @@ function bindCategoryEvents() {
 window.saveEditCategoryAndApprove = saveEditCategoryAndApprove;
 window.openAddCategoryModal = openAddCategoryModal;
 window.saveNewCategory = saveNewCategory;
+window.submitAddCategory = saveNewCategory; // Alias for HTML onclick
