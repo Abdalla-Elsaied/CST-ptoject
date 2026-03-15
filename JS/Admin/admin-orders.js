@@ -17,7 +17,8 @@ import {
     showConfirm,
     renderPagination,
     renderTableEmptyState,
-    debounce
+    debounce,
+    escapeHTML
 } from './admin-helpers.js';
 
 import { getLS, setLS } from '../Core/Storage.js';
@@ -122,27 +123,33 @@ export function renderOrdersTable() {
         const total = Number(o.totalPrice || o.total || o.subtotal) || 0;
         const fullId = String(o.id || '');
         const shortId = '#' + (fullId.length > 6 ? fullId.slice(-6) : fullId);
+        // Support both customerId and userId
+        const customerId = o.customerId || o.userId;
 
         const statuses = ['Pending','Processing','Shipped','Delivered','Cancelled','Refunded'];
+        // Normalize status to capitalized form for consistent comparison
+        const normalizedStatus = o.status
+            ? o.status.charAt(0).toUpperCase() + o.status.slice(1).toLowerCase()
+            : 'Pending';
         const statusOptions = statuses.map(st =>
-            `<option value="${st}" ${st === o.status ? 'selected' : ''}>${st}</option>`
+            `<option value="${st}" ${st === normalizedStatus ? 'selected' : ''}>${st}</option>`
         ).join('');
 
         return `
             <tr>
                 <td><span class="text-muted small fw-bold">${startIdx + i + 1}</span></td>
                 <td><span class="order-id-pill" title="${escapeHTML(fullId)}">${escapeHTML(shortId)}</span></td>
-                <td style="font-size:12px;">${getCustomerName(o.customerId)}</td>
+                <td style="font-size:12px;">${getCustomerName(customerId)}</td>
                 <td style="font-size:12px;">${sellerText}</td>
                 <td class="text-center">
                     <span style="font-weight:700;font-size:13px;color:var(--text-primary);">${itemCount}</span>
                     <span style="font-size:10px;color:var(--text-muted);display:block;">item${itemCount !== 1 ? 's' : ''}</span>
                 </td>
                 <td style="text-align:right;font-weight:700;">${formatPrice(total)}</td>
-                <td>${statusBadge(o.status)}</td>
+                <td>${statusBadge(normalizedStatus)}</td>
                 <td><div style="font-size:12px;">${formatDate(o.date || o.createdAt)}</div></td>
                 <td>
-                    <select class="order-status-select status-dropdown" data-id="${o.id}" data-original="${o.status}">
+                    <select class="order-status-select status-dropdown" data-id="${o.id}" data-original="${normalizedStatus}">
                         ${statusOptions}
                     </select>
                 </td>
@@ -177,7 +184,7 @@ function openOrderDetail(orderId) {
 
     titleEl.textContent = `Order #${order.id}`;
 
-    const customerName = getCustomerName(order.customerId);
+    const customerName = getCustomerName(order.customerId || order.userId);
 
     // Sellers summary
     let sellerSummary = '—';
@@ -354,7 +361,9 @@ export function confirmChangeOrderStatus(orderId, newStatus, selectElement) {
     const index = orders.findIndex(o => String(o.id) === String(orderId));
     if (index === -1) return;
 
-    const currentStatus = orders[index].status;
+    // Normalize stored status to capitalized form
+    const rawStatus = orders[index].status || 'pending';
+    const currentStatus = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase();
 
     // Business Rule: Cannot change from Delivered, Cancelled, or Refunded
     if (currentStatus === 'Delivered' || currentStatus === 'Cancelled' || currentStatus === 'Refunded') {

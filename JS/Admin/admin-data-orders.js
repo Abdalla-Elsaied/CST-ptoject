@@ -15,9 +15,8 @@ let _ordersCache = null;
  * Returns a Promise for consistency with fetchProducts().
  */
 export async function fetchOrders() {
-    if (!_ordersCache) {
-        _ordersCache = getLS(KEY_ORDERS) || [];
-    }
+    // Always read fresh from localStorage — cache was causing new orders to be invisible
+    _ordersCache = getLS(KEY_ORDERS) || [];
     return _ordersCache;
 }
 
@@ -40,14 +39,18 @@ window.addEventListener('storage', (e) => {
  * Returns filtered and paginated orders.
  */
 export function getFilteredOrders(filters) {
-    const orders = fetchOrders();
+    // Read fresh from localStorage every time
+    const orders = getLS(KEY_ORDERS) || [];
     const { search, status, dateFrom, dateTo, page, limit } = filters;
 
     const filtered = orders.filter(o => {
         const orderId = String(o.id || '');
-        const customerId = String(o.customerId || '');
-        const matchSearch = !search || orderId.includes(search) || customerId.includes(search);
-        const matchStatus = status === 'All' || o.status === status;
+        // Support both customerId and userId field names
+        const customerId = String(o.customerId || o.userId || '');
+        const customerName = String(o.userName || '');
+        const matchSearch = !search || orderId.includes(search) || customerId.includes(search) || customerName.toLowerCase().includes(search.toLowerCase());
+        // Case-insensitive status match
+        const matchStatus = status === 'All' || (o.status || '').toLowerCase() === status.toLowerCase();
 
         let matchDate = true;
         const orderDateStr = getOrderDate(o);
@@ -79,7 +82,7 @@ export function getFilteredOrders(filters) {
  * Updates order status.
  */
 export function updateOrderStatus(orderId, newStatus) {
-    const orders = fetchOrders();
+    const orders = getLS(KEY_ORDERS) || [];
     const index = orders.findIndex(o => o.id == orderId);
     if (index === -1) return false;
 

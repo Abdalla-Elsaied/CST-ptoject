@@ -51,6 +51,14 @@ export function getOrders() {
     return getLS(KEY_ORDERS) || [];
 }
 
+/**
+ * Returns the effective customer id from an order,
+ * supporting both customerId and userId field names.
+ */
+export function getOrderCustomerId(order) {
+    return order.customerId || order.userId || null;
+}
+
 export function getUsers() {
     return getLS(KEY_USERS) || [];
 }
