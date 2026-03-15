@@ -123,7 +123,16 @@ async function renderKPICards(products, orders) {
     const customerCount = users.filter(u => (u.role || '').toLowerCase() === 'customer').length;
 
     const totalRevenue = orders.reduce((sum, o) => {
-        return sum + (Number(o.total) || Number(o.subtotal) || Number(o.totalPrice) || 0);
+        let amount = Number(o.total) || Number(o.subtotal) || Number(o.totalPrice) || 0;
+
+        // Fallback: calculate from items if top-level total is 0
+        if (amount === 0 && o.items && o.items.length > 0) {
+            amount = o.items.reduce((itemSum, item) => {
+                return itemSum + ((Number(item.price) || 0) * (Number(item.quantity) || 1));
+            }, 0);
+        }
+
+        return sum + amount;
     }, 0);
 
     const trends = await getAllTrends();
@@ -180,9 +189,17 @@ function renderRecentSellers() {
 
     const sellers = getSellers().slice(-5).reverse();
 
-    const header = document.querySelector('.data-card:has(#recentSellersBody) .data-card-header');
+    // Update count badge — preserve the "View All" link
+    const header = document.getElementById('recentSellersHeader');
     if (header) {
-        header.innerHTML = `Recent Sellers <span class="badge rounded-pill bg-light text-dark ms-2 border">${sellers.length}</span>`;
+        let badge = header.querySelector('.sellers-count-badge');
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'badge rounded-pill bg-light text-dark ms-2 border sellers-count-badge';
+            const viewAllLink = header.querySelector('a');
+            header.insertBefore(badge, viewAllLink || null);
+        }
+        badge.textContent = sellers.length;
     }
 
     if (sellers.length === 0) {
@@ -201,27 +218,49 @@ function renderRecentSellers() {
     }
 
     tbody.innerHTML = sellers.map(s => {
-        const name    = s.fullName || s.name || '—';
-        const initial = name.charAt(0).toUpperCase();
+        const name        = s.fullName || s.name || '—';
+        const initial     = name.charAt(0).toUpperCase();
+        const store       = s.storeName || '—';
+        const isSuspended = s.isSuspended || false;
+        const isApproved  = s.isApproved !== false;
+
+        const avatarClass = isSuspended ? '' : !isApproved ? '' : 'seller-avatar';
+        const avatarStyle = isSuspended
+            ? 'background:linear-gradient(135deg,#ef4444,#dc2626)'
+            : !isApproved
+                ? 'background:linear-gradient(135deg,#f59e0b,#d97706)'
+                : '';
+
+        const statusHtml = isSuspended
+            ? '<span class="status-pill status-suspended">Suspended</span>'
+            : !isApproved
+                ? '<span class="status-pill status-pending">Pending</span>'
+                : '<span class="status-pill status-active">Active</span>';
+
+        const dotClass = isSuspended ? 'dot-red' : !isApproved ? 'dot-amber' : 'dot-green';
+
+        const city    = s.city || '—';
+        const payment = s.paymentMethod || '—';
+
         return `
-            <tr>
+            <tr data-seller-id="${s.id}">
                 <td>
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="table-avatar">${initial}</span>
-                        <span>${escapeHTML(name)}</span>
+                    <div class="d-flex align-items-center gap-2 flex-nowrap">
+                        <span class="table-avatar ${avatarClass}" style="${avatarStyle};flex-shrink:0">${initial}</span>
+                        <div style="min-width:0;">
+                            <div class="fw-semibold d-flex align-items-center gap-1" style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;" title="${escapeHTML(name)}">
+                                <span class="status-dot ${dotClass}" style="flex-shrink:0"></span>${escapeHTML(name)}
+                            </div>
+                        </div>
                     </div>
                 </td>
-                <td>${escapeHTML(s.storeName || '—')}</td>
-                <td>${escapeHTML(s.city || '—')}</td>
-                <td><small class="text-muted">${escapeHTML(s.paymentMethod || '—')}</small></td>
+                <td><div class="text-truncate" style="max-width:100px;font-size:12px;" title="${escapeHTML(store)}">${escapeHTML(store)}</div></td>
+                <td><div class="text-truncate" style="max-width:80px;font-size:12px;" title="${escapeHTML(city)}">${escapeHTML(city)}</div></td>
+                <td><div class="text-truncate" style="max-width:100px;font-size:12px;" title="${escapeHTML(payment)}">${escapeHTML(payment)}</div></td>
                 <td class="text-center">
-                    <div class="d-flex gap-1 justify-content-center">
-                        <button class="btn-action btn-info btn-sm" onclick="viewSellerDetails('${s.id}')" title="View">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                        <button class="btn-action btn-edit btn-sm" onclick="editSeller('${s.id}')" title="Edit">
-                            <i class="bi bi-pencil"></i>
-                        </button>
+                    <div class="d-flex gap-1 justify-content-center flex-nowrap">
+                        <button class="btn-action btn-view" onclick="viewSellerDetails('${s.id}')" title="View in Sellers"><i class="bi bi-eye"></i></button>
+                        <button class="btn-action btn-edit" onclick="editSeller('${s.id}')" title="Edit"><i class="bi bi-pencil"></i></button>
                     </div>
                 </td>
             </tr>`;
@@ -229,13 +268,19 @@ function renderRecentSellers() {
 }
 
 window.viewSellerDetails = function (sellerId) {
-    document.querySelector('[data-section="sellers"]')?.click();
+    // ✅ FIX: Navigate to sellers section properly
+    if (window.activateSection) {
+        window.activateSection('sellers');
+    } else {
+        document.querySelector('[data-section="sellers"]')?.click();
+    }
+    
     setTimeout(() => {
         const row = document.querySelector(`[data-seller-id="${sellerId}"]`);
         if (row) {
             row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            row.style.backgroundColor = 'var(--green-light-bg)';
-            setTimeout(() => { row.style.backgroundColor = ''; }, 2000);
+            row.classList.add('row-highlight');
+            setTimeout(() => row.classList.remove('row-highlight'), 2000);
         }
     }, 300);
 };
@@ -254,9 +299,15 @@ function renderRecentOrders(allOrders) {
     const tbody  = document.getElementById('recentOrdersBody');
     if (!tbody) return;
 
-    const header = document.querySelector('.data-card:has(#recentOrdersBody) .data-card-header');
+    const header = document.getElementById('recentOrdersHeader');
     if (header) {
-        header.innerHTML = `Recent Orders <span class="badge rounded-pill bg-light text-dark ms-2 border">${orders.length}</span>`;
+        let badge = header.querySelector('.orders-count-badge');
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'badge rounded-pill bg-light text-dark ms-2 border orders-count-badge';
+            header.insertBefore(badge, header.firstChild.nextSibling || null);
+        }
+        badge.textContent = orders.length;
     }
 
     if (orders.length === 0) {
@@ -322,10 +373,10 @@ function renderRecentOrders(allOrders) {
 
         return `
             <tr data-id="${escapeHTML(fullId)}">
-                <td><span class="order-id" title="${escapeHTML(fullId)}">${escapeHTML(shortId)}</span></td>
+                <td><span class="order-id-pill" title="${escapeHTML(fullId)}">${escapeHTML(shortId)}</span></td>
                 <td>${customerDisplay}</td>
                 <td>${sellerDisplay}</td>
-                <td class="text-end fw-bold">${formatPrice(total)}</td>
+                <td style="text-align:right;font-weight:700;">${formatPrice(total)}</td>
                 <td>${statusBadge(o.status)}</td>
             </tr>`;
     }).join('');
