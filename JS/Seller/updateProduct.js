@@ -69,8 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
     loadProductById(queryId);
 });
 
-let currentProduct = null; 
-let existingImages = [];    
+let currentProduct = null;
+let existingImages = [];
 
 function setSelectValue(selectElement, value) {
     if (!selectElement) return;
@@ -112,7 +112,7 @@ function loadCategories() {
 async function loadProductById(id) {
     try {
         showLoading(true, 'Loading product...');
-        const products = await loadProductsFromFolder(); 
+        const products = await loadProductsFromFolder();
         const product = products.find(p => String(p.id) === String(id));
 
         if (!product) {
@@ -173,7 +173,7 @@ function refreshPreview() {
         div.style.margin = '8px';
 
         const image = document.createElement('img');
-        image.src = img.url; 
+        image.src = img.url;
         image.style.maxWidth = '140px';
         image.style.borderRadius = '6px';
         div.appendChild(image);
@@ -216,7 +216,7 @@ form.addEventListener('submit', async (e) => {
     }
 
     const productData = {
-        ...currentProduct, 
+        ...currentProduct,
         name: formData.get('productName').trim(),
         description: formData.get('description').trim(),
         price: Number(formData.get('price')) || 0,
@@ -235,7 +235,7 @@ form.addEventListener('submit', async (e) => {
 
     try {
         showLoading(true, 'Updating product...');
-        await saveProductToDisk(productData, imageFiles); 
+        await saveProductToDisk(productData, imageFiles);
         showLoading(false);
         showMessage('Product updated successfully!', 'success');
         setTimeout(() => {

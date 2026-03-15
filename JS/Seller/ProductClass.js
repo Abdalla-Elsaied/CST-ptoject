@@ -140,11 +140,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentUser = getCurrentUser();
         const sellerId = currentUser?.id ?? null;
 
-        if (currentUser.role != ROLES.SELLER){
+        if (currentUser.role != ROLES.SELLER) {
             console.error("only seller can add products")
             return;
         }
-            
+
 
         const product = {
             name: formData.get('productName')?.trim() || '(no name)',

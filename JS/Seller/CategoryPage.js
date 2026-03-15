@@ -1,5 +1,5 @@
 import { KEY_CATEGORIES, KEY_PRODUCTS } from "../Core/Constants.js";
-import {getLS, setLS} from "../Core/Storage.js"
+import { getLS, setLS } from "../Core/Storage.js"
 
 let categories = getLS(KEY_CATEGORIES);
 
