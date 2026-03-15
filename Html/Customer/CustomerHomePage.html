@@ -245,7 +245,7 @@
           <div class="feat-content">
             <span class="feat-tag">New Arrivals</span>
             <h3>New Year<br>New Fashion</h3>
-            <a href="#" class="btn btn-feat">Shop Now <i class="bi bi-arrow-right"></i></a>
+            <a href="NewArrivals.html" class="btn btn-feat">Shop Now <i class="bi bi-arrow-right"></i></a>
           </div>
         </div>
       </div>
@@ -258,7 +258,7 @@
               <div class="feat-overlay"></div>
               <div class="feat-content">
                 <h4>Gaming<br>Accessories</h4>
-                <a href="#" class="btn btn-feat-sm">View All</a>
+                <a href="categoryProducts.html?category=Electronics" class="btn btn-feat-sm">View All</a>
               </div>
             </div>
           </div>
@@ -267,7 +267,7 @@
               <div class="feat-overlay"></div>
               <div class="feat-content">
                 <h4>Men's<br>Fashion</h4>
-                <a href="#" class="btn btn-feat-sm">View All</a>
+                <a href="categoryProducts.html?category=Men%20Essentials" class="btn btn-feat-sm">View All</a>
               </div>
             </div>
           </div>
@@ -296,7 +296,7 @@
               <div class="feat-overlay"></div>
               <div class="feat-content">
                 <h4>Trending<br>Sneakers</h4>
-                <a href="#" class="btn btn-feat-sm">Shop Now</a>
+                <a href="categoryProducts.html?category=Shoes" class="btn btn-feat-sm">Shop Now</a>
               </div>
             </div>
           </div>
@@ -305,7 +305,7 @@
               <div class="feat-overlay"></div>
               <div class="feat-content">
                 <h4>Beauty &<br>Skincare</h4>
-                <a href="#" class="btn btn-feat-sm">Explore</a>
+                <a href="categoryProducts.html?category=Women%20Fashion" class="btn btn-feat-sm">Explore</a>
               </div>
             </div>
           </div>
@@ -576,39 +576,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="module" src="../../JS/Customer/SellerRequestNotifications.js"></script>
 <script type="module" src="../../JS/Customer/CustomerHomePage.js"></script>
-
-<!-- ===== MOBILE MENU – JS toggle patch ===== -->
-<!-- The CustomerHomePage.js sets inline style display directly which fights the CSS class.
-     This tiny script patches the toggle to use only class-based show/hide. -->
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('mobileMenuBtn');
-    if (!btn) return;
-
-    // Override the click listener by capturing at the document level first
-    btn.addEventListener('click', (e) => {
-      e.stopImmediatePropagation(); // prevent the original JS handler from also running if it registered first
-
-      const menu = document.getElementById('mobileNavMenu');
-      if (!menu) return; // not built yet — let the original handler run once, then we take over
-
-      const isOpen = menu.classList.contains('mobile-nav-open');
-      // Use ONLY class toggling — no inline style so CSS is authoritative
-      menu.classList.toggle('mobile-nav-open', !isOpen);
-      menu.style.removeProperty('display'); // clear any inline style set by original JS
-    }, true); // capture phase so this runs before the original listener
-
-    // Also watch for the menu being created (first click) and clean up inline styles
-    const observer = new MutationObserver(() => {
-      const menu = document.getElementById('mobileNavMenu');
-      if (menu) {
-        menu.style.removeProperty('display');
-        observer.disconnect();
-      }
-    });
-    observer.observe(document.body, { childList: true, subtree: false });
-  });
-</script>
 
 <!-- ===== BECOME A SELLER – Form Validation ===== -->
 <script type="module">

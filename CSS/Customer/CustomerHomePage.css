@@ -431,7 +431,7 @@ body {
 .product-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  /* object-fit: cover; */
   transition: transform 0.4s;
 }
 .product-card:hover .product-img { transform: scale(1.05); }
@@ -1257,9 +1257,9 @@ body {
 .order-status--delivered { background: #d1fae5; color: #065f46; }
 .order-status--cancelled { background: #fee2e2; color: #991b1b; }
 
-@media (max-width: 575px) {
+/* @media (max-width: 575px) {
   .wishlist-drawer { width: 100vw; }
-}
+} */
 
 /* =====================================================
    TESTIMONIALS – DYNAMIC ADDITIONS
@@ -1460,26 +1460,24 @@ body {
 
 /* =====================================================
    MOBILE NAV MENU – slides down from hamburger button
-   The menu is inserted as a sibling AFTER header.navbar-top
-   by JS, so it sits in normal document flow (no absolute/fixed).
+   The JS inserts #mobileNavMenu as a sibling after header.navbar-top.
+   Toggle is class-only: .mobile-nav-open shows it, no class hides it.
    ===================================================== */
 .mobile-nav-menu {
-  display: none;                          /* hidden by default          */
+  display: none;                     /* hidden until .mobile-nav-open added */
   width: 100%;
   background: #fff;
   border-bottom: 2px solid var(--border);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   padding: 8px 0 12px;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  /* Sticky so it scrolls with the page but stays below the fixed/sticky header */
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 1047;
-  animation: mobileMenuSlideDown 0.22s ease;
 }
 
 .mobile-nav-menu.mobile-nav-open {
   display: block;
+  animation: mobileMenuSlideDown 0.22s ease;
 }
 
 @keyframes mobileMenuSlideDown {
@@ -1550,4 +1548,182 @@ body {
   margin: 6px 20px;
   border-color: var(--border);
   opacity: 1;
+}
+
+
+/* =====================================================
+   NEW ARRIVALS PAGE – NewArrivals.html
+   ===================================================== */
+
+/* ── Hero banner ──────────────────────────────────── */
+.na-hero {
+  background: linear-gradient(135deg, #0d4a28 0%, #16a34a 50%, #22c55e 100%);
+  padding: 48px 0 40px;
+  position: relative;
+  overflow: hidden;
+}
+.na-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+}
+.na-hero-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 24px;
+  position: relative;
+  z-index: 1;
+}
+.na-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255,255,255,0.3);
+  backdrop-filter: blur(4px);
+}
+.na-hero-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 8px;
+  line-height: 1.1;
+}
+.na-hero-title span { color: #bbf7d0; }
+.na-hero-sub {
+  color: rgba(255,255,255,0.8);
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+/* Hero stat chips */
+.na-hero-stats {
+  display: flex;
+  gap: 16px;
+  flex-shrink: 0;
+}
+.na-stat {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 12px;
+  padding: 12px 20px;
+  text-align: center;
+  backdrop-filter: blur(6px);
+  min-width: 80px;
+}
+.na-stat-num {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+.na-stat-label {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.75);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* ── Filter bar ───────────────────────────────────── */
+.na-filter-bar {
+  background: #fff;
+  border-bottom: 1.5px solid var(--border);
+  z-index: 900;
+  top: 0;   /* sits just below the main navbar which is also sticky */
+}
+.na-filter-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  flex-wrap: wrap;
+}
+.na-filter-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+.na-pill {
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 4px 14px;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+.na-pill:hover { border-color: var(--green-primary); color: var(--green-dark); }
+.na-pill.active {
+  background: var(--green-primary);
+  border-color: var(--green-primary);
+  color: #fff;
+  font-weight: 700;
+}
+.na-filter-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.na-count {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  font-weight: 600;
+}
+.na-sort {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-color: var(--border);
+  border-radius: 8px;
+  min-width: 160px;
+}
+.na-sort:focus { border-color: var(--green-primary); box-shadow: 0 0 0 3px rgba(34,197,94,0.12); }
+
+/* ── "NEW" ribbon on cards ────────────────────────── */
+.na-new-ribbon {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  z-index: 2;
+}
+
+/* ── Responsive ───────────────────────────────────── */
+@media (max-width: 767px) {
+  .na-hero-stats { display: none; }
+  .na-filter-inner { flex-direction: column; align-items: stretch; }
+  .na-filter-right { justify-content: space-between; }
+  .na-sort { flex: 1; }
+}
+@media (max-width: 575px) {
+  .na-hero { padding: 32px 0 28px; }
+  .na-hero-title { font-size: 1.8rem; }
 }
