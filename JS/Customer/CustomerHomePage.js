@@ -155,20 +155,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   const mobileMenuBtn = document.getElementById('mobileMenuBtn');
 
   // Mobile hamburger → show a compact offcanvas-style dropdown below navbar
+  /** Close the mobile menu using class only (no inline style) */
+  function closeMobileMenu() {
+    const m = document.getElementById('mobileNavMenu');
+    if (m) m.classList.remove('mobile-nav-open');
+  }
+
   if (mobileMenuBtn) {
     mobileMenuBtn.addEventListener('click', e => {
       e.stopPropagation();
       let mobileMenu = document.getElementById('mobileNavMenu');
 
       if (mobileMenu) {
-        // toggle
-        const isOpen = mobileMenu.classList.contains('mobile-nav-open');
-        mobileMenu.classList.toggle('mobile-nav-open', !isOpen);
-        mobileMenu.style.display = isOpen ? 'none' : 'block';
+        // Toggle via class only — no inline style so CSS is authoritative
+        mobileMenu.classList.toggle('mobile-nav-open');
         return;
       }
 
-      // Build menu once
+      // Build menu once on first click
       mobileMenu = document.createElement('div');
       mobileMenu.id = 'mobileNavMenu';
       mobileMenu.className = 'mobile-nav-menu mobile-nav-open';
@@ -225,8 +229,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
       document.getElementById('mobileWishlistLink')?.addEventListener('click', e => {
         e.preventDefault();
-        mobileMenu.style.display = 'none';
-        mobileMenu.classList.remove('mobile-nav-open');
+        closeMobileMenu();
         openWishlistDrawer();
       });
     });
@@ -235,8 +238,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('click', e => {
       const menu = document.getElementById('mobileNavMenu');
       if (menu && !mobileMenuBtn.contains(e.target) && !menu.contains(e.target)) {
-        menu.style.display = 'none';
-        menu.classList.remove('mobile-nav-open');
+        closeMobileMenu();
       }
     });
   }
