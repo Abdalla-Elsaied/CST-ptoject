@@ -25,7 +25,7 @@ import {
 
 // ─── ROLES ───────────────────────────────────────────────────
 
-const ROLES = {
+export const ROLES = {
     CUSTOMER: 'customer',
     SELLER:   'seller',
     ADMIN:    'admin',
@@ -65,23 +65,47 @@ function normalizeEmail(email) {
     return email.trim().toLowerCase();
 }
 
+/**
+ * Validates Egyptian mobile numbers.
+ * Accepts: 01XXXXXXXXX (11 digits) or +201XXXXXXXXX
+ * Rejects: 00201..., short numbers, non-numeric
+ */
+function isValidPhone(phone) {
+    if (!phone) return false;
+    return /^(\+20|0)(10|11|12|15)[0-9]{8}$/.test(phone.trim());
+}
+
 
 // ─── REGISTRATION ─────────────────────────────────────────────
 
 /**
  * Register a new CUSTOMER (self-registration only).
+ * @param {string} name
+ * @param {string} email
+ * @param {string} password
+ * @param {string|null} phone - Optional for customers; validated if provided
  */
-export function registerUser(name, email, password) {
-    if (!isValidName(name))     return { success: false, error: 'Name is required' };
-    if (!isValidEmail(email))   return { success: false, error: 'Invalid email format' };
+export function registerUser(name, email, password, phone = null) {
+    if (!isValidName(name))         return { success: false, error: 'Name is required' };
+    if (!isValidEmail(email))       return { success: false, error: 'Invalid email format' };
     if (!isValidPassword(password)) return { success: false, error: 'Password must be at least 6 characters' };
+
+    // Validate phone only if provided
+    if (phone && !isValidPhone(phone)) {
+        return { success: false, error: 'Invalid phone number. Use format: 01XXXXXXXXX or +201XXXXXXXXX' };
+    }
 
     const users           = getLS(KEY_USERS) || [];
     const normalizedEmail = normalizeEmail(email);
 
-    // ✅ Block duplicate email
+    // Block duplicate email
     if (users.some(u => (u.email || '').toLowerCase() === normalizedEmail)) {
         return { success: false, error: 'This email is already registered. Please login instead.' };
+    }
+
+    // Block duplicate phone (if provided)
+    if (phone && users.some(u => u.phone && u.phone.replace(/\s/g, '') === phone.trim().replace(/\s/g, ''))) {
+        return { success: false, error: 'This phone number is already registered.' };
     }
 
     const newUser = {
@@ -90,6 +114,7 @@ export function registerUser(name, email, password) {
         email:     normalizedEmail,
         password,
         role:      ROLES.CUSTOMER,
+        ...(phone ? { phone: phone.trim() } : {}),
         createdAt: new Date().toISOString(),
     };
 
@@ -99,24 +124,34 @@ export function registerUser(name, email, password) {
 
 /**
  * Admin-only: create any type of user.
+ * @param {string|null} phone - Optional; validated if provided
  */
-export function adminCreateUser(currentUser, name, email, password, role) {
+export function adminCreateUser(currentUser, name, email, password, role, phone = null) {
     if (!currentUser || currentUser.role !== ROLES.ADMIN) {
         return { success: false, error: 'Only admins can create users' };
     }
     if (!ALL_VALID_ROLES.includes(role)) {
         return { success: false, error: `Invalid role. Allowed: ${ALL_VALID_ROLES.join(', ')}` };
     }
-    if (!isValidName(name))     return { success: false, error: 'Invalid name' };
-    if (!isValidEmail(email))   return { success: false, error: 'Invalid email format' };
+    if (!isValidName(name))         return { success: false, error: 'Invalid name' };
+    if (!isValidEmail(email))       return { success: false, error: 'Invalid email format' };
     if (!isValidPassword(password)) return { success: false, error: 'Password must be at least 6 characters' };
+
+    if (phone && !isValidPhone(phone)) {
+        return { success: false, error: 'Invalid phone number. Use format: 01XXXXXXXXX or +201XXXXXXXXX' };
+    }
 
     const users           = getLS(KEY_USERS) || [];
     const normalizedEmail = normalizeEmail(email);
 
-    // ✅ Block duplicate email
+    // Block duplicate email
     if (users.some(u => (u.email || '').toLowerCase() === normalizedEmail)) {
         return { success: false, error: 'A user with this email already exists.' };
+    }
+
+    // Block duplicate phone (if provided)
+    if (phone && users.some(u => u.phone && u.phone.replace(/\s/g, '') === phone.trim().replace(/\s/g, ''))) {
+        return { success: false, error: 'This phone number is already registered.' };
     }
 
     const newUser = {
@@ -125,6 +160,7 @@ export function adminCreateUser(currentUser, name, email, password, role) {
         email:     normalizedEmail,
         password,
         role,
+        ...(phone ? { phone: phone.trim() } : {}),
         createdAt: new Date().toISOString(),
         createdBy: currentUser.id,
     };
@@ -179,12 +215,34 @@ export function setCurrentUser(user) {
 /**
  * Protect pages by required role.
  * Call at the very top of protected page scripts.
+ *
+ * Also checks isBanned on every page load — if the admin banned this user
+ * while they were already logged in, they get kicked out on next navigation.
  */
 export function requireRole(allowedRoles) {
     const user = getCurrentUser();
 
     if (!user) {
         window.location.href = LOGIN_URL;
+        return false;
+    }
+
+    // Re-read the live user record from storage to catch ban/suspend applied after login
+    const liveUsers = getLS(KEY_USERS) || [];
+    const liveUser  = liveUsers.find(u => u.id === user.id);
+
+    if (liveUser && liveUser.isBanned) {
+        // Clear session and redirect to login with a message
+        removeLS(KEY_CURRENT_USER);
+        removeLS(KEY_CART);
+        window.location.href = LOGIN_URL + '?banned=1';
+        return false;
+    }
+
+    if (liveUser && liveUser.isSuspended) {
+        removeLS(KEY_CURRENT_USER);
+        removeLS(KEY_CART);
+        window.location.href = LOGIN_URL + '?suspended=1';
         return false;
     }
 
@@ -245,6 +303,11 @@ export function addCustomerToSeller(userId, storeData) {
     );
     if (alreadyRequested) {
         return { success: false, error: 'You already submitted a request' };
+    }
+
+    // Phone is required for seller requests
+    if (!storeData.phone || !isValidPhone(storeData.phone)) {
+        return { success: false, error: 'A valid phone number is required. Use format: 01XXXXXXXXX or +201XXXXXXXXX' };
     }
 
     const users = getLS(KEY_USERS) || [];
@@ -345,5 +408,3 @@ export function rejectCustomerSellerRequest(requestId) {
 
 
 // ─── EXPORTS ─────────────────────────────────────────────────
-
-export { ROLES };

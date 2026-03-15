@@ -1,175 +1,91 @@
 // ============================================================
 // SeedData.js
-// Seeds essential data on first run and patches incomplete
-// records from old versions.
+// Seeds essential data on first run.
 //
-// Contains:
-//   1. seedAdmin()         → Admin + 2 complete seed sellers
-//   2. patchSeedSellers()  → Updates incomplete sellers via PUT
-//   3. seedCategories()    → Default marketplace categories
+// ARCHITECTURE:
+//   Users        → MockAPI (remote) via Storage.js setLS/initUsers
+//   Categories   → localStorage (KEY_CATEGORIES)
+//   Testimonials → localStorage (KEY_TESTIMONIALS)
 //
-// Does NOT contain:
-//   ✗ seedTestimonials()   → Testimonials come from real users via UI
-//   ✗ seedProducts()       → Products added by sellers via UI
+// WHAT THIS FILE DOES:
+//   seedAdmin()         → Admin only → MockAPI via setLS(KEY_USERS)
+//   seedCategories()    → Default categories → localStorage
+//   patchSeedSellers()  → Patches existing sellers with required fields
+//   seedTestimonials()  → Default testimonials → localStorage
 //
-// Call order in admin-panel.js (after await initUsers()):
-//   await patchSeedSellers();
-//   invalidateCaches();
-//   seedAdmin() is called separately before initUsers()
+// NOTE: Sellers are NO LONGER seeded here.
+//       All sellers must be added through the UI (Seller Requests).
+//
+// CALL ORDER in admin-panel.js:
+//   await initUsers()        ← loads MockAPI cache
+//   invalidateCaches()       ← rebuilds name Maps
+//   patchSeedSellers()       ← patches existing sellers with required fields
+//   initMetricsTracking()    ← starts metrics
 // ============================================================
 
-import { getLS, setLS, updateItem } from './Storage.js';
-import { KEY_USERS, KEY_CATEGORIES } from './Constants.js';
+import { getLS, setLS } from './Storage.js';
+import {
+    KEY_USERS,
+    KEY_CATEGORIES,
+    KEY_TESTIMONIALS
+} from './Constants.js';
 
 
-// ─── 1. SEED ADMIN + SELLERS ─────────────────────────────────
+// ─── 1. SEED ADMIN ONLY ───────────────────────────────────────
 
 /**
- * Seeds the admin user and 2 complete seed sellers if they
- * do not already exist. Runs once — skipped if admin exists.
+ * Seeds the admin account if no admin exists yet.
+ * Skipped entirely if any admin is already in the MockAPI cache.
  *
- * Seed accounts:
- *   Admin  → admin@cst.com      / password123
- *   Seller → seller@cst.com     / password1233  (Karim Mostafa)
- *   Seller → seller3@cst.com    / password1233  (Nour Khaled)
+ * Account:
+ *   Admin → admin@cst.com / password123
+ *
+ * Sellers are intentionally NOT seeded here.
+ * They must be registered and approved through the UI.
  */
 export function seedAdmin() {
-    const users = getLS(KEY_USERS) || [];
+    const users    = getLS(KEY_USERS) || [];
     const hasAdmin = users.some(u => u.role === 'admin');
+    if (hasAdmin) return;
 
-    if (hasAdmin) return; // already seeded
+    const existingEmails = new Set(
+        users.map(u => (u.email || '').toLowerCase())
+    );
 
-    const existingEmails = new Set(users.map(u => (u.email || '').toLowerCase()));
-
-    // ── Platform Admin ────────────────────────────────────
     const newAdmin = {
-        id: 'admin-001',
-        fullName: 'Platform Administrator',
-        name: 'Admin',
-        email: 'admin@cst.com',
-        password: 'password123',
-        role: 'admin',
+        id:        'admin-001',
+        fullName:  'Platform Administrator',
+        name:      'Admin',
+        email:     'admin@cst.com',
+        password:  'password123',
+        role:      'admin',
         createdAt: new Date().toISOString()
     };
 
-    // ── Seed Seller 1 — Karim Mostafa ─────────────────────
-    const sellerKarim = {
-        id: 'seller-001',
-        fullName: 'Karim Mostafa',
-        name: 'Karim Mostafa',
-        email: 'seller@cst.com',
-        password: 'password1233',
-        role: 'seller',
-        storeName: 'TechZone Egypt',
-        storeDescription: 'Your go-to store for the latest electronics and gadgets at the best prices in Egypt.',
-        category: 'Electronics',
-        city: 'Cairo',
-        phone: '01012345678',
-        paymentMethod: 'Bank Transfer',
-        sellerApprovedAt: new Date('2025-11-15').toISOString(),
-        createdAt: new Date('2025-11-15').toISOString()
-    };
+    // Skip if admin email already exists
+    if (existingEmails.has(newAdmin.email.toLowerCase())) return;
 
-    // ── Seed Seller 2 — Nour Khaled ───────────────────────
-    const sellerNour = {
-        id: 'seller-0012033',
-        fullName: 'Nour Khaled',
-        name: 'Nour Khaled',
-        email: 'seller3@cst.com',
-        password: 'password1233',
-        role: 'seller',
-        storeName: 'Nour Fashion Boutique',
-        storeDescription: 'Trendy women and men fashion — handpicked collections from local Egyptian designers.',
-        category: 'Women Fashion',
-        city: 'Tanta',
-        phone: '01198765432',
-        paymentMethod: 'Vodafone Cash',
-        sellerApprovedAt: new Date('2025-12-01').toISOString(),
-        createdAt: new Date('2025-12-01').toISOString()
-    };
-
-    const toSeed = [newAdmin, sellerKarim, sellerNour]
-        .filter(u => !existingEmails.has(u.email.toLowerCase()));
-
-    if (toSeed.length > 0) {
-        // ✅ Pass ONLY truly new users
-        setLS(KEY_USERS, toSeed);
-        console.log(`[SEED] ${toSeed.length} user(s) seeded successfully`);
-    }
+    setLS(KEY_USERS, [newAdmin]);
+    console.log('[SEED] Admin account seeded → MockAPI');
 }
 
 
-// ─── 2. PATCH INCOMPLETE SEED SELLERS ────────────────────────
+// ─── 2. SEED CATEGORIES ───────────────────────────────────────
 
 /**
- * Patches existing seed sellers on MockAPI that are missing
- * store metadata — happens when the old seedAdmin() ran before
- * the complete seller fields were added.
+ * Seeds default marketplace categories to localStorage.
+ * Skipped if categories already exist.
  *
- * Uses updateItem() which sends a PUT request to MockAPI →
- * updates the existing record instead of creating a duplicate.
+ * NOTE: Categories are managed via:
+ *   - This seed (first run only)
+ *   - Admin UI (Add Category → Suggestions tab)
+ *   - NOT stored on MockAPI
  *
- * Safe to call on every startup — only patches if storeName
- * is missing. Never overwrites real user data.
- *
- * Called in admin-panel.js after await initUsers().
- */
-export async function patchSeedSellers() {
-    const users = getLS(KEY_USERS) || [];
-
-    const patches = {
-
-        // Karim Mostafa — TechZone Egypt
-        'seller-001': {
-            fullName: 'Karim Mostafa',
-            name: 'Karim Mostafa',
-            storeName: 'TechZone Egypt',
-            storeDescription: 'Your go-to store for the latest electronics and gadgets.',
-            category: 'Electronics',
-            city: 'Cairo',
-            phone: '01012345678',
-            paymentMethod: 'Bank Transfer',
-            sellerApprovedAt: new Date('2025-11-15').toISOString()
-        },
-
-        // Nour Khaled — Nour Fashion Boutique
-        'seller-0012033': {
-            fullName: 'Nour Khaled',
-            name: 'Nour Khaled',
-            storeName: 'Nour Fashion Boutique',
-            storeDescription: 'Trendy fashion from local Egyptian designers.',
-            category: 'Women Fashion',
-            city: 'Tanta',
-            phone: '01198765432',
-            paymentMethod: 'Vodafone Cash',
-            sellerApprovedAt: new Date('2025-12-01').toISOString()
-        }
-    };
-
-    for (const user of users) {
-        // Only patch if:
-        // 1. This user has a patch defined
-        // 2. The user is missing storeName (incomplete old seed)
-        if (patches[user.id] && !user.storeName) {
-            // updateItem → updates _usersCache + sends PUT to MockAPI
-            // Correct: updates existing record, no duplicates created
-            updateItem(KEY_USERS, user.id, patches[user.id]);
-            console.log(`[SEED] Patched seller ${user.id} — ${patches[user.id].fullName}`);
-        }
-    }
-}
-
-
-// ─── 3. SEED CATEGORIES ───────────────────────────────────────
-
-/**
- * Seeds the default marketplace categories on first run.
- * Skipped if categories already exist in localStorage.
- *
- * Visibility:
- *   active → visible on storefront and in seller product forms
- *   hidden → not visible on storefront
- *   draft  → pending admin approval (shows in Category Suggestions)
+ * Visibility rules:
+ *   active → visible on storefront + seller product forms
+ *   hidden → exists but not shown on storefront
+ *   draft  → pending approval in Suggestions tab
+ *            (admin-created drafts or seller suggestions)
  */
 export function seedCategories() {
     const existing = getLS(KEY_CATEGORIES);
@@ -177,73 +93,213 @@ export function seedCategories() {
 
     const categories = [
         {
-            id: 'cat-1',
-            name: 'Women Fashion',
-            products: 214,
-            visibility: 'active',
-            source: 'admin',
+            id:          'cat-1',
+            name:        'Women Fashion',
+            description: 'Clothing, accessories, and footwear for women.',
+            visibility:  'active',
+            source:      'admin',
             suggestedBy: null,
-            updated: 'Mar 06, 2026',
-            createdAt: new Date('2025-10-01').toISOString(),
-            description: 'Clothing, accessories, and footwear for women.'
+            products:    214,
+            updated:     'Mar 06, 2026',
+            createdAt:   new Date('2025-10-01').toISOString()
         },
         {
-            id: 'cat-2',
-            name: 'Men Essentials',
-            products: 162,
-            visibility: 'active',
-            source: 'admin',
+            id:          'cat-2',
+            name:        'Men Essentials',
+            description: 'Everyday clothing and essentials for men.',
+            visibility:  'active',
+            source:      'admin',
             suggestedBy: null,
-            updated: 'Mar 02, 2026',
-            createdAt: new Date('2025-10-01').toISOString(),
-            description: 'Everyday clothing and essentials for men.'
+            products:    162,
+            updated:     'Mar 02, 2026',
+            createdAt:   new Date('2025-10-01').toISOString()
         },
         {
-            id: 'cat-3',
-            name: 'Beauty & Care',
-            products: 88,
-            visibility: 'hidden',
-            source: 'admin',
+            id:          'cat-3',
+            name:        'Beauty & Care',
+            description: 'Skincare, haircare, and beauty products.',
+            visibility:  'hidden',
+            source:      'admin',
             suggestedBy: null,
-            updated: 'Feb 28, 2026',
-            createdAt: new Date('2025-10-01').toISOString(),
-            description: 'Skincare, haircare, and beauty products.'
+            products:    88,
+            updated:     'Feb 28, 2026',
+            createdAt:   new Date('2025-10-01').toISOString()
         },
         {
-            id: 'cat-4',
-            name: 'Electronics',
-            products: 132,
-            visibility: 'active',
-            source: 'admin',
+            id:          'cat-4',
+            name:        'Electronics',
+            description: 'Gadgets, devices, and tech accessories.',
+            visibility:  'active',
+            source:      'admin',
             suggestedBy: null,
-            updated: 'Mar 08, 2026',
-            createdAt: new Date('2025-10-01').toISOString(),
-            description: 'Gadgets, devices, and tech accessories.'
+            products:    132,
+            updated:     'Mar 08, 2026',
+            createdAt:   new Date('2025-10-01').toISOString()
         },
         {
-            id: 'cat-5',
-            name: 'Home & Living',
-            products: 104,
-            visibility: 'draft',
-            source: 'admin',
+            id:          'cat-5',
+            name:        'Home & Living',
+            description: 'Furniture, decor, and home essentials.',
+            visibility:  'hidden',
+            source:      'admin',
             suggestedBy: null,
-            updated: 'Feb 22, 2026',
-            createdAt: new Date('2025-10-01').toISOString(),
-            description: 'Furniture, decor, and home essentials.'
+            products:    104,
+            updated:     'Feb 22, 2026',
+            createdAt:   new Date('2025-10-01').toISOString()
         },
         {
-            id: 'cat-6',
-            name: 'Shoes',
-            products: 96,
-            visibility: 'active',
-            source: 'admin',
+            id:          'cat-6',
+            name:        'Shoes',
+            description: 'Footwear for all occasions and styles.',
+            visibility:  'active',
+            source:      'admin',
             suggestedBy: null,
-            updated: 'Mar 01, 2026',
-            createdAt: new Date('2025-10-01').toISOString(),
-            description: 'Footwear for all occasions and styles.'
-        },
+            products:    96,
+            updated:     'Mar 01, 2026',
+            createdAt:   new Date('2025-10-01').toISOString()
+        }
     ];
 
     setLS(KEY_CATEGORIES, categories);
-    console.log('[SEED] Default categories seeded successfully');
+    console.log('[SEED] Default categories seeded → localStorage');
+}
+
+
+// ─── 3. PATCH SEED SELLERS ────────────────────────────────────
+
+/**
+ * Patches existing sellers in the database with required fields.
+ * This ensures sellers created before certain features were added
+ * have all necessary properties (storeName, isApproved, etc.).
+ *
+ * Called by admin-panel.js on page load.
+ * Does NOT create new sellers — only patches existing ones.
+ */
+export function patchSeedSellers() {
+    const users = getLS(KEY_USERS) || [];
+    let changed = false;
+
+    const patched = users.map(u => {
+        if (u.role === 'seller') {
+            const updates = {};
+            
+            // Ensure isApproved exists (default to true for existing sellers)
+            if (u.isApproved === undefined) {
+                updates.isApproved = true;
+                changed = true;
+            }
+            
+            // Ensure storeName exists (fallback to name or email)
+            if (!u.storeName) {
+                updates.storeName = u.name || u.fullName || u.email?.split('@')[0] || 'Store';
+                changed = true;
+            }
+            
+            // Ensure other seller fields exist
+            if (!u.city) {
+                updates.city = 'Cairo';
+                changed = true;
+            }
+            
+            if (!u.paymentMethod) {
+                updates.paymentMethod = 'Bank Transfer';
+                changed = true;
+            }
+            
+            if (Object.keys(updates).length > 0) {
+                return { ...u, ...updates };
+            }
+        }
+        return u;
+    });
+
+    if (changed) {
+        setLS(KEY_USERS, patched);
+        console.log('[PATCH] Sellers patched with required fields');
+    }
+}
+
+
+// ─── 4. SEED TESTIMONIALS ─────────────────────────────────────
+
+/**
+ * Seeds default testimonials to localStorage.
+ * Skipped if testimonials already exist.
+ *
+ * NOTE: In production, testimonials come from real customers.
+ *       This seed provides initial data for a fresh install
+ *       so the storefront homepage looks populated.
+ *
+ * The admin Reviews section reads from this same key.
+ * Customers can add/delete testimonials via the storefront.
+ */
+export function seedTestimonials() {
+    const existing = getLS(KEY_TESTIMONIALS);
+    if (Array.isArray(existing) && existing.length > 0) return;
+
+    const testimonials = [
+        {
+            id:        't1',
+            userId:    null,
+            name:      'Emily R.',
+            avatar:    'https://i.pravatar.cc/60?img=1',
+            rating:    5,
+            comment:   'Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!',
+            createdAt: '2025-12-01T10:00:00Z',
+            featured:  true
+        },
+        {
+            id:        't2',
+            userId:    null,
+            name:      'John D.',
+            avatar:    'https://i.pravatar.cc/60?img=12',
+            rating:    5,
+            comment:   'Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!',
+            createdAt: '2025-12-05T14:00:00Z',
+            featured:  true
+        },
+        {
+            id:        't3',
+            userId:    null,
+            name:      'Ahmed M.',
+            avatar:    'https://i.pravatar.cc/60?img=7',
+            rating:    5,
+            comment:   'Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!',
+            createdAt: '2025-12-10T09:00:00Z',
+            featured:  true
+        },
+        {
+            id:        't4',
+            userId:    null,
+            name:      'Alex T.',
+            avatar:    'https://i.pravatar.cc/60?img=33',
+            rating:    5,
+            comment:   'Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!',
+            createdAt: '2025-12-12T11:00:00Z',
+            featured:  false
+        },
+        {
+            id:        't5',
+            userId:    null,
+            name:      'Priya R.',
+            avatar:    'https://i.pravatar.cc/60?img=45',
+            rating:    5,
+            comment:   'Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!',
+            createdAt: '2025-12-14T08:00:00Z',
+            featured:  false
+        },
+        {
+            id:        't6',
+            userId:    null,
+            name:      'David H.',
+            avatar:    'https://i.pravatar.cc/60?img=22',
+            rating:    5,
+            comment:   'Fast delivery and fantastic quality! The customer support team was quick to resolve my query. Dealport has earned a loyal customer!',
+            createdAt: '2025-12-16T16:00:00Z',
+            featured:  false
+        }
+    ];
+
+    setLS(KEY_TESTIMONIALS, testimonials);
+    console.log('[SEED] Default testimonials seeded → localStorage');
 }
