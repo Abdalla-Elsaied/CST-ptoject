@@ -80,6 +80,6 @@ $(document).ready(async function () {
                 return;
         }
 
-        window.location.href = redirectUrl;
+        window.location.replace(redirectUrl);
     });
 });

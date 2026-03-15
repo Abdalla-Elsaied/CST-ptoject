@@ -10,6 +10,7 @@
 import { getLS, setLS, updateItem } from '../Core/Storage.js';
 import { KEY_USERS, KEY_CURRENT_USER, KEY_APPROVAL, KEY_CATEGORIES } from '../Core/Constants.js';
 import { showToast, formatDate } from './admin-helpers.js';
+import { uploadProfilePhoto } from '../Core/FileStorage.js';
 
 let currentAdmin = null;
 
@@ -69,7 +70,9 @@ function setupProfileDropdown() {
     profileDropdown.innerHTML = `
         <div class="profile-trigger" id="profileTrigger">
             <div class="profile-avatar" id="topbarProfileAvatar">
-                ${getInitials(currentAdmin.fullName || currentAdmin.name || 'A')}
+                ${currentAdmin.photoUrl
+                    ? `<img src="${currentAdmin.photoUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"/>`
+                    : getInitials(currentAdmin.fullName || currentAdmin.name || 'A')}
             </div>
             <div class="profile-info">
                 <div class="profile-name" id="topbarProfileName">
@@ -279,6 +282,20 @@ function setupProfileModal() {
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
+                        <div class="text-center mb-4">
+                            <div style="position:relative;width:80px;height:80px;margin:0 auto;">
+                                <img id="adminAvatarPhoto" src=""
+                                    style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:none;"/>
+                                <div id="adminAvatarInitials" class="profile-avatar"
+                                    style="width:80px;height:80px;font-size:1.8rem;margin:0;display:flex;">
+                                </div>
+                                <label for="adminPhotoInput" style="position:absolute;bottom:2px;right:2px;background:#16a34a;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;border:2px solid #fff;">
+                                    <i class="bi bi-camera-fill"></i>
+                                </label>
+                                <input type="file" id="adminPhotoInput" accept="image/*" style="display:none"/>
+                            </div>
+                            <div id="adminPhotoUploadStatus" class="small text-muted mt-2"></div>
+                        </div>
                         <h6 class="section-heading mb-3">
                             <i class="bi bi-person"></i> Personal Information
                         </h6>
@@ -351,6 +368,19 @@ function openProfileModal() {
     document.getElementById('passwordChanged').textContent = currentAdmin.passwordChangedAt
         ? formatDate(currentAdmin.passwordChangedAt) : 'Never changed';
 
+    const photoEl    = document.getElementById('adminAvatarPhoto');
+    const initialsEl = document.getElementById('adminAvatarInitials');
+    if (currentAdmin.photoUrl) {
+        if (photoEl)    { photoEl.src = currentAdmin.photoUrl; photoEl.style.display = 'block'; }
+        if (initialsEl) initialsEl.style.display = 'none';
+    } else {
+        if (photoEl)    photoEl.style.display = 'none';
+        if (initialsEl) { 
+            initialsEl.style.display = 'flex'; 
+            initialsEl.textContent = getInitials(originalName);
+        }
+    }
+
     // ── Clean up stale listeners by replacing both elements ──
     const oldInput  = document.getElementById('profileFullName');
     const oldBtn    = document.getElementById('saveProfileBtn');
@@ -390,8 +420,58 @@ function openProfileModal() {
         bootstrap.Modal.getInstance(document.getElementById('profileModal'))?.hide();
     });
 
+    // Photo upload handler
+        const photoInput = document.getElementById('adminPhotoInput');
+        if (photoInput) {
+            photoInput.onchange = async function() {
+                const file = this.files[0];
+                if (!file) return;
+                const statusEl = document.getElementById('adminPhotoUploadStatus');
+                if (statusEl) statusEl.textContent = 'Uploading...';
+                try {
+                    const url = await uploadProfilePhoto(file);
+                    // Save to MockAPI
+                    updateItem(KEY_USERS, currentAdmin.id, { photoUrl: url });
+                    currentAdmin.photoUrl = url;
+                    setLS(KEY_CURRENT_USER, currentAdmin);
+                    // Update modal preview
+                    const photoEl    = document.getElementById('adminAvatarPhoto');
+                    const initialsEl = document.getElementById('adminAvatarInitials');
+                    if (photoEl)    { photoEl.src = url; photoEl.style.display = 'block'; }
+                    if (initialsEl) initialsEl.style.display = 'none';
+                    // Update topbar avatar
+                    updateAdminPhotoEverywhere(url);
+                    if (statusEl) statusEl.textContent = 'Photo updated!';
+                    setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 3000);
+                } catch {
+                    if (statusEl) statusEl.textContent = 'Upload failed. Try again.';
+                } finally {
+                    this.value = '';
+                }
+            };
+        }
+
     populateActivityLog();
     modal.show();
+}
+
+export function updateAdminPhotoEverywhere(photoUrl) {
+    const topbarAvatar = document.getElementById('topbarProfileAvatar');
+    if (topbarAvatar) {
+        topbarAvatar.innerHTML = photoUrl
+            ? `<img src="${photoUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"/>`
+            : getInitials(currentAdmin.fullName || currentAdmin.name || 'A');
+    }
+
+    const sidebarAvatar = document.getElementById('sidebarUserAvatar');
+    if (sidebarAvatar) {
+        sidebarAvatar.style.overflow = 'hidden';
+        sidebarAvatar.style.borderRadius = '50%';
+        sidebarAvatar.style.padding = '0';
+        sidebarAvatar.innerHTML = photoUrl
+            ? `<img src="${photoUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"/>`
+            : (currentAdmin.fullName || currentAdmin.name || 'A').charAt(0).toUpperCase();
+    }
 }
 
 /**
@@ -441,10 +521,23 @@ export function updateAdminNameEverywhere(newName) {
     // Always query fresh — never cache element references
     document.getElementById('adminUserName')          && (document.getElementById('adminUserName').textContent          = clean);
     document.getElementById('topbarProfileName')      && (document.getElementById('topbarProfileName').textContent      = clean);
-    document.getElementById('topbarProfileAvatar')    && (document.getElementById('topbarProfileAvatar').textContent    = initials);
+    if (document.getElementById('topbarProfileAvatar')) {
+        const av = document.getElementById('topbarProfileAvatar');
+        if (!currentAdmin.photoUrl) av.textContent = initials;
+    }
     document.getElementById('sidebarUserName')        && (document.getElementById('sidebarUserName').textContent        = clean);
-    document.getElementById('sidebarUserAvatar')      && (document.getElementById('sidebarUserAvatar').textContent      = clean.charAt(0).toUpperCase());
-
+    
+    document.getElementById('sidebarUserAvatar') && (() => {
+        const el = document.getElementById('sidebarUserAvatar');
+        el.style.overflow = 'hidden';
+        el.style.borderRadius = '50%';
+        el.style.padding = '0';
+        if (currentAdmin.photoUrl) {
+            el.innerHTML = `<img src="${currentAdmin.photoUrl}" style="width:100%;height:100%;object-fit:cover;display:block;"/>`;
+        } else {
+            el.textContent = clean.charAt(0).toUpperCase();
+        }
+    })();
     // Also update by class — fallback in case IDs not set
     document.querySelector('.profile-name')   && (document.querySelector('.profile-name').textContent   = clean);
     document.querySelector('.profile-avatar') && (document.querySelector('.profile-avatar').textContent = initials);

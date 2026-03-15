@@ -10,9 +10,6 @@ import {
     rejectCustomerSellerRequest
 } from '../Core/Auth.js';
 
-import { getLS, setLS } from '../Core/Storage.js';
-import { KEY_APPROVAL, KEY_SELLER_OUTCOMES } from '../Core/Constants.js';
-
 import {
     showToast,
     showConfirm,
@@ -22,12 +19,14 @@ import {
 } from './admin-helpers.js';
 
 import { logAdminAction } from './admin-profile.js';
+import { initUsers } from '../Core/Storage.js';
 
 /**
  * Main entry point for the seller requests section.
  * Called every time the user clicks "Seller Requests" in the sidebar.
  */
-export function renderRequests() {
+export async function renderRequests() {
+    await initUsers(); 
     renderRequestsTable();
     bindRequestsEvents();
 }

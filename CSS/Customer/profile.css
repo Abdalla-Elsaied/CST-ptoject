@@ -427,3 +427,11 @@
 .order-status--shipped   { background: #dbeafe; color: #1e40af; }
 .order-status--delivered { background: #d1fae5; color: #065f46; }
 .order-status--cancelled { background: #fee2e2; color: #991b1b; }
+
+.avatar-upload-btn {
+  position: absolute; bottom: 4px; right: 4px;
+  background: #22c55e; color: #fff; border-radius: 50%;
+  width: 28px; height: 28px; display: flex;
+  align-items: center; justify-content: center;
+  cursor: pointer; font-size: 13px;
+}

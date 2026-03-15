@@ -88,7 +88,6 @@ function starsHTML(rating) {
 
 /* ── Single product card HTML ────────────────────────────────── */
 function productCardHTML(p) {
-  console.log(p);
   const discountBadge = p.discount
     ? `<span class="badge-discount">${p.discount}% OFF</span>` : '';
   const tagBadge = !p.discount && p.tag
