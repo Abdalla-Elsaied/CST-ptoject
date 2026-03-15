@@ -21,7 +21,7 @@ import {
     renderTableEmptyState,
     debounce,
     invalidateCaches,
-    applyTableCardLabels
+    // applyTableCardLabels
 } from './admin-helpers.js';
 
 import { 
@@ -315,7 +315,7 @@ export function renderCustomersTable() {
     }).join('');
 
     // Apply card labels for mobile layout
-    applyTableCardLabels('usersTable');
+  //  applyTableCardLabels('usersTable');
 
     // Render Pagination
     renderPagination(totalItems, customerPagination.limit, customerPagination.page, 'customersPagination', (newPage) => {
