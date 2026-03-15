@@ -33,8 +33,14 @@ let _usersMapCache   = null;
 
 export function getSellers() {
     const users = getLS(KEY_USERS) || [];
-    console.log("users: "+users)
     return users.filter(u => u.role === ROLES.SELLER);
+}
+
+/**
+ * Returns the date field from an order, trying all known field names.
+ */
+export function getOrderDate(order) {
+    return order.createdAt || order.date || order.orderDate || order.timestamp || null;
 }
 
 export function getProducts() {
@@ -145,16 +151,16 @@ export function getCustomerEmail(customerId) {
  * Returns a colored HTML badge for order status.
  */
 export function statusBadge(status) {
-    const map = {
-        'Pending':    { bg: '#f59e0b', color: '#fff' },
-        'Processing': { bg: '#3b82f6', color: '#fff' },
-        'Shipped':    { bg: '#8b5cf6', color: '#fff' },
-        'Delivered':  { bg: '#22c55e', color: '#fff' },
-        'Cancelled':  { bg: '#ef4444', color: '#fff' },
-        'Refunded':   { bg: '#6b7280', color: '#fff' },
+    const classMap = {
+        'Pending':    'status-pending',
+        'Processing': 'status-processing',
+        'Shipped':    'status-shipped',
+        'Delivered':  'status-delivered',
+        'Cancelled':  'status-cancelled',
+        'Refunded':   'status-refunded',
     };
-    const style = map[status] || { bg: '#6b7280', color: '#fff' };
-    return `<span class="status-badge" style="background:${style.bg};color:${style.color}">${escapeHTML(status || 'Unknown')}</span>`;
+    const cls = classMap[status] || 'status-hidden';
+    return `<span class="status-pill ${cls}">${escapeHTML(status || 'Unknown')}</span>`;
 }
 
 /**
@@ -413,6 +419,34 @@ export function renderTableEmptyState(colspan, message, icon = 'bi-search') {
                 </div>
             </td>
         </tr>`;
+}
+
+/**
+ * Sets a button into a loading state with a spinner.
+ * Stores original HTML on the element for resetButton().
+ * @param {HTMLButtonElement} btn
+ * @param {string} [text] - Optional loading label
+ */
+export function setButtonLoading(btn, text = 'Loading...') {
+    if (!btn) return;
+    btn._originalHTML    = btn.innerHTML;
+    btn._originalDisabled = btn.disabled;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>${escapeHTML(text)}`;
+}
+
+/**
+ * Restores a button from loading state.
+ * @param {HTMLButtonElement} btn
+ */
+export function resetButton(btn) {
+    if (!btn) return;
+    btn.disabled = btn._originalDisabled ?? false;
+    if (btn._originalHTML !== undefined) {
+        btn.innerHTML = btn._originalHTML;
+        delete btn._originalHTML;
+        delete btn._originalDisabled;
+    }
 }
 
 /**

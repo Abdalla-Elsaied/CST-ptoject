@@ -103,8 +103,13 @@ export async function renderProducts() {
         catFilter.value = 'All';
     }
 
-    /**
+    renderProductsTable();
+    bindProductsEvents();
+}
+
+/**
  * Normalizes product image source.
+ * Checks all known field names including Cloudinary arrays.
  */
 function getProductImageSrc(product) {
     if (product.imageUrl)    return product.imageUrl;
@@ -112,7 +117,7 @@ function getProductImageSrc(product) {
     if (Array.isArray(product.images) && product.images.length > 0) {
         return product.images[0]?.url ||
                product.images[0]?.secure_url ||
-               product.images[0];
+               (typeof product.images[0] === 'string' ? product.images[0] : null);
     }
     if (product.thumbnail)   return product.thumbnail;
     if (product.photo)       return product.photo;
@@ -121,19 +126,15 @@ function getProductImageSrc(product) {
 
 /**
  * Normalizes product stock level.
+ * Checks all known field names.
  */
 function getProductStock(product) {
-    const stock = product.stock ??
-                  product.quantity ??
-                  product.stockQuantity ??
-                  product.inStock ??
-                  product.availableQuantity ??
-                  0;
+    const stock = product.stock          ??
+                  product.quantity       ??
+                  product.stockQuantity  ??
+                  product.inStock        ??
+                  product.availableQuantity ?? 0;
     return Number(stock) || 0;
-}
-
-renderProductsTable();
-    bindProductsEvents();
 }
 
 
@@ -166,50 +167,52 @@ export function renderProductsTable() {
     const startIdx = (productFilters.page - 1) * productFilters.limit;
 
     tbody.innerHTML = items.map((p, i) => {
-        const imgSrc = getProductImageSrc(p);
+        const imgSrc  = getProductImageSrc(p);
         const imgCell = imgSrc
-            ? `<img src="${escapeHTML(imgSrc)}" class="product-thumb rounded shadow-sm"
-                    style="width: 40px; height: 40px; object-fit: cover;"
-                    alt="${escapeHTML(p.name || p.productName || 'Product')}"
-                    onerror="this.src='';this.parentElement.innerHTML='<span class=\\'no-img-placeholder\\'>No Img</span>'">`
-            : `<span class="no-img-placeholder">No Img</span>`;
+            ? `<img src="${escapeHTML(imgSrc)}" class="product-thumb"
+                    alt="${escapeHTML(p.name || p.productName || '')}"
+                    onerror="this.outerHTML='<div class=\\'no-img\\'><i class=\\'bi bi-image\\'></i></div>'">`
+            : `<div class="no-img"><i class="bi bi-image"></i></div>`;
+
+        const catHtml = `<span style="background:var(--green-light-bg,#f0fdf4);color:var(--green-dark,#166534);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:600;white-space:nowrap;">${escapeHTML(p.category || p.productCategory || '—')}</span>`;
 
         return `
         <tr>
-            <td><span class="text-muted small fw-bold">${startIdx + i + 1}</span></td>
-            <td>${imgCell}</td>
-            <td><div class="fw-bold">${escapeHTML(p.name || p.productName)}</div></td>
-            <td>${getSellerName(p.sellerId)}</td>
-            <td><span class="badge bg-light text-dark border">${escapeHTML(p.category || p.productCategory || '—')}</span></td>
-            <td class="fw-bold">${formatPrice(p.price)}</td>
-            <td>
-                <div class="d-flex align-items-center gap-2">
+            <td class="col-index"><span class="text-muted small fw-bold">${startIdx + i + 1}</span></td>
+            <td class="col-thumb">${imgCell}</td>
+            <td class="col-product-name">
+                <div class="product-name-cell">
+                    <div class="name">${escapeHTML(p.name || p.productName || '—')}</div>
+                    <div class="pid">ID: ${String(p.id).slice(-8)}</div>
+                </div>
+            </td>
+            <td class="col-seller" style="font-size:12px;">${getSellerName(p.sellerId)}</td>
+            <td class="col-category">${catHtml}</td>
+            <td class="col-price">${formatPrice(p.price)}</td>
+            <td class="col-stock">
+                <div class="stock-cell">
                     ${stockBadge(getProductStock(p))}
-                    <button class="btn-action btn-sm btn-outline-secondary" title="Adjust Stock"
-                            data-id="${p.id}" data-action="editStock">
+                    <button class="btn-action btn-edit" style="width:28px;height:28px;font-size:11px;" title="Adjust Stock" data-id="${p.id}" data-action="editStock">
                         <i class="bi bi-pencil-square"></i>
                     </button>
                 </div>
             </td>
-            <td>
-                <div class="form-check form-switch d-flex justify-content-center">
-                    <input class="form-check-input product-status-toggle" type="checkbox" 
-                           ${p.isActive ? 'checked' : ''} 
+            <td class="col-toggle">
+                <div class="form-check form-switch d-flex justify-content-center mb-0">
+                    <input class="form-check-input product-status-toggle" type="checkbox" role="switch"
                            data-id="${p.id}"
-                           title="${p.isActive ? 'Click to deactivate' : 'Click to activate'}">
+                           ${p.isActive !== false ? 'checked' : ''}
+                           style="cursor:pointer;width:40px;height:20px;"
+                           title="${p.isActive !== false ? 'Click to deactivate' : 'Click to activate'}">
                 </div>
             </td>
-            <td class="text-center">
-                <div class="d-flex gap-1 justify-content-center">
-                    <button class="btn-action btn-info btn-sm" title="View Details"
-                            data-id="${p.id}" data-action="view"><i class="bi bi-eye"></i></button>
-                    <button class="btn-action btn-delete btn-sm" title="Delete"
-                            data-id="${p.id}" data-action="delete"><i class="bi bi-trash"></i></button>
+            <td class="col-actions">
+                <div class="action-group">
+                    <button class="btn-action btn-view" title="View Details" data-id="${p.id}" data-action="view"><i class="bi bi-eye"></i></button>
+                    <button class="btn-action btn-delete" title="Delete" data-id="${p.id}" data-action="delete"><i class="bi bi-trash"></i></button>
                 </div>
             </td>
-        </tr>
-    `;
-    }).join('');
+        </tr>`; }).join('');
 
     // Bind toggle switches
     document.querySelectorAll('.product-status-toggle').forEach(toggle => {
@@ -417,7 +420,7 @@ function openProductDetailsModal(id) {
     if (!product) return;
 
     const sellerName = getSellerName(product.sellerId);
-    const imageUrl = product.imageUrl || product.image || '';
+    const imageUrl = getProductImageSrc(product); // ✅ FIX: Use proper image resolver
 
     // Create modal if it doesn't exist
     if (!document.getElementById('productDetailsModal')) {

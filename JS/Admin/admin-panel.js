@@ -6,8 +6,8 @@
 
 import { getCurrentUser, invalidateCaches }  from './admin-helpers.js';
 import { getLS, initUsers, setLS }           from '../Core/Storage.js';
-import { patchSeedSellers }                  from '../Core/SeedData.js';
 import { KEY_APPROVAL, KEY_CATEGORIES, KEY_CURRENT_USER } from '../Core/Constants.js';
+import { patchSeedSellers }                  from '../Core/SeedData.js';
 import { renderDashboard }                   from './admin-dashboard.js';
 import { renderSellers }                     from './admin-sellers.js';
 import { renderRequests }                    from './admin-requests.js';
@@ -18,7 +18,7 @@ import { renderOrders }                      from './admin-orders.js';
 import { renderReviews }                     from './admin-reviews.js';
 import { renderAnalytics }                   from './admin-analytics.js';
 import { initMetricsTracking }               from './admin-metrics.js';
-import { updateAdminNameEverywhere }         from './admin-profile.js';
+import { updateAdminNameEverywhere, initAdminProfile } from './admin-profile.js';
 
 // ─── AUTH GUARD ──────────────────────────────────────────────
 const _currentUser = getCurrentUser();
@@ -34,11 +34,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // STEP 1: Load all users from MockAPI into memory cache
     await initUsers();
 
-    // STEP 2: Patch any incomplete seed sellers (PUT — no duplicates)
-    await patchSeedSellers();
-
-    // STEP 3: Reset name lookup Maps with fresh data
+    // STEP 2: Reset name lookup Maps with fresh data
     invalidateCaches();
+
+    // STEP 3: Patch seed sellers with required fields (storeName, isApproved, etc.)
+    patchSeedSellers();
 
     // STEP 4: Metrics tracking
     initMetricsTracking();
@@ -46,6 +46,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // STEP 5: Set admin name in all UI locations
     const adminName = (_currentUser.fullName || _currentUser.name) || 'Admin';
     updateAdminNameEverywhere(adminName);
+    // Welcome text uses first name only — full name truncates in topbar
+    const firstName = adminName.split(' ')[0];
+    const welcomeEl = document.getElementById('adminUserName');
+    if (welcomeEl) welcomeEl.textContent = firstName;
 
     // STEP 6: Date in topbar
     const dateEl = document.getElementById('topbarDate');
@@ -87,13 +91,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // STEP 10: Init navigation, badges, theme
+    // STEP 10: Init navigation, badges, theme, profile
     initSidebar();
     migrateCategorySource(); // ✅ Fix legacy category data
     updateSidebarBadges();
     initTheme();
+    initAdminProfile(); // ✅ Initialize profile dropdown and modals
 
-    // STEP 11: Load last active section
+    // STEP 11: Restore last active section, default to dashboard on first load
     const lastSection = sessionStorage.getItem('adminActiveSection') || 'dashboard';
     activateSection(lastSection);
 });
@@ -114,7 +119,13 @@ const sectionRenderers = {
 };
 
 function initSidebar() {
-    document.querySelectorAll('[data-section]').forEach(link => {
+    // Logo → go to dashboard
+    document.getElementById('sidebarLogo')?.addEventListener('click', () => {
+        activateSection('dashboard');
+    });
+
+    // Internal nav links (data-section)
+    document.querySelectorAll('a[data-section]').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             activateSection(link.dataset.section);
@@ -122,15 +133,23 @@ function initSidebar() {
             document.getElementById('sidebarOverlay').classList.remove('visible');
         });
     });
+
+    // Storefront — external link, just close mobile sidebar
+    document.getElementById('storefrontLink')?.addEventListener('click', () => {
+        if (window.innerWidth <= 992) {
+            document.getElementById('adminSidebar')?.classList.remove('open');
+            document.getElementById('sidebarOverlay')?.classList.remove('visible');
+        }
+    });
 }
 
-export function activateSection(section) {
+function activateSection(section) {
     document.querySelectorAll('.admin-section').forEach(el => el.style.display = 'none');
 
     const target = document.getElementById(`${section}Section`);
     if (target) target.style.display = 'block';
 
-    document.querySelectorAll('[data-section]').forEach(link => {
+    document.querySelectorAll('a[data-section]').forEach(link => {
         link.classList.toggle('active', link.dataset.section === section);
     });
 
@@ -175,15 +194,27 @@ function updateNotificationsBell(totalCount) {
     const bell  = document.getElementById('notificationsBell');
     const badge = document.getElementById('notificationsBadge');
     if (!bell || !badge) return;
+
+    const requests          = getLS(KEY_APPROVAL) || [];
+    const pendingRequests   = requests.filter(r => r.status === 'pending').length;
+    const categories        = getLS(KEY_CATEGORIES) || [];
+    const pendingCategories = categories.filter(c => c.visibility === 'draft').length;
+
     if (totalCount > 0) {
         badge.classList.remove('d-none');
-        bell.title = `${totalCount} pending notification${totalCount > 1 ? 's' : ''}`;
+        badge.textContent = totalCount > 99 ? '99+' : totalCount;
+        bell.title = `${totalCount} pending item(s)`;
     } else {
         badge.classList.add('d-none');
         bell.title = 'No notifications';
     }
+
     bell.onclick = () => {
-        if (totalCount > 0) document.querySelector('[data-section="requests"]')?.click();
+        if (pendingRequests > 0) {
+            document.querySelector('[data-section="requests"]')?.click();
+        } else if (pendingCategories > 0) {
+            document.querySelector('[data-section="categories"]')?.click();
+        }
     };
 }
 

@@ -14,6 +14,7 @@ import {
     saveProducts,
     getUsers,
     saveUsers,
+    getOrders,
     showToast,
     showConfirm,
     escapeHTML,
@@ -81,91 +82,60 @@ export function renderSellersTable() {
     tbody.innerHTML = filtered.map((s, i) => {
         const isApproved  = s.isApproved !== false;
         const isSuspended = s.isSuspended || false;
-        const hasStore    = s.storeName && s.storeName.trim();
+        const name        = (s.fullName || s.name || '—').trim();
 
-        let statusBadge = '';
-        let rowClass    = '';
+        // 2-letter initials
+        const words    = name.split(/\s+/).filter(Boolean);
+        const initials = words.length >= 2
+            ? (words[0][0] + words[words.length - 1][0]).toUpperCase()
+            : name.slice(0, 2).toUpperCase();
 
-        if (!isApproved) {
-            statusBadge = `<span class="badge bg-warning text-dark ms-2 small">PENDING</span>`;
-            rowClass    = 'table-warning';
-        } else if (isSuspended) {
-            statusBadge = `<span class="badge bg-danger ms-2 small">SUSPENDED</span>`;
-            rowClass    = 'table-danger';
-        } else if (!hasStore) {
-            statusBadge = `<span class="badge bg-secondary ms-2 small">⚠ Incomplete Profile</span>`;
-        }
+        // Avatar gradient — consistent: suspended=red, pending=amber, active=blue
+        const avatarGradient = isSuspended
+            ? 'linear-gradient(135deg,#ef4444,#dc2626)'
+            : !isApproved
+                ? 'linear-gradient(135deg,#f59e0b,#d97706)'
+                : 'linear-gradient(135deg,#3b82f6,#2563eb)';
 
-        // FIX: Icon-only compact buttons in a single flex row — never stacked
-        const actionButtons = `
-            <div class="d-flex gap-1 justify-content-center align-items-center flex-nowrap">
-                ${!isApproved ? `
-                    <button class="btn-action btn-success btn-sm"
-                        data-id="${s.id}" data-action="approve"
-                        title="Approve Seller">
-                        <i class="bi bi-check-circle"></i>
-                    </button>
-                    <button class="btn-action btn-delete btn-sm"
-                        data-id="${s.id}" data-action="reject"
-                        title="Reject Seller">
-                        <i class="bi bi-x-circle"></i>
-                    </button>
-                ` : isSuspended ? `
-                    <button class="btn-action btn-success btn-sm"
-                        data-id="${s.id}" data-action="unsuspend"
-                        title="Unsuspend Seller">
-                        <i class="bi bi-check-circle"></i>
-                    </button>
-                ` : `
-                    <button class="btn-action btn-warn btn-sm"
-                        data-id="${s.id}" data-action="suspend"
-                        title="Suspend Seller">
-                        <i class="bi bi-ban"></i>
-                    </button>
-                `}
-                ${isApproved ? `
-                    <button class="btn-action btn-edit btn-sm"
-                        data-id="${s.id}" data-action="edit"
-                        title="Edit Seller">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="btn-action btn-info btn-sm"
-                        data-id="${s.id}" data-action="resetPassword"
-                        title="Reset Password">
-                        <i class="bi bi-key"></i>
-                    </button>
-                ` : ''}
-                <button class="btn-action btn-delete btn-sm"
-                    data-id="${s.id}" data-action="delete"
-                    title="Delete Seller">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </div>`;
+        const rowClass = isSuspended ? 'row-suspended' : !isApproved ? 'row-pending' : '';
+
+        const statusHtml = isSuspended
+            ? '<span class="um-status-pill um-status-banned"><span class="um-dot um-dot-red"></span> Suspended</span>'
+            : !isApproved
+                ? '<span class="um-status-pill" style="background:rgba(245,158,11,0.1);color:#92400e;border:1.5px solid rgba(245,158,11,0.3);"><span class="um-dot" style="background:#f59e0b;"></span> Pending</span>'
+                : '<span class="um-status-pill um-status-active"><span class="um-dot um-dot-green um-dot-pulse"></span> Active</span>';
+
+        const actionButtons = !isApproved ? `
+            <button class="btn-action btn-success" data-id="${s.id}" data-action="approve" title="Approve"><i class="bi bi-check-circle"></i></button>
+            <button class="btn-action btn-delete"  data-id="${s.id}" data-action="reject"  title="Reject"><i class="bi bi-x-circle"></i></button>
+        ` : isSuspended ? `
+            <button class="btn-action btn-success" data-id="${s.id}" data-action="unsuspend" title="Unsuspend"><i class="bi bi-check-circle"></i></button>
+            <button class="btn-action btn-delete"  data-id="${s.id}" data-action="delete"    title="Delete"><i class="bi bi-trash"></i></button>
+        ` : `
+            <button class="btn-action btn-edit"   data-id="${s.id}" data-action="edit"          title="Edit"><i class="bi bi-pencil"></i></button>
+            <button class="btn-action btn-warn"   data-id="${s.id}" data-action="suspend"        title="Suspend"><i class="bi bi-slash-circle"></i></button>
+            <button class="btn-action btn-key"    data-id="${s.id}" data-action="resetPassword"  title="Reset Password"><i class="bi bi-key"></i></button>
+            <button class="btn-action btn-delete" data-id="${s.id}" data-action="delete"         title="Delete"><i class="bi bi-trash"></i></button>
+        `;
 
         return `
             <tr class="${rowClass}" data-seller-id="${s.id}">
-                <td>${i + 1}</td>
-                <td>
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="table-avatar"
-                            style="${isSuspended
-                                ? 'background:linear-gradient(135deg,#ef4444,#dc2626)'
-                                : 'background:linear-gradient(135deg,var(--green-primary),#10b981)'}">
-                            ${(s.fullName || s.name || '?').charAt(0).toUpperCase()}
-                        </span>
-                        <div>
-                            <div class="fw-semibold">
-                                ${escapeHTML(s.fullName || s.name || '—')}${statusBadge}
-                            </div>
+                <td class="col-index">${i + 1}</td>
+                <td class="col-seller-name">
+                    <div class="seller-cell">
+                        <div class="sm-avatar" style="background:${avatarGradient}">${escapeHTML(initials)}</div>
+                        <div class="seller-meta">
+                            <div class="name" title="${escapeHTML(name)}">${escapeHTML(name)}</div>
+                            <div class="email">${escapeHTML(s.email || '—')}</div>
                         </div>
                     </div>
                 </td>
-                <td title="${escapeHTML(s.email || '')}">${escapeHTML(s.email || '—')}</td>
-                <td>${escapeHTML(s.phone || '—')}</td>
-                <td>${escapeHTML(s.storeName || '—')}</td>
-                <td>${escapeHTML(s.city || '—')}</td>
-                <td><small class="text-muted">${escapeHTML(s.paymentMethod || '—')}</small></td>
-                <td class="text-center">${actionButtons}</td>
+                <td class="col-phone">${escapeHTML(s.phone || '—')}</td>
+                <td class="col-store" title="${escapeHTML(s.storeName || '')}">${escapeHTML(s.storeName || '—')}</td>
+                <td class="col-city"  title="${escapeHTML(s.city || '')}">${escapeHTML(s.city || '—')}</td>
+                <td class="col-payment payment-cell">${escapeHTML(s.paymentMethod || '—')}</td>
+                <td class="col-status">${statusHtml}</td>
+                <td class="col-actions"><div class="action-group">${actionButtons}</div></td>
             </tr>`;
     }).join('');
 }
@@ -354,9 +324,11 @@ export function confirmSuspendSeller(id) {
 
             sellerProducts.forEach(p => {
                 const pIdx = products.findIndex(x => x.id === p.id);
-                if (pIdx !== -1) {
-                    products[pIdx].isActive           = false;
-                    products[pIdx].hiddenBySuspension = true;
+                if (pIdx !== -1 && products[pIdx].isActive !== false) {
+                    // Only flag products that were ACTIVE before suspension
+                    products[pIdx].isActive                  = false;
+                    products[pIdx].hiddenBySuspension        = true;
+                    products[pIdx].wasActiveBeforeSuspension = true;
                 }
             });
             saveProducts(products);
@@ -389,9 +361,10 @@ export function confirmUnsuspendSeller(id) {
 
             hiddenProducts.forEach(p => {
                 const pIdx = products.findIndex(x => x.id === p.id);
-                if (pIdx !== -1) {
+                if (pIdx !== -1 && products[pIdx].hiddenBySuspension) {
                     products[pIdx].isActive = true;
                     delete products[pIdx].hiddenBySuspension;
+                    delete products[pIdx].wasActiveBeforeSuspension;
                 }
             });
             saveProducts(products);
@@ -467,6 +440,23 @@ export function saveSellerEdit() {
 export function confirmDeleteSeller(id) {
     const seller = getSellers().find(s => s.id == id);
     if (!seller) return;
+
+    // Check for active orders before allowing deletion
+    const orders = getOrders();
+    const activeStatuses = ['Pending', 'Processing', 'Shipped'];
+    const activeOrders = orders.filter(o => {
+        const sellerInItems = o.items?.some(item => String(item.sellerId) === String(id));
+        const sellerOnOrder = String(o.sellerId) === String(id);
+        return (sellerInItems || sellerOnOrder) && activeStatuses.includes(o.status);
+    });
+
+    if (activeOrders.length > 0) {
+        showToast(
+            `Cannot delete — seller has ${activeOrders.length} active order(s). Complete or cancel them first.`,
+            'error'
+        );
+        return;
+    }
 
     showConfirm(
         `Delete seller "${seller.fullName}" (${seller.storeName || 'No store'})? This cannot be undone.`,

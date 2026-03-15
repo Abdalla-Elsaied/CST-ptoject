@@ -5,19 +5,36 @@
  */
 import { getLS, setLS } from '../Core/Storage.js';
 import { KEY_ORDERS } from '../Core/Constants.js';
+import { getOrderDate } from './admin-helpers.js';
 
 // Memory cache
 let _ordersCache = null;
 
 /**
  * Loads orders from LocalStorage.
+ * Returns a Promise for consistency with fetchProducts().
  */
-export function fetchOrders() {
+export async function fetchOrders() {
     if (!_ordersCache) {
         _ordersCache = getLS(KEY_ORDERS) || [];
     }
     return _ordersCache;
 }
+
+/**
+ * Invalidates the orders cache so next fetchOrders() reads fresh data.
+ */
+export function invalidateOrdersCache() {
+    _ordersCache = null;
+}
+
+// Invalidate cache when orders are updated from another tab
+window.addEventListener('storage', (e) => {
+    if (e.key === KEY_ORDERS) {
+        _ordersCache = null;
+        console.log('[ORDERS] Cache invalidated — new order detected');
+    }
+});
 
 /**
  * Returns filtered and paginated orders.
@@ -33,7 +50,7 @@ export function getFilteredOrders(filters) {
         const matchStatus = status === 'All' || o.status === status;
 
         let matchDate = true;
-        const orderDateStr = o.createdAt || o.orderDate;
+        const orderDateStr = getOrderDate(o);
         if (orderDateStr) {
             const date = new Date(orderDateStr).getTime();
             if (dateFrom) matchDate = matchDate && date >= new Date(dateFrom).getTime();
