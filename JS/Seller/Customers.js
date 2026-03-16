@@ -1,4 +1,4 @@
-import { getLS } from '../Core/Storage.js';
+import { getLS, initUsers } from '../Core/Storage.js';
 import { KEY_USERS, KEY_ORDERS, KEY_PRODUCTS } from '../Core/Constants.js';
 import { getCurrentUser, requireRole, ROLES } from '../Core/Auth.js';
 
@@ -24,6 +24,7 @@ if (!hasAccess || !sellerId) {
 }
 
 let users = [];
+let productSellerMap = new Map();
 
 function safeLower(value) {
   return String(value ?? '').trim().toLowerCase();
@@ -34,20 +35,23 @@ function loadOrders() {
   return Array.isArray(stored) ? stored : [];
 }
 
-function loadSellerProductIds() {
+function buildProductSellerMap() {
   const keys = [KEY_PRODUCTS, 'products', 'sellerProducts'];
+  const map = new Map();
   for (const key of keys) {
     try {
       const parsed = JSON.parse(localStorage.getItem(key));
-      if (Array.isArray(parsed) && parsed.length) {
-        return new Set(parsed
-          .filter((p) => String(p?.sellerId ?? p?.seller_id ?? p?.seller?.id ?? '').trim() === sellerId)
-          .map((p) => String(p?.id ?? '')));
-      }
+      if (!Array.isArray(parsed)) continue;
+      parsed.forEach((p) => {
+        const id = String(p?.id ?? p?.productId ?? p?.product_id ?? '').trim();
+        if (!id || map.has(id)) return;
+        const sid = String(p?.sellerId ?? p?.seller_id ?? p?.seller?.id ?? '').trim();
+        if (sid) map.set(id, sid);
+      });
     } catch (_err) {
     }
   }
-  return new Set();
+  return map;
 }
 
 function getOrderItems(order) {
@@ -56,17 +60,19 @@ function getOrderItems(order) {
   return [];
 }
 
+function getItemSellerId(item) {
+  const direct = String(item?.sellerId ?? item?.seller_id ?? item?.seller?.id ?? '').trim();
+  if (direct) return direct;
+  const pid = String(item?.id ?? item?.productId ?? item?.product_id ?? '').trim();
+  if (!pid) return '';
+  return productSellerMap.get(pid) || '';
+}
+
 function orderBelongsToSeller(order) {
   if (!order) return false;
   if (String(order?.sellerId ?? '') === sellerId) return true;
   const items = getOrderItems(order);
-  if (items.some((item) => String(item?.sellerId ?? '') === sellerId)) return true;
-  const sellerProductIds = loadSellerProductIds();
-  if (!sellerProductIds.size) return false;
-  return items.some((item) => {
-    const pid = item?.id ?? item?.productId ?? item?.product_id ?? '';
-    return sellerProductIds.has(String(pid));
-  });
+  return items.some((item) => getItemSellerId(item) === sellerId);
 }
 
 function getSellerCustomerIds() {
@@ -191,7 +197,9 @@ function renderTable() {
   }).join('');
 }
 
-function init() {
+async function init() {
+  await initUsers();
+  productSellerMap = buildProductSellerMap();
   users = loadUsers();
   computeStats();
   renderTable();
