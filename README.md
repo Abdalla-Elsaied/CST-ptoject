@@ -334,7 +334,7 @@ Built as a CST (Client-Side Technology) faculty project at ITI — March 2026.
 
 <div align="center">
 
-**MockAPI Base URL:** `https://69abf0bc9ca639a5217dcac2.mockapi.io/api`
+**MockAPI Base URL:** `https://mockapi.io/projects/69abf0bc9ca639a5217dcac3`
 
 © 2026 DEALPORT — ITI CST Project
 
