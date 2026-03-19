@@ -8,7 +8,7 @@
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)
 ![jQuery](https://img.shields.io/badge/jQuery-3.7-0769AD?style=for-the-badge&logo=jquery&logoColor=white)
 
-A frontend-only multi-role e-commerce platform built as a faculty project for the **Information Technology Institute (ITI)**.  
+A frontend-only multi-role e-commerce platform project built for the **Information Technology Institute (ITI)**.  
 Supports three distinct user roles — Customer, Seller, and Admin — each with a fully dedicated interface.
 
 [Live Demo](https://cst-ptoject.vercel.app/Html/Customer/Login.html) · [Documentation](./CST-Team1-Technical-Documentation.docx) · [Report a Bug](https://github.com/Abdalla-Elsaied/CST-ptoject/issues)
