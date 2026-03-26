@@ -47,12 +47,42 @@ function renderNotification() {
   }
 
   const role = user.role?.toLowerCase?.() || 'customer';
-  const isSeller = role === 'seller';
+  const isAdmin  = role === 'admin';
+
+  // Also check live role from users cache — session may be stale if admin
+  // just approved this user while they were already logged in
+  let effectiveRole = role;
+  try {
+    const users = JSON.parse(localStorage.getItem('ls_users') || '[]');
+    const liveUser = users.find(u => String(u.id) === String(user.id));
+    if (liveUser?.role) effectiveRole = liveUser.role.toLowerCase();
+  } catch (_) {}
+
+  const isSeller = effectiveRole === 'seller';
   const pending = getMyPendingRequest(user.id);
   const rejected = getMyRejectedOutcome(user.id);
 
   let html = '';
   let variant = 'info';
+
+  // ── Admin: clean "Storefront Preview" info bar instead of the seller CTA ──
+  if (isAdmin) {
+    variant = 'admin';
+    container.innerHTML = `
+      <div class="seller-notif seller-notif-admin">
+        <div class="seller-notif-icon"><i class="bi bi-eye"></i></div>
+        <div class="seller-notif-body">
+          <strong>Storefront Preview Mode</strong>
+          <span>You are browsing as Admin. Customer features (cart, wishlist, checkout) are disabled.</span>
+        </div>
+        <span class="admin-preview-label"><i class="bi bi-shield-lock-fill"></i> Admin View</span>
+        <a href="../Admin/admin-panel.html" class="admin-panel-btn">
+          <i class="bi bi-arrow-left-circle"></i> Admin Panel
+        </a>
+      </div>`;
+    container.setAttribute('data-variant', variant);
+    return;
+  }
 
   if (isSeller) {
     variant = 'success';

@@ -10,23 +10,27 @@ import {
     rejectCustomerSellerRequest
 } from '../Core/Auth.js';
 
+import { getLS, setLS } from '../Core/Storage.js';
+import { KEY_APPROVAL, KEY_SELLER_OUTCOMES } from '../Core/Constants.js';
+
 import {
     showToast,
     showConfirm,
     escapeHTML,
+    formatDate,
     getCustomerName,
-    getCustomerEmail
+    getCustomerEmail,
+    positionDropdown,
+    getCustomerByEmail
 } from './admin-helpers.js';
 
 import { logAdminAction } from './admin-profile.js';
-import { initUsers } from '../Core/Storage.js';
 
 /**
  * Main entry point for the seller requests section.
  * Called every time the user clicks "Seller Requests" in the sidebar.
  */
-export async function renderRequests() {
-    await initUsers(); 
+export function renderRequests() {
     renderRequestsTable();
     bindRequestsEvents();
 }
@@ -54,58 +58,92 @@ export function renderRequestsTable() {
 
     if (requests.length === 0) {
         tbody.innerHTML = `
-            <tr><td colspan="9">
-                <div style="text-align:center;padding:48px 24px;display:flex;flex-direction:column;align-items:center;gap:8px;">
-                    <i class="bi bi-check-circle" style="font-size:2.5rem;color:var(--text-muted);opacity:0.35;"></i>
-                    <p style="font-weight:700;font-size:14px;color:var(--text-primary);margin:0;">All caught up!</p>
-                    <p style="font-size:12px;color:var(--text-muted);margin:0;">No pending seller applications.</p>
-                </div>
-            </td></tr>`;
+            <tr>
+                <td colspan="8" class="empty-state">
+                    <i class="bi bi-check-circle fs-1 text-success d-block mb-2"></i>
+                    <strong>All caught up!</strong> No pending seller applications.
+                </td>
+            </tr>`;
         return;
     }
 
     tbody.innerHTML = requests.map(req => {
-        const customerName  = getCustomerName(req.userId);
-        const customerEmail = getCustomerEmail(req.userId);
-        const initial       = customerName.charAt(0).toUpperCase();
-        const dateStr       = req.createdAt
-            ? new Date(req.createdAt).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
-            : '—';
-        const descPreview   = req.description
-            ? escapeHTML(req.description.slice(0, 45)) + (req.description.length > 45 ? '…' : '')
-            : '—';
+        let name = getCustomerName(req.userId);
+        if (name === '—') {
+            const u = getCustomerByEmail(req.email);
+            name = u ? (u.name || u.fullName || '—') : '—';
+        }
+        name = escapeHTML(name);
+        const email = escapeHTML(req.email || getCustomerEmail(req.userId));
+
+        const storeName   = escapeHTML(req.storeName   || '—');
+        const city        = escapeHTML(req.city        || '—');
+        const category    = escapeHTML(req.category    || '—');
+        const phone       = escapeHTML(req.phone       || '—');
+        const payment     = escapeHTML(req.paymentMethod || '—');
+        const description = escapeHTML(req.description  || '—');
+        const dateStr     = req.createdAt ? formatDate(req.createdAt) : '—';
+
+        // Truncate long descriptions with a title tooltip
+        const descPreview = (req.description || '').length > 40
+            ? escapeHTML(req.description.slice(0, 40)) + '…'
+            : description;
 
         return `
         <tr>
-            <td style="width:40px;padding:0 8px;">
-                <input type="checkbox" class="form-check-input request-check-item" value="${escapeHTML(req.id)}">
+            <td class="col-check" data-label="">
+                <input type="checkbox" class="request-check-item" value="${escapeHTML(req.id)}">
             </td>
-            <td><strong>${escapeHTML(req.storeName)}</strong></td>
-            <td>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="table-avatar customer-avatar" style="width:32px;height:32px;font-size:11px;">${initial}</span>
+
+            <td data-label="Store">
+                <div class="req-store-cell">
+                    <div class="req-store-icon"><i class="bi bi-shop"></i></div>
                     <div>
-                        <div class="fw-semibold" style="font-size:12px;">${escapeHTML(customerName)}</div>
-                        <div style="font-size:11px;color:var(--text-muted);">${escapeHTML(customerEmail)}</div>
+                        <div class="req-store-name">${storeName}</div>
+                        <div class="req-store-city"><i class="bi bi-geo-alt"></i> ${city}</div>
                     </div>
                 </div>
             </td>
-            <td>${escapeHTML(req.city)}</td>
-            <td>${escapeHTML(req.category)}</td>
-            <td>${escapeHTML(req.paymentMethod)}</td>
-            <td>
-                <span title="${escapeHTML(req.description || '')}" style="cursor:help;border-bottom:1px dashed var(--border);font-size:12px;color:var(--text-muted);">
-                    ${descPreview}
-                </span>
-            </td>
-            <td><small style="color:var(--text-muted);">${dateStr}</small></td>
-            <td class="text-center">
-                <div class="d-flex gap-1 justify-content-center flex-nowrap">
-                    <button class="btn-action btn-success" data-id="${req.id}" data-action="approve" title="Approve"><i class="bi bi-check-lg"></i></button>
-                    <button class="btn-action btn-delete" data-id="${req.id}" data-action="reject" title="Reject"><i class="bi bi-x-lg"></i></button>
+
+            <td data-label="Applicant">
+                <div class="req-user-cell">
+                    <div class="req-user-avatar">${name.charAt(0).toUpperCase()}</div>
+                    <div>
+                        <div class="req-user-name">${name}</div>
+                        <div class="req-user-email">${email}</div>
+                        <div class="req-user-phone"><i class="bi bi-telephone"></i> ${phone}</div>
+                    </div>
                 </div>
             </td>
-        </tr>`; }).join('');
+
+            <td data-label="Category">
+                <span class="req-cat-pill">${category}</span>
+            </td>
+
+            <td data-label="Payment">
+                <span class="req-payment-pill"><i class="bi bi-credit-card"></i> ${payment}</span>
+            </td>
+
+            <td data-label="Description" class="priority-low">
+                <span class="req-desc" title="${description}">${descPreview}</span>
+            </td>
+
+            <td data-label="Date" class="priority-low">
+                <span class="req-date">${dateStr}</span>
+            </td>
+
+            <td data-label="Actions" class="col-actions">
+                <div class="req-action-group">
+                    <button class="req-btn-approve" data-id="${req.id}" data-action="approve">
+                        <i class="bi bi-check-lg"></i> Approve
+                    </button>
+                    <button class="req-btn-reject" data-id="${req.id}" data-action="reject">
+                        <i class="bi bi-x-lg"></i> Reject
+                    </button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
 }
 
 /**
@@ -121,22 +159,9 @@ function bindRequestsEvents() {
         };
     }
 
-    // Individual checkbox → update selectAll indeterminate state
+    // Action buttons (Approve/Reject)
     const tbody = document.getElementById('requestsTableBody');
     if (tbody) {
-        tbody.addEventListener('change', (e) => {
-            if (e.target.classList.contains('request-check-item')) {
-                const all     = document.querySelectorAll('.request-check-item');
-                const checked = document.querySelectorAll('.request-check-item:checked');
-                const sa      = document.getElementById('selectAllRequests');
-                if (sa) {
-                    sa.indeterminate = checked.length > 0 && checked.length < all.length;
-                    sa.checked       = checked.length === all.length && all.length > 0;
-                }
-            }
-        });
-
-        // Action buttons (Approve/Reject)
         tbody.onclick = (e) => {
             const btn = e.target.closest('[data-action]');
             if (!btn) return;
@@ -146,72 +171,71 @@ function bindRequestsEvents() {
 
             if (action === 'approve') {
                 showConfirm(`Approve this seller application?`, () => {
-                    // 1. Get request data FIRST before it gets deleted
-                    const allRequests = getAllCustomerToApproved();
-                    const req = allRequests.find(r => r.id === id);
-
-                    // 2. Now accept (removes request from list)
                     acceptCustomerSellerRequest(id);
-
-                    // 3. Log with data we captured before deletion
+                    const requests = getAllCustomerToApproved();
+                    const req = requests.find(r => r.id === id); // Re-find if needed for logging
                     if (req) {
-                        logAdminAction('approved_seller', req.storeName || req.fullName || 'Unknown Store', id);
+                        logAdminAction('approved_seller', req.storeName || req.fullName || 'Unknown', id);
                     }
                     showToast('Seller request approved!', 'success');
                     renderRequests();
+                    // Update main panel badges
                     if (window.updateSidebarBadges) window.updateSidebarBadges();
                 });
             } else if (action === 'reject') {
                 showConfirm(`Reject and delete this application?`, () => {
-                    // 1. Get data FIRST
-                    const allRequests = getAllCustomerToApproved();
-                    const req = allRequests.find(r => r.id === id);
-
-                    // 2. Reject
+                    const requests = getAllCustomerToApproved();
+                    const req = requests.find(r => r.id === id);
                     rejectCustomerSellerRequest(id);
-
-                    // 3. Log
                     if (req) {
-                        logAdminAction('rejected_seller', req.storeName || req.fullName || 'Unknown Store', id);
+                        logAdminAction('rejected_seller', req.storeName || req.fullName || 'Unknown', id);
                     }
                     showToast('Application rejected.', 'error');
                     renderRequests();
+                    // Update main panel badges
                     if (window.updateSidebarBadges) window.updateSidebarBadges();
                 });
             }
         };
     }
 
+    if (tbody && !tbody._dropdownBound) {
+        tbody._dropdownBound = true;
+        tbody.addEventListener('click', (e) => {
+            const btn = e.target.closest('.um-btn-more');
+            if (!btn) return;
+            e.stopPropagation();
+            const wrap = btn.closest('.um-overflow-wrap');
+            const dropdown = wrap?.querySelector('.um-dropdown');
+            if (!dropdown) return;
+            const isOpen = dropdown.classList.contains('open');
+            document.querySelectorAll('.um-dropdown.open').forEach(d => {
+                d.classList.remove('open');
+                d.closest('.um-overflow-wrap')?.querySelector('.um-btn-more')?.setAttribute('aria-expanded','false');
+            });
+            if (!isOpen) { dropdown.classList.add('open'); positionDropdown(btn, dropdown); btn.setAttribute('aria-expanded','true'); }
+        });
+        if (!window._requestsDropdownListenerAdded) {
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.um-dropdown.open').forEach(d => {
+                    d.classList.remove('open');
+                    d.closest('.um-overflow-wrap')?.querySelector('.um-btn-more')?.setAttribute('aria-expanded','false');
+                });
+            });
+            window._requestsDropdownListenerAdded = true;
+        }
+    }
+
     // Bulk actions
     const bulkApprove = document.getElementById('bulkApproveBtn');
     if (bulkApprove) {
-        bulkApprove.onclick = async () => {
+        bulkApprove.onclick = () => {
             const selected = Array.from(document.querySelectorAll('.request-check-item:checked')).map(c => c.value);
-            if (selected.length === 0) return showToast('Please select at least one request.', 'warning');
+            if (selected.length === 0) return showToast('Please select at least one request', 'warning');
 
-            showConfirm(`Approve ${selected.length} selected application(s)?`, async () => {
-                let succeeded = 0;
-                let failed    = 0;
-
-                for (const id of selected) {
-                    try {
-                        const allReqs = getAllCustomerToApproved();
-                        const req     = allReqs.find(r => r.id === id);
-                        acceptCustomerSellerRequest(id);
-                        if (req) logAdminAction('approved_seller', req.storeName || 'Unknown', id);
-                        succeeded++;
-                    } catch (err) {
-                        console.error(`[REQUESTS] Failed to approve ${id}:`, err);
-                        failed++;
-                    }
-                }
-
-                if (failed > 0) {
-                    showToast(`${succeeded} approved, ${failed} failed.`, 'warning');
-                } else {
-                    showToast(`${succeeded} application(s) approved!`, 'success');
-                }
-
+            showConfirm(`Approve ${selected.length} selected applications?`, () => {
+                selected.forEach(id => acceptCustomerSellerRequest(id));
+                showToast('Selected applications approved!', 'success');
                 renderRequests();
                 if (window.updateSidebarBadges) window.updateSidebarBadges();
             });

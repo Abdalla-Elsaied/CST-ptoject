@@ -6,14 +6,14 @@
 
 import { loadProductsFromFolder, avatarHTML }                              from '../Core/FileStorage.js';
 import { renderProductsByCategory, showSkeleton, showError }   from './ProductRenderer.js';
-import { getCurrentUser, logoutUser, getCartCount, ROLES }     from '../Core/Auth.js';
+import { getCurrentUser, logoutUser, ROLES }     from '../Core/Auth.js';
 import {
   getWishlist, removeFromWishlist,
   toggleWishlist, isWishlisted, getWishlistCount,
 } from './Wishlist.js';
-import { addToCart, getCart }   from './Cart.js';
+import { addToCart, getCart, getCartCount }   from './Cart.js';
 import { getLS, setLS }         from '../Core/Storage.js';
-import { KEY_LOCATION }         from '../Core/Constants.js';
+import { KEY_LOCATION, KEY_USERS }         from '../Core/Constants.js';
 import {
   getTestimonials, addTestimonial, hasUserTestimonial,
   starsHTML as reviewStarsHTML, formatDate,
@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
      Admins access it via the "View Storefront" link in the admin panel.
   ══════════════════════════════════════════════════ */
   const currentUser = getCurrentUser();
+  let _allProducts = [];
 
   /* ══════════════════════════════════════════════════
      1. SWIPERS
@@ -265,7 +266,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function bumpCart() {
     if (!cartBadgeEl) return;
-    cartBadgeEl.textContent = (parseInt(cartBadgeEl.textContent) || 0) + 1;
+    const count = getCartCount(); 
+    cartBadgeEl.textContent = count;
     cartBadgeEl.style.transform = 'scale(1.5)';
     cartBadgeEl.style.transition = 'transform 0.2s';
     setTimeout(() => { cartBadgeEl.style.transform = ''; }, 300);
@@ -535,48 +537,51 @@ document.addEventListener('DOMContentLoaded', async () => {
   const searchCat   = document.querySelector('.search-cat');
 
   function doSearch() {
-    const query    = (searchInput?.value || '').trim().toLowerCase();
-    const category = searchCat?.value || 'All';
+    const query        = (searchInput?.value || '').trim().toLowerCase();
+    const category     = searchCat?.value || 'All';
+    const dynContainer = document.getElementById('dynamic-categories');
+    const noResults    = document.getElementById('no-results-msg');
 
-    document.querySelectorAll('.category-section').forEach(section => {
-      const sectionCategory = section.dataset.category || '';
-      if (category !== 'All' && sectionCategory !== category) {
-        section.style.display = 'none'; return;
-      }
-      if (query) {
-        let visibleCount = 0;
-        section.querySelectorAll('.product-card').forEach(card => {
-          const name = (card.querySelector('.product-name')?.textContent || '').toLowerCase();
-          const col  = card.closest('[class*="col-"]');
-          if (name.includes(query)) { col?.classList.remove('d-none'); visibleCount++; }
-          else col?.classList.add('d-none');
+    // ── Always work from the full in-memory list ──────────────────
+    const filtered = (!query && category === 'All')
+        ? _allProducts                          // no filters → full restore
+        : _allProducts.filter(p => {
+            const name = (p.name || p.title || '').toLowerCase();
+            const cat  = (p.category || '').toLowerCase();
+            return (!query || name.includes(query))
+                && (category === 'All' || cat === category.toLowerCase());
         });
-        section.style.display = visibleCount === 0 ? 'none' : '';
-      } else {
-        section.style.display = '';
-        section.querySelectorAll('[class*="col-"].d-none').forEach(c => c.classList.remove('d-none'));
-      }
-    });
 
-    const noResults = document.getElementById('no-results-msg');
-    const allHidden = [...document.querySelectorAll('.category-section')].every(s => s.style.display === 'none');
-    if (noResults) noResults.style.display = allHidden && (query || category !== 'All') ? 'block' : 'none';
-  }
+    if (filtered.length === 0) {
+        if (dynContainer) dynContainer.innerHTML = '';
+        if (noResults) noResults.style.display = 'block';
+        return;
+    }
+
+    if (noResults) noResults.style.display = 'none';
+    renderProductsByCategory(filtered, dynContainer);
+
+    if (query) {
+        // ── Search results: skip scroll-reveal, show immediately ──
+        dynContainer.querySelectorAll('.product-card').forEach(card => {
+            card.style.opacity   = '1';
+            card.style.transform = 'none';
+            card.dataset.obs     = '1';   // prevent observeCards re-hiding them
+        });
+    } else {
+        // ── Full restore: normal scroll reveal ─────────────────────
+        observeCards();
+    }
+
+    syncHeartIcons();
+}
 
   searchBtn?.addEventListener('click', doSearch);
   searchInput?.addEventListener('keypress', e => { if (e.key === 'Enter') doSearch(); });
   searchCat?.addEventListener('change', doSearch);
   searchInput?.addEventListener('input', () => {
-    if (!searchInput.value.trim()) {
-      const cat = searchCat?.value || 'All';
-      document.querySelectorAll('.category-section').forEach(s => {
-        s.style.display = (cat === 'All' || s.dataset.category === cat) ? '' : 'none';
-        if (s.style.display !== 'none') s.querySelectorAll('[class*="col-"].d-none').forEach(c => c.classList.remove('d-none'));
-      });
-      const nr = document.getElementById('no-results-msg');
-      if (nr) nr.style.display = 'none';
-    }
-  });
+    if (!searchInput.value.trim()) doSearch();
+});
 
   /* ══════════════════════════════════════════════════
      11. SCROLL REVEAL
@@ -615,6 +620,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!products || products.length === 0) {
         showError(dynContainer, 'The server returned an empty product list.');
       } else {
+        _allProducts = products;
         renderProductsByCategory(products, dynContainer);
         observeCards();
         syncHeartIcons();
@@ -650,11 +656,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       const isFeatured = t.featured || i < 3;
       const stars    = reviewStarsHTML(t.rating);
       const initials = t.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-      const avatarImg = t.avatar
-        ? `<img src="${t.avatar}" alt="${t.name}" class="testi-avatar"
-               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
-           <div class="testi-avatar-fallback" style="display:none">${initials}</div>`
-        : `<div class="testi-avatar-fallback">${initials}</div>`;
+      
+      const liveUsers  = getLS(KEY_USERS) || [];
+      const liveUser   = liveUsers.find(u =>
+          (t.userId && String(u.id) === String(t.userId)) ||
+          (t.email  && u.email && u.email.toLowerCase() === t.email.toLowerCase())
+      );
+      const avatarSrc  = t.avatar || liveUser?.photoUrl || null;
+
+      const avatarImg = avatarSrc
+          ? `<img src="${avatarSrc}" alt="${t.name}" class="testi-avatar"
+                onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+            <div class="testi-avatar-fallback" style="display:none">${initials}</div>`
+          : `<div class="testi-avatar-fallback">${initials}</div>`;
+
       return `
         <div class="col-md-6 col-lg-4">
           <div class="testimonial-card ${isFeatured ? 'featured-testimonial' : ''}">

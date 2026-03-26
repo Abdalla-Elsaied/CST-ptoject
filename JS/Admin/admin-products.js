@@ -22,6 +22,7 @@ import {
     formatDate,
     getCurrentUser,
     // applyTableCardLabels
+    positionDropdown
 } from './admin-helpers.js';
 
 import { getLS, setLS } from '../Core/Storage.js';
@@ -305,7 +306,8 @@ function bindProductsEvents() {
 
     // Table buttons via event delegation
     const tbody = document.getElementById('productsTableBody');
-    if (tbody) {
+    if (tbody && !tbody._productsBound) {
+        tbody._productsBound = true;
         tbody.addEventListener('click', (e) => {
             // Handle ⋯ toggle
             const moreBtn = e.target.closest('.um-btn-more');
@@ -322,6 +324,7 @@ function bindProductsEvents() {
 
                 if (!isOpen) {
                     dropdown.classList.add('open');
+                    positionDropdown(moreBtn, dropdown);
                     moreBtn.setAttribute('aria-expanded', 'true');
                 }
                 return;
@@ -343,6 +346,17 @@ function bindProductsEvents() {
             if (action === 'activate') toggleProductStatus(id, true);
             if (action === 'deactivate') confirmDeactivateProduct(id, document.querySelector(`.product-status-toggle[data-id="${id}"]`));
             if (action === 'delete') confirmDeleteProduct(id);
+        });
+    }
+
+    // Close dropdowns when clicking anywhere outside
+    if (!window._productsDropdownListenerAdded) {
+        window._productsDropdownListenerAdded = true;
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.um-dropdown.open').forEach(d => {
+                d.classList.remove('open');
+                d.closest('.um-overflow-wrap')?.querySelector('.um-btn-more')?.setAttribute('aria-expanded', 'false');
+            });
         });
     }
 }

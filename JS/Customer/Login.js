@@ -1,4 +1,4 @@
-import { loginUser, getCurrentUser, ROLES } from '../Core/Auth.js';
+import { loginUser, getCurrentUser, ROLES, showNotif } from '../Core/Auth.js';
 import { seedAdmin, seedCategories } from '../Core/SeedData.js';
 import { initUsers } from "../Core/Storage.js";
 import { getLS, setLS, updateItem } from "../Core/Storage.js"; // ← use your abstraction
@@ -14,10 +14,17 @@ $(document).ready(async function () {
     // Show ban/suspend message if redirected from requireRole()
     const params = new URLSearchParams(window.location.search);
     if (params.get('banned') === '1') {
-        alert('Your account has been banned. Please contact support.');
+    showNotif('Your account has been banned. Please contact support.', 'warning');
     } else if (params.get('suspended') === '1') {
-        alert('Your seller account has been suspended. Please contact support.');
+        showNotif('Your seller account has been suspended. Please contact support.', 'warning');
     }
+
+    $('#guestBtn').on('click', function () {
+        // Clear only the customer session — leave admin/seller sessions intact
+        localStorage.removeItem('ls_currentUser_customer');
+        localStorage.removeItem('ls_currentUser');
+        window.location.href = '/Html/Customer/CustomerHomePage.html';
+    });
 
     $("#togglePassword").on("click", function () {
         const $input = $("#floatingPassword");
@@ -40,7 +47,7 @@ $(document).ready(async function () {
         const result   = loginUser(email, password);
 
         if (!result.success) {
-            alert(result.error || "Login failed. Please check your credentials.");
+            showNotif(result.error || 'Login failed. Please check your credentials.', 'error');
             if (result.error?.includes("credentials")) {
                 $("#floatingPassword").val("").focus().select();
             } else {
@@ -52,7 +59,7 @@ $(document).ready(async function () {
         const user = getCurrentUser();
 
         if (!user) {
-            alert("Something went wrong after login. Please try again.");
+            showNotif('Something went wrong after login. Please try again.', 'error');
             return;
         }
 
@@ -62,13 +69,10 @@ $(document).ready(async function () {
         setLS('ls_currentUser', user);
 
         if (user.role === ROLES.SELLER && user.isApproved === false) {
-            alert("Your seller account is pending approval. Please wait for admin approval.");
+            showNotif('Your seller account is pending approval. Please wait for admin approval.', 'warning');
             localStorage.removeItem('ls_currentUser');
             return;
         }
-
-        const welcomeName = user.name || user.email.split('@')[0];
-        alert(`Welcome back, ${welcomeName}!`);
 
         let redirectUrl = null;
         switch (user.role) {
@@ -76,10 +80,15 @@ $(document).ready(async function () {
             case ROLES.SELLER:   redirectUrl = "/Html/Seller/SellerHomePage.html";      break;
             case ROLES.CUSTOMER: redirectUrl = "/Html/Customer/CustomerHomePage.html";  break;
             default:
-                alert("Unknown user role. Contact support.");
+                showNotif('Unknown user role. Contact support.', 'error');
                 return;
         }
 
-        window.location.replace(redirectUrl);
+        const welcomeName = user.name || user.email.split('@')[0];
+        showNotif(`Welcome back, ${welcomeName}! Redirecting you now…`, 'success', 1000);
+        setTimeout(() => window.location.replace(redirectUrl), 1800);
+
     });
 });
+
+// ── Popup utility (replaces alert) ──────────────────────────────

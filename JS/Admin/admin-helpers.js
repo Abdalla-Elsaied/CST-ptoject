@@ -104,6 +104,7 @@ export function saveOrders(orders) {
 export function invalidateCaches() {
     _sellersMapCache = null;
     _usersMapCache   = null;
+    _usersEmailCache = null;
 }
 
 
@@ -188,7 +189,15 @@ export function getCustomerEmail(customerId) {
     return escapeHTML(user ? user.email : '—');
 }
 
-
+export function getCustomerByEmail(email) {
+    if (!email) return null;
+    if (!_usersEmailCache) {
+        _usersEmailCache = new Map(
+            getUsers().map(u => [(u.email || '').toLowerCase(), u])
+        );
+    }
+    return _usersEmailCache.get(email.toLowerCase()) || null;
+}
 // ─── BADGE HELPERS ───────────────────────────────────────────
 
 /**
@@ -583,10 +592,53 @@ export function getCustomerUser(customerId) {
   return _usersMapCache.get(String(customerId)) || null;
 }
 
+let _usersEmailCache = null;
+
+export function getCustomerUserByEmail(email) {
+    if (!email) return null;
+    if (!_usersEmailCache) {
+        _usersEmailCache = new Map(
+            getUsers().map(u => [(u.email || '').toLowerCase(), u])
+        );
+    }
+    return _usersEmailCache.get(email.toLowerCase()) || null;
+}
+
 export function getSellerUser(sellerId) {
   if (!sellerId) return null;
   if (!_sellersMapCache) {
     _sellersMapCache = new Map(getSellers().map(s => [String(s.id), s]));
   }
   return _sellersMapCache.get(String(sellerId)) || null;
+}
+
+/**
+ * positionDropdown — positions a fixed um-dropdown relative to its trigger button.
+ * Call this whenever opening a dropdown inside a mobile card layout.
+ * @param {HTMLElement} btn  — the .um-btn-more button
+ * @param {HTMLElement} dropdown — the .um-dropdown panel
+ */
+export function positionDropdown(btn, dropdown) {
+    dropdown.style.visibility = 'hidden';
+    dropdown.style.display    = 'block';
+
+    const rect  = btn.getBoundingClientRect();
+    const dropW = dropdown.offsetWidth  || 190;
+    const dropH = dropdown.offsetHeight || 180;
+    const vpW   = window.innerWidth;
+    const vpH   = window.innerHeight;
+
+    let left = rect.right - dropW;
+    if (left < 8) left = rect.left;
+    if (left + dropW > vpW - 8) left = vpW - dropW - 8;
+    left = Math.max(8, left);
+
+    let top = rect.bottom + 6;
+    if (top + dropH > vpH - 8) top = rect.top - dropH - 6;
+    top = Math.max(8, top);
+
+    dropdown.style.left       = left + 'px';
+    dropdown.style.top        = top  + 'px';
+    dropdown.style.visibility = '';
+    dropdown.style.display    = '';
 }

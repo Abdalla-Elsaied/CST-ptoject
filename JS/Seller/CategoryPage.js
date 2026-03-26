@@ -2,7 +2,7 @@ import { KEY_CATEGORIES, KEY_PRODUCTS } from "../Core/Constants.js";
 import { getLS, setLS } from "../Core/Storage.js";
 import { getCurrentUser } from "../Core/Auth.js";
 
-let categories = getLS(KEY_CATEGORIES);
+let categories = getLS(KEY_CATEGORIES) || [];
 
 const tableBody = document.getElementById("categoryTable");
 const searchInput = document.getElementById("searchInput");
@@ -20,7 +20,6 @@ const cancelModalBtn = document.getElementById("cancelModalBtn");
 const saveCategoryBtn = document.getElementById("saveCategoryBtn");
 
 const categoryNameInput = document.getElementById("categoryNameInput");
-const categoryVisibilityInput = document.getElementById("categoryVisibilityInput");
 const categoryDescInput = document.getElementById("categoryDescInput");
 const categoryNotice = document.getElementById("categoryNotice");
 const categoryNoticeText = document.querySelector(".category-notice-text");
@@ -61,11 +60,13 @@ const persistTheme = () => {
 };
 
 const renderStats = () => {
+  // Always read fresh so stats reflect latest state
+  categories = getLS(KEY_CATEGORIES) || [];
   const products = getStoredProducts();
-  stats.total.textContent = categories.length;
-  stats.active.textContent = categories.filter((cat) => cat.visibility === "active").length;
-  stats.hidden.textContent = categories.filter((cat) => cat.visibility === "hidden").length;
-  stats.products.textContent = products.length;
+  if (stats.total)    stats.total.textContent    = categories.length;
+  if (stats.active)   stats.active.textContent   = categories.filter((cat) => cat.visibility === "active").length;
+  if (stats.hidden)   stats.hidden.textContent   = categories.filter((cat) => cat.visibility === "hidden").length;
+  if (stats.products) stats.products.textContent = products.length;
 };
 
 const getStoredProducts = () => {
@@ -161,14 +162,14 @@ const openModal = (options = {}) => {
   const isEdit = mode === "edit";
 
   document.getElementById("modalTitle").textContent =
-    mode === "edit" ? "Edit Category" : mode === "view" ? "View Category" : "Add Category";
+    mode === "edit" ? "Edit Suggestion" : mode === "view" ? "View Category" : "Suggest Category";
+  const saveBtn = document.getElementById("saveCategoryBtn");
+  if (saveBtn) saveBtn.textContent = mode === "edit" ? "Save Changes" : "Submit Suggestion";
 
   categoryNameInput.value = category?.name ?? "";
-  categoryVisibilityInput.value = category?.visibility ?? "draft";
   categoryDescInput.value = category?.description ?? "";
 
   categoryNameInput.disabled = viewOnly;
-  categoryVisibilityInput.disabled = viewOnly || isEdit;
   categoryDescInput.disabled = viewOnly;
   cancelModalBtn.textContent = viewOnly ? "Close" : "Cancel";
   saveCategoryBtn.textContent = "Save";
@@ -195,15 +196,13 @@ const handleSave = () => {
     return;
   }
 
-  const visibility = editingId
-    ? (categories.find((cat) => cat.id === editingId)?.visibility ?? "draft")
-    : "draft";
   const description = categoryDescInput.value.trim();
 
   if (editingId) {
+    // Seller can only edit name/description of their own draft suggestions
     categories = categories.map((cat) =>
       cat.id === editingId
-        ? { ...cat, name, visibility, description, updated: formatDate(new Date()) }
+        ? { ...cat, name, description, updated: formatDate(new Date()) }
         : cat
     );
   } else {

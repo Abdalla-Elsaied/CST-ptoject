@@ -179,7 +179,7 @@ export function renderCategoryRequestsTable() {
     if (!tbody) return;
 
     if (pendingCats.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="empty-state"><i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>No category suggestions pending. Sellers can suggest new categories from their dashboard.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>No category suggestions pending. Sellers can suggest new categories from their dashboard.</td></tr>`;
         return;
     }
 

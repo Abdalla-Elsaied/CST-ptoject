@@ -77,21 +77,35 @@ function orderBelongsToSeller(order) {
 
 function getSellerCustomerIds() {
   const orders = loadOrders();
-  const ids = new Set();
-  orders.forEach((order) => {
-    if (!orderBelongsToSeller(order)) return;
-    const cid = order?.customerId ?? order?.userId ?? order?.user?.id ?? null;
-    if (cid) ids.add(String(cid));
-  });
-  return ids;
+    const ids    = new Set();
+    const emails = new Set();
+
+    orders.forEach((order) => {
+        if (!orderBelongsToSeller(order)) return;
+        const cid   = order?.customerId ?? order?.userId ?? order?.user?.id ?? null;
+        const email = order?.userEmail ?? order?.customerEmail ?? null;
+        if (cid)   ids.add(String(cid));
+        if (email) emails.add(String(email).toLowerCase());
+    });
+
+    return { ids, emails };
 }
 
 function loadUsers() {
   const stored = getLS(KEY_USERS);
-  if (!Array.isArray(stored)) return [];
-  const allowedIds = getSellerCustomerIds();
-  if (!allowedIds.size) return [];
-  return stored.filter((u) => u.role === 'customer' && allowedIds.has(String(u.id)));
+    if (!Array.isArray(stored)) return [];
+
+    const { ids, emails } = getSellerCustomerIds();
+    if (!ids.size && !emails.size) return [];
+
+    return stored.filter((u) => {
+        if (u.role !== 'customer') return false;
+        // Match by logical ID first
+        if (ids.has(String(u.id))) return true;
+        // Fallback: match by email (bypasses MockAPI ID mismatch)
+        const userEmail = (u.email || '').toLowerCase();
+        return userEmail && emails.has(userEmail);
+    });
 }
 
 function initialsFromName(name) {
@@ -173,27 +187,35 @@ function renderTable() {
   emptyState.classList.add('d-none');
 
   tableBody.innerHTML = list.map((user) => {
-    const name = user.name || user.fullName || 'Customer';
-    const email = user.email || '-';
+    const name     = user.name || user.fullName || 'Customer';
+    const email    = user.email || '-';
     const roleText = user.role || 'customer';
-    const store = user.storeName || '-';
-    const joined = formatDate(user.createdAt);
+    const store    = user.storeName || '-';
+    const joined   = formatDate(user.createdAt);
     const initials = initialsFromName(name);
 
-    return `
-      <tr>
-        <td>
-          <div class="customer-cell">
-            <div class="customer-avatar">${initials}</div>
-            <span>${name}</span>
-          </div>
-        </td>
-        <td>${email}</td>
-        <td><span class="role-badge ${roleText}">${roleText}</span></td>
-        <td>${store}</td>
-        <td>${joined}</td>
-      </tr>
-    `;
+    // Show photo if available, fall back to initials
+    const avatarHtml = user.photoUrl
+        ? `<img src="${user.photoUrl}" 
+               style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+           <div class="customer-avatar" style="display:none">${initials}</div>`
+        : `<div class="customer-avatar">${initials}</div>`;
+
+      return `
+        <tr>
+          <td>
+            <div class="customer-cell">
+              ${avatarHtml}
+              <span>${name}</span>
+            </div>
+          </td>
+          <td>${email}</td>
+          <td><span class="role-badge ${roleText}">${roleText}</span></td>
+          <td>${store}</td>
+          <td>${joined}</td>
+        </tr>
+      `;
   }).join('');
 }
 

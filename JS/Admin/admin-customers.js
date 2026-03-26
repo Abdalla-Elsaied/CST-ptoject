@@ -21,6 +21,7 @@ import {
     renderTableEmptyState,
     debounce,
     invalidateCaches,
+    positionDropdown
     // applyTableCardLabels
 } from './admin-helpers.js';
 
@@ -47,7 +48,6 @@ let customerPagination = { page: 1, limit: 10 };
  */
 export async function renderCustomers() {
     await initUsers(); 
-    console.log(getUsers())
     customerSearchQuery = '';
     customerStatusFilter = 'All';
     customerRoleFilter = 'All';
@@ -227,7 +227,13 @@ export function renderCustomersTable() {
             : '<span class="um-status-pill um-status-active"><span class="um-dot um-dot-green um-dot-pulse"></span> Active</span>';
 
         // Orders count — no duplicate "ORDERS" word
-        const orderCount = getOrders().filter(o => String(o.customerId) === String(c.id)).length;
+        const userEmail = (c.email || '').toLowerCase();
+        const orderCount = getOrders().filter(o =>
+            String(o.customerId) === String(c.id) ||
+            String(o.userId)     === String(c.id) ||
+            (userEmail && o.userEmail && o.userEmail.toLowerCase() === userEmail)
+        ).length;
+
         const ordersCell = `<div class="um-orders-cell">
             <span class="um-orders-count">${orderCount}</span>
             <span class="um-orders-label">order${orderCount !== 1 ? 's' : ''}</span>
@@ -404,6 +410,7 @@ function bindCustomersEvents() {
                 });
 
                 if (!isOpen) {
+                    positionDropdown(moreBtn, dropdown);
                     dropdown.classList.add('open');
                     moreBtn.setAttribute('aria-expanded', 'true');
                 }
@@ -616,7 +623,11 @@ function invalidateUserSession(userId) {
  * Returns how many orders a customer has placed.
  */
 export function getCustomerOrderCount(customerId) {
-    const count = getOrders().filter(o => String(o.customerId) === String(customerId)).length;
+    const count = getOrders().filter(o =>
+        String(o.customerId) === String(customerId) ||
+        String(o.userId)     === String(customerId)
+    ).length;
+
     return `<div class="um-orders-cell">
         <span class="um-orders-count">${count} ORDER${count !== 1 ? 'S' : ''}</span>
         <span class="um-orders-label">ORDERS</span>
@@ -927,7 +938,13 @@ function openCustomerDetailsModal(id) {
     const user = users.find(u => String(u.id) === String(id));
     if (!user) return;
 
-    const orders = getOrders().filter(o => String(o.customerId) === String(id));
+    const userEmail = (user.email || '').toLowerCase();  // user is already fetched above
+    const orders = getOrders().filter(o =>
+    String(o.customerId) === String(id) ||
+    String(o.userId)     === String(id) ||
+    (userEmail && o.userEmail && o.userEmail.toLowerCase() === userEmail)
+    );
+    
     const totalSpent = orders.reduce((sum, o) => sum + (Number(o.subtotal) || Number(o.total) || Number(o.totalPrice) || 0), 0);
 
     // Create modal if it doesn't exist
@@ -1055,7 +1072,13 @@ export function confirmDeleteCustomer(id) {
         return;
     }
 
-    const orderCount = getOrders().filter(o => String(o.customerId) === String(id)).length;
+    const custEmail = (customer.email || '').toLowerCase();
+    const orderCount = getOrders().filter(o =>
+        String(o.customerId) === String(id) ||
+        String(o.userId)     === String(id) ||
+        (custEmail && o.userEmail && o.userEmail.toLowerCase() === custEmail)
+    ).length;
+    
     const warning = orderCount > 0
         ? ` This customer has ${orderCount} order(s) — those orders will remain in the system.`
         : '';

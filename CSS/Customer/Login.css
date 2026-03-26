@@ -1,4 +1,4 @@
-  :root {
+:root {
       --primary: #0f9d58;
       --primary-dark: #0b7d45;
       --card-bg: rgba(255, 255, 255, 0.75);
@@ -125,3 +125,215 @@
       .image-panel     { min-height: 220px; border-radius: 0 0 20px 20px; }
       .image-panel img { border-radius: 0 0 20px 20px; }
     }
+    /* ── Guest button & divider ── */
+    .guest-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0 16px;
+      color: #94a3b8;
+      font-size: 0.82rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .guest-divider::before,
+    .guest-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e2e8f0;
+    }
+
+    .btn-guest {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 0.78rem 1rem;
+      border-radius: 12px;
+      border: 1.5px dashed #cbd5e1;
+      background: transparent;
+      color: #64748b;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      font-family: inherit;
+    }
+    .btn-guest:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: rgba(15, 157, 88, 0.04);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(15, 157, 88, 0.1);
+    }
+    .btn-guest i {
+      font-size: 1rem;
+    }
+    /* ── Welcome popup styles ── */
+.dp-welcome-overlay {
+    position: fixed;
+    top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+}
+
+.dp-welcome-popup {
+    background: #fff;
+    padding: 2rem 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.25);
+    transform: translateY(-30px);
+    opacity: 0;
+    transition: all 1s ease-out;
+    text-align: center;
+    max-width: 300px;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.dp-welcome-popup.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.dp-welcome-popup h4 {
+    margin: 0 0 0.5rem;
+    color: #0f9d58;
+}
+
+.dp-welcome-popup p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+/* ── Notification Popup ── */
+.dp-notif-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 28px;
+  pointer-events: none;
+}
+
+.dp-notif {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  min-width: 300px;
+  max-width: 420px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+  pointer-events: all;
+  transform: translateY(-20px);
+  opacity: 0;
+  transition: transform 0.35s cubic-bezier(.22,1,.36,1), opacity 0.3s ease;
+}
+
+.dp-notif.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.dp-notif.hide {
+  transform: translateY(-16px);
+  opacity: 0;
+}
+
+/* Success variant */
+.dp-notif.success {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+}
+.dp-notif.success .dp-notif-icon {
+  background: #dcfce7;
+  color: #16a34a;
+}
+.dp-notif.success .dp-notif-title { color: #15803d; }
+.dp-notif.success .dp-notif-msg   { color: #166534; }
+
+/* Error variant */
+.dp-notif.error {
+  background: #fff5f5;
+  border: 1.5px solid #fecaca;
+}
+.dp-notif.error .dp-notif-icon {
+  background: #fee2e2;
+  color: #dc2626;
+}
+.dp-notif.error .dp-notif-title { color: #b91c1c; }
+.dp-notif.error .dp-notif-msg   { color: #7f1d1d; }
+
+/* Warning variant */
+.dp-notif.warning {
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
+}
+.dp-notif.warning .dp-notif-icon {
+  background: #fef3c7;
+  color: #d97706;
+}
+.dp-notif.warning .dp-notif-title { color: #b45309; }
+.dp-notif.warning .dp-notif-msg   { color: #78350f; }
+
+.dp-notif-icon {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.dp-notif-body { flex: 1; }
+.dp-notif-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 2px;
+}
+.dp-notif-msg {
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.dp-notif-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #94a3b8;
+  padding: 0;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+.dp-notif-close:hover { color: #475569; }
+
+/* Progress bar for auto-dismiss */
+.dp-notif-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  border-radius: 0 0 14px 14px;
+  animation: dp-shrink linear forwards;
+}
+.dp-notif { position: relative; }
+.success .dp-notif-progress { background: #16a34a; }
+.error   .dp-notif-progress { background: #dc2626; }
+.warning .dp-notif-progress { background: #d97706; }
+
+@keyframes dp-shrink {
+  from { width: 100%; }
+  to   { width: 0%;   }
+}

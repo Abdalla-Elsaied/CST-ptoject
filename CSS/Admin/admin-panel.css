@@ -1027,9 +1027,9 @@ h6.section-heading {
 
 [data-theme="dark"] .data-card { background: var(--card-bg); border-color: var(--border); }
 [data-theme="dark"] .data-card-header { background: var(--card-bg); border-bottom-color: var(--border); color: var(--text-primary); }
-[data-theme="dark"] .filter-bar { background: var(--card-bg); border-color: var(--border); }
-[data-theme="dark"] .filter-input,
-[data-theme="dark"] .filter-select { background: var(--card-bg); border-color: var(--border); color: var(--text-primary); }
+[data-theme="dark"] .filter-bar { background-color: var(--card-bg); border-color: var(--border); }
+[data-theme="dark"] .filter-input { background-color: var(--card-bg); border-color: var(--border); color: var(--text-primary); }
+[data-theme="dark"] .filter-select { background-color: var(--card-bg); border-color: var(--border); color: var(--text-primary); }
 [data-theme="dark"] .filter-input::placeholder { color: var(--text-muted); }
 [data-theme="dark"] .form-control,
 [data-theme="dark"] .form-select { background: var(--card-bg); border-color: var(--border); color: var(--text-primary); }
@@ -1147,6 +1147,10 @@ h6.section-heading {
     .kpi-value { font-size: 24px; }
     .kpi-icon-wrapper { width: 44px; height: 44px; font-size: 20px; }
     .section-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .section-header .d-flex.gap-2 { flex-wrap: wrap; }
+    .section-header .d-flex.gap-2 .btn-primary-green,
+    .section-header .d-flex.gap-2 .btn-delete,
+    .section-header .d-flex.gap-2 .btn-outline-green { flex: 1; min-width: 110px; justify-content: center; }
     .section-title { font-size: 22px; }
     .filter-bar { padding: 12px; gap: 8px; }
     .filter-input { min-width: 100%; }
@@ -1183,7 +1187,9 @@ h6.section-heading {
    25. MOBILE CARD TABLE TRANSFORMATION
    ════════════════════════════════════════════ */
 
-/* On small screens, flip table rows into stacked cards */
+/* On small screens (≤640px), flip table rows into stacked cards.
+   NOTE: The primary/full implementation is in section 25 (≤575px).
+   This block handles the 576–640px range for tables that need earlier transformation. */
 @media (max-width: 640px) {
     .admin-table,
     .admin-table thead,
@@ -1197,6 +1203,7 @@ h6.section-heading {
     .admin-table tbody tr {
         background: var(--card-bg);
         border: 1px solid var(--border);
+        border-top: 3px solid var(--green-primary);
         border-radius: var(--radius-md);
         margin-bottom: 10px;
         padding: 12px;
@@ -1230,16 +1237,19 @@ h6.section-heading {
         color: var(--text-muted);
         flex-shrink: 0;
         margin-right: 12px;
+        min-width: 80px;
         text-align: left;
     }
+    .admin-table tbody td:not([data-label])::before,
+    .admin-table tbody td[data-label=""]::before { display: none; }
 
-    /* Keep action cells centered */
+    /* Keep action cells right-aligned */
     .admin-table tbody td.col-actions,
     .admin-table tbody td:last-child {
         justify-content: flex-end;
         border-bottom: none;
     }
-    .admin-table tbody td.col-actions::before { display: none; }
+    .admin-table tbody td.col-actions::before { content: "Actions"; }
 
     /* Hide utility columns on card view */
     .admin-table tbody td.col-check,
@@ -1258,8 +1268,12 @@ h6.section-heading {
     .dashboard-orders-table th,
     .dashboard-orders-table td,
     .dashboard-orders-table tr { display: revert; }
+    .dashboard-sellers-table,
+    .dashboard-orders-table { border-top: none; }
     .dashboard-sellers-table thead,
     .dashboard-orders-table thead { display: table-header-group; }
+    .dashboard-sellers-table tbody tr,
+    .dashboard-orders-table tbody tr { border-top: none; }
 }
 
 /* ════════════════════════════════════════════
@@ -1873,6 +1887,64 @@ input[type="date"].filter-input { max-width: 160px; cursor: pointer; }
 input[type="date"].filter-input::-webkit-calendar-picker-indicator { cursor: pointer; filter: opacity(0.6); }
 input[type="date"].filter-input:hover::-webkit-calendar-picker-indicator { filter: opacity(1); }
 
+/* ── Date range group (orders filter) ── */
+.date-range-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 6px 14px;
+    flex-shrink: 0;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.date-range-group:focus-within {
+    border-color: var(--green-primary);
+    box-shadow: 0 0 0 3px rgba(34,197,94,0.12);
+}
+.date-range-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: default;
+    user-select: none;
+}
+.date-range-sep {
+    color: var(--text-muted);
+    font-size: 13px;
+    flex-shrink: 0;
+}
+.date-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 2px 0;
+    min-width: 120px;
+}
+.date-input::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.5;
+    filter: var(--calendar-icon-filter, none);
+    transition: opacity 0.15s ease;
+}
+.date-input:hover::-webkit-calendar-picker-indicator { opacity: 1; }
+[data-theme="dark"] .date-input { color-scheme: dark; }
+[data-theme="dark"] .date-range-group { background: var(--card-bg); border-color: var(--border); }
+@media (max-width: 767px) {
+    .date-range-group { width: 100%; justify-content: space-between; }
+    .date-input { flex: 1; min-width: 0; }
+}
+
 .btn-custom {
     background: var(--green-primary); border-color: var(--green-primary);
     color: white; padding: 10px 32px; font-weight: 600;
@@ -2466,7 +2538,7 @@ input[type="date"].filter-input:hover::-webkit-calendar-picker-indicator { filte
 
 /* Filter bar */
 [data-theme="dark"] .filter-bar { background-color: #1a2035 !important; border-color: #2a3550 !important; }
-[data-theme="dark"] .filter-input,
+[data-theme="dark"] .filter-input { background-color: var(--page-bg) !important; color: var(--text-primary) !important; border-color: var(--border) !important; }
 [data-theme="dark"] .filter-select { background-color: var(--page-bg) !important; color: var(--text-primary) !important; border-color: var(--border) !important; }
 [data-theme="dark"] .filter-input::placeholder { color: var(--text-muted) !important; }
 [data-theme="dark"] .filter-select option { background-color: var(--card-bg); color: var(--text-primary); }
@@ -2743,6 +2815,11 @@ body, .data-card, .chart-card, .kpi-card, .filter-bar,
     .admin-section { padding: 20px 16px; }
     .section-header { flex-direction: column; align-items: stretch; }
     .section-header .btn-primary-green { width: 100%; justify-content: center; }
+    /* Button groups in section-header stay inline, don't stretch */
+    .section-header .d-flex.gap-2 { flex-wrap: wrap; }
+    .section-header .d-flex.gap-2 .btn-primary-green,
+    .section-header .d-flex.gap-2 .btn-delete,
+    .section-header .d-flex.gap-2 .btn-outline-green { width: auto; flex: 1; justify-content: center; min-width: 120px; }
 
     /* Filter bar */
     .filter-bar { flex-direction: column; }
@@ -2877,7 +2954,16 @@ body, .data-card, .chart-card, .kpi-card, .filter-bar,
    Every admin-table row becomes a labeled card at ≤ 575px
    ════════════════════════════════════════════ */
 @media (max-width: 575px) {
-    /* Hide header row */
+
+    /* ── Reset table display model ── */
+    .admin-table,
+    .admin-table thead,
+    .admin-table tbody,
+    .admin-table th,
+    .admin-table td,
+    .admin-table tr { display: block; }
+
+    /* Hide header row — labels come from data-label */
     .admin-table thead { display: none; }
 
     /* Each row → card */
@@ -2890,7 +2976,10 @@ body, .data-card, .chart-card, .kpi-card, .filter-bar,
         background: var(--card-bg);
         box-shadow: 0 1px 4px rgba(0,0,0,0.06);
         overflow: hidden;
+        /* Green top accent strip */
+        border-top: 3px solid var(--green-primary);
     }
+    .admin-table tbody tr:hover { background: var(--table-hover-bg); }
 
     /* Each cell → labeled row */
     .admin-table tbody td {
@@ -2899,7 +2988,7 @@ body, .data-card, .chart-card, .kpi-card, .filter-bar,
         justify-content: space-between;
         gap: 10px;
         padding: 10px 14px;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--border-light);
         white-space: normal;
         overflow: visible;
         text-overflow: unset;
@@ -2909,49 +2998,127 @@ body, .data-card, .chart-card, .kpi-card, .filter-bar,
     }
     .admin-table tbody td:last-child { border-bottom: none; }
 
-    /* Label on the left */
+    /* Empty-state cells reset */
+    .admin-table tbody td[colspan],
+    .admin-table tbody td.empty-state {
+        display: block !important;
+        text-align: center;
+        padding: 40px 20px !important;
+        border-bottom: none;
+        min-height: unset;
+    }
+    .admin-table tbody td[colspan]::before,
+    .admin-table tbody td.empty-state::before { display: none !important; }
+
+    /* Label on the left via data-label */
     .admin-table tbody td::before {
         content: attr(data-label);
-        font-size: 10px; font-weight: 700;
-        text-transform: uppercase; letter-spacing: 0.5px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
         color: var(--text-muted);
-        flex-shrink: 0; min-width: 80px;
-        padding-top: 2px; line-height: 1.4;
+        flex-shrink: 0;
+        min-width: 86px;
+        padding-top: 2px;
+        line-height: 1.4;
     }
 
-    /* Content on the right */
+    /* Hide label when data-label is empty or not set */
+    .admin-table tbody td:not([data-label])::before,
+    .admin-table tbody td[data-label=""]::before { display: none; }
+
+    /* Content side */
     .admin-table tbody td > * {
-        flex: 1; text-align: right;
-        max-width: calc(100% - 92px);
-        overflow: hidden; text-overflow: ellipsis;
+        flex: 1;
+        text-align: right;
+        max-width: calc(100% - 98px);
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
-    .admin-table tbody td > div { text-align: left; }
+    /* Divs and flex-containers stay left-aligned */
+    .admin-table tbody td > div,
+    .admin-table tbody td > span.d-flex { text-align: left; }
+
+    /* ── Special cells ── */
 
     /* Actions cell */
-    .admin-table tbody td.col-actions { justify-content: flex-end; background: rgba(0,0,0,0.015); }
+    .admin-table tbody td.col-actions {
+        justify-content: flex-end;
+        background: rgba(0,0,0,0.015);
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
     .admin-table tbody td.col-actions::before { content: "Actions"; }
     .admin-table tbody td.col-actions .action-group,
-    .admin-table tbody td.col-actions .d-flex { justify-content: flex-end; flex-wrap: wrap; gap: 6px; }
+    .admin-table tbody td.col-actions .d-flex,
+    .admin-table tbody td.col-actions .um-action-cell {
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 6px;
+        flex: 1;
+    }
 
-    /* Hide checkbox col on mobile */
-    .admin-table tbody td.col-check { display: none; }
+    /* Hide checkbox & sequential-number columns */
+    .admin-table tbody td.col-check,
+    .admin-table tbody td.col-num { display: none; }
 
-    /* Status-select full width */
+    /* Orders: status-select full width */
     .order-status-select { max-width: 100%; width: 100%; }
 
-    /* Change-status cell */
-    .admin-table tbody td.col-changestatus { flex-direction: column; gap: 4px; }
+    /* Orders: change-status cell stacks vertically */
+    .admin-table tbody td.col-changestatus {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
     .admin-table tbody td.col-changestatus::before { min-width: unset; }
     .admin-table tbody td.col-changestatus .order-status-select { width: 100%; max-width: 100%; }
 
-    /* Toggle cell */
-    .admin-table tbody td.col-toggle { justify-content: space-between; }
+    /* Products/Customers: toggle cell */
+    .admin-table tbody td.col-toggle { justify-content: space-between; align-items: center; }
+    .admin-table tbody td.col-toggle .form-check { justify-content: flex-end; margin: 0; }
+
+    /* Sellers: payment cell */
+    .admin-table tbody td.col-payment { align-items: center; }
+
+    /* Requests: description preview cell */
+    .admin-table tbody td[data-label="Description"] > span {
+        text-align: right;
+        max-width: calc(100% - 98px);
+    }
 
     /* data-card overflow fix */
-    .data-card:has(.admin-table) { overflow: visible; border-radius: var(--radius-lg); }
+    .data-card:has(.admin-table) { overflow: visible; }
 
-    [data-theme="dark"] .admin-table tbody tr { box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
-    [data-theme="dark"] .admin-table tbody td.col-actions { background: rgba(255,255,255,0.02); }
+    /* ── Dark mode overrides ── */
+    [data-theme="dark"] .admin-table tbody tr {
+        box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+        border-top-color: var(--green-dark);
+    }
+    [data-theme="dark"] .admin-table tbody td.col-actions { background: rgba(255,255,255,0.025); }
+
+    /* ── Dashboard mini-tables: revert to normal horizontal layout ──
+       These are compact summary tables that should NOT become cards */
+    .dashboard-sellers-table,
+    .dashboard-sellers-table thead,
+    .dashboard-sellers-table tbody,
+    .dashboard-sellers-table th,
+    .dashboard-sellers-table td,
+    .dashboard-sellers-table tr,
+    .dashboard-orders-table,
+    .dashboard-orders-table thead,
+    .dashboard-orders-table tbody,
+    .dashboard-orders-table th,
+    .dashboard-orders-table td,
+    .dashboard-orders-table tr { display: revert; }
+    .dashboard-sellers-table,
+    .dashboard-orders-table { border-top: none; }
+    .dashboard-sellers-table thead,
+    .dashboard-orders-table thead { display: table-header-group; }
+    /* Remove card border-top from dashboard rows */
+    .dashboard-sellers-table tbody tr,
+    .dashboard-orders-table tbody tr { border-top: none; }
 }
 
 /* ── Very small phones ≤ 359px ── */
@@ -3081,18 +3248,20 @@ textarea:focus-visible {
     background: var(--green-light-bg);
 }
 
-/* Dropdown panel */
+/* Dropdown panel
+   Always position: fixed so positionDropdown()'s viewport-relative
+   coordinates (left/top set via JS) are always correct — regardless
+   of whether the parent card has overflow:hidden or a scroll container. */
 .um-dropdown {
     display: none;
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
+    position: fixed;
+    /* left / top are set dynamically by positionDropdown() in admin-helpers.js */
     min-width: 180px;
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 10px;
     box-shadow: 0 8px 28px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.06);
-    z-index: 500;
+    z-index: 9999;
     overflow: hidden;
     animation: umDropIn 0.15s cubic-bezier(0.16,1,0.3,1);
 }
@@ -3316,9 +3485,694 @@ textarea:focus-visible {
     .products-admin-table tbody td.col-category,
     .products-admin-table tbody td.col-stock { display: flex !important; }
 
-    /* Dropdown opens upward on last rows */
-    .products-admin-table tbody tr:nth-last-child(-n+2) .um-dropdown {
-        top: auto;
-        bottom: calc(100% + 6px);
+    /* positionDropdown() in JS handles upward flip for bottom rows. */
+}
+/* ════════════════════════════════════════════
+   27. RESPONSIVE TABLES — MOBILE CARD LAYOUT
+   2025 standard approach
+   ════════════════════════════════════════════ */
+
+/* ── Wrapper (replaces plain .table-responsive) ── */
+.table-responsive-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius, 12px);
+}
+
+/* ── Priority helpers — hide low-value columns early ── */
+@media (max-width: 575px) {
+    .priority-low { display: none !important; }
+}
+
+/* ── Recent Sellers list widget ── */
+.rs-list { padding: 0 4px; }
+.rs-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+}
+.rs-item:last-child { border-bottom: none; }
+.rs-item:hover { background: var(--bs-table-hover-bg); }
+.rs-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+.rs-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+}
+.rs-info { min-width: 0; }
+.rs-name {
+    font-size: 13px; font-weight: 600;
+    color: var(--text-primary);
+    display: flex; align-items: center; gap: 5px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rs-meta {
+    font-size: 11px; color: var(--text-secondary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-top: 1px;
+}
+.rs-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.rs-badge {
+    font-size: 10px; font-weight: 600; padding: 2px 8px;
+    border-radius: 20px; white-space: nowrap;
+}
+.rs-badge-active   { background: rgba(16,185,129,0.1); color: #065f46; border: 1px solid rgba(16,185,129,0.25); }
+.rs-badge-pending  { background: rgba(245,158,11,0.1); color: #92400e; border: 1px solid rgba(245,158,11,0.25); }
+.rs-badge-suspended{ background: rgba(239,68,68,0.1);  color: #991b1b; border: 1px solid rgba(239,68,68,0.25); }
+
+[data-theme="dark"] .rs-badge-active    { color: #6ee7b7; }
+[data-theme="dark"] .rs-badge-pending   { color: #fcd34d; }
+[data-theme="dark"] .rs-badge-suspended { color: #fca5a5; }
+
+/* ── Desktop (≥992px): full horizontal table — untouched ── */
+@media (min-width: 992px) {
+    .table-responsive-wrapper { overflow-x: auto; }
+    .table-responsive-wrapper table { display: table; width: 100%; }
+    .actions-mobile  { display: none !important; }
+    .actions-desktop { display: flex !important; }
+}
+
+/* ══════════════════════════════════════════
+   Mobile card layout (≤991px)
+   ══════════════════════════════════════════ */
+@media (max-width: 991px) {
+
+    /* Wrapper scrolls only when min-width forces it */
+    .table-responsive-wrapper {
+        overflow-x: visible;
+        border-radius: 0;
+    }
+
+    /* Hide thead — labels come from data-label */
+    .table-responsive-wrapper thead {
+        display: none !important;
+    }
+
+    /* Table fills container - CRITICAL: remove table display */
+    .table-responsive-wrapper table {
+        display: block;
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    .table-responsive-wrapper tbody {
+        display: block;
+        width: 100%;
+    }
+
+    /* Each row → card - CRITICAL: proper block display */
+    .table-responsive-wrapper tbody tr {
+        display: block;
+        background: var(--card-bg, #fff);
+        border: 1px solid var(--border, #e5e7eb);
+        border-radius: 10px;
+        margin-bottom: 12px;
+        padding: 0;
+        box-shadow: 0 1px 4px rgba(0,0,0,.05);
+        overflow: visible;
+        position: relative;
+    }
+
+    .table-responsive-wrapper tbody tr.row-suspended {
+        border-left: 3px solid #ef4444;
+    }
+    .table-responsive-wrapper tbody tr.row-pending {
+        border-left: 3px solid #f59e0b;
+    }
+
+    /* Each cell → labelled flex row - CRITICAL: proper flex display */
+    .table-responsive-wrapper tbody td {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border-light, #f3f4f6);
+        font-size: 13px;
+        gap: 12px;
+        min-height: 44px;
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    /* Empty-state cells: reset to normal block, full width, centered */
+    .table-responsive-wrapper tbody td[colspan],
+    .table-responsive-wrapper tbody td.empty-state {
+        display: block !important;
+        width: 100% !important;
+        text-align: center;
+        padding: 40px 20px !important;
+        border-bottom: none;
+        min-height: unset;
+        white-space: normal;
+        overflow: visible;
+    }
+    .table-responsive-wrapper tbody td[colspan]::before,
+    .table-responsive-wrapper tbody td.empty-state::before {
+        display: none !important;
+    }
+    .table-responsive-wrapper tbody tr:has(td[colspan]) {
+        border: none;
+        box-shadow: none;
+        background: transparent;
+    }
+
+    .table-responsive-wrapper tbody td:last-child {
+        border-bottom: none;
+    }
+
+    /* Label injected via ::before from data-label */
+    .table-responsive-wrapper tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        font-size: 11px;
+        color: var(--text-muted, #9ca3af);
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        min-width: 90px;
+    }
+
+    /* Cells with empty data-label (checkboxes etc.) hide label */
+    .table-responsive-wrapper tbody td[data-label=""]::before,
+    .table-responsive-wrapper tbody td:not([data-label])::before {
+        display: none;
+    }
+
+    /* ── Image cells ── */
+    .table-responsive-wrapper tbody td.col-image {
+        justify-content: flex-start;
+        padding: 12px 16px;
+        border-bottom: none;
+        background: var(--page-bg, #f8fafc);
+    }
+    .table-responsive-wrapper tbody td.col-image::before { display: none; }
+    .table-responsive-wrapper tbody td.col-image .product-thumb,
+    .table-responsive-wrapper tbody td.col-image .no-img {
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
+    }
+
+    /* ── Name cells ── */
+    .table-responsive-wrapper tbody td.col-name {
+        justify-content: flex-start;
+        padding-top: 8px;
+        border-bottom: 1px solid var(--border-light, #f3f4f6);
+    }
+    .table-responsive-wrapper tbody td.col-name::before { display: none; }
+    .table-responsive-wrapper tbody td.col-name .product-name-cell,
+    .table-responsive-wrapper tbody td.col-name .user-cell,
+    .table-responsive-wrapper tbody td.col-name .seller-cell {
+        width: 100%;
+    }
+
+    /* ── User/Seller cells with avatars ── */
+    .table-responsive-wrapper tbody td.col-user,
+    .table-responsive-wrapper tbody td.col-seller-name {
+        justify-content: flex-start;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border-light, #f3f4f6);
+        background: var(--page-bg, #f8fafc);
+    }
+    .table-responsive-wrapper tbody td.col-user::before,
+    .table-responsive-wrapper tbody td.col-seller-name::before { display: none; }
+
+    /* ── Checkbox cells ── */
+    .table-responsive-wrapper tbody td.col-check {
+        justify-content: flex-end;
+        padding: 8px 16px;
+        min-height: 36px;
+        border-bottom: none;
+        background: var(--page-bg, #f8fafc);
+    }
+
+    /* ── Number cells ── */
+    .table-responsive-wrapper tbody td.col-num { display: none !important; }
+
+    /* ── Actions cell ── */
+    .table-responsive-wrapper tbody td.col-actions {
+        justify-content: flex-end;
+        border-bottom: none;
+        padding: 12px 16px;
+        background: var(--page-bg, #f8fafc);
+    }
+    .table-responsive-wrapper tbody td.col-actions::before { display: none; }
+
+    /* Show mobile actions, hide desktop actions */
+    .actions-desktop { display: none !important; }
+    .actions-mobile  { display: block !important; }
+
+    /* Status / toggle cells */
+    .table-responsive-wrapper tbody td.col-status,
+    .table-responsive-wrapper tbody td.col-toggle { 
+        justify-content: space-between; 
+    }
+
+    /* Role and status pills */
+    .table-responsive-wrapper tbody td.col-role,
+    .table-responsive-wrapper tbody td.col-status {
+        justify-content: space-between;
+    }
+
+    /* Select dropdowns fill available space */
+    .table-responsive-wrapper tbody td .order-status-select,
+    .table-responsive-wrapper tbody td .status-dropdown,
+    .table-responsive-wrapper tbody td.col-changestatus select {
+        flex: 1;
+        max-width: 180px;
+        font-size: 13px;
+    }
+
+    /* Dropdown is always position:fixed (set in base rule above).
+       positionDropdown() in admin-helpers.js sets left/top dynamically. */
+    .table-responsive-wrapper .um-overflow-wrap {
+        position: static; /* don't create an offset parent — fixed is viewport-relative */
+    }
+    /* Actions cell: push content to the right on mobile */
+    .table-responsive-wrapper tbody td.col-actions {
+        justify-content: flex-end !important;
+    }
+    .table-responsive-wrapper tbody td.col-actions .um-action-cell {
+        justify-content: flex-end;
+        margin-left: auto;
+    }
+    /* Last rows: positionDropdown() in JS already flips upward when
+       not enough space below — no CSS override needed. */
+
+    /* Force-reveal all data columns inside card view */
+    .table-responsive-wrapper tbody td.col-seller,
+    .table-responsive-wrapper tbody td.col-category,
+    .table-responsive-wrapper tbody td.col-stock,
+    .table-responsive-wrapper tbody td.col-contact,
+    .table-responsive-wrapper tbody td.col-joined,
+    .table-responsive-wrapper tbody td.col-orders,
+    .table-responsive-wrapper tbody td.col-phone,
+    .table-responsive-wrapper tbody td.col-store,
+    .table-responsive-wrapper tbody td.col-city,
+    .table-responsive-wrapper tbody td.col-payment,
+    .table-responsive-wrapper tbody td.col-changestatus,
+    .table-responsive-wrapper tbody td.col-role {
+        display: flex !important;
+    }
+
+    /* Contact cell special handling */
+    .table-responsive-wrapper tbody td.col-contact {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .table-responsive-wrapper tbody td.col-contact::before {
+        margin-bottom: 8px;
+    }
+    .table-responsive-wrapper tbody td.col-contact .contact-cell {
+        width: 100%;
+    }
+
+    /* Joined cell special handling */
+    .table-responsive-wrapper tbody td.col-joined {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .table-responsive-wrapper tbody td.col-joined::before {
+        margin-bottom: 8px;
+    }
+    .table-responsive-wrapper tbody td.col-joined .joined-cell {
+        width: 100%;
+    }
+
+    /* Orders cell */
+    .table-responsive-wrapper tbody td.col-orders .um-orders-cell {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
     }
 }
+
+/* ── Very small phones (≤480px): tighter cards ── */
+@media (max-width: 480px) {
+    .table-responsive-wrapper tbody td {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    .table-responsive-wrapper tbody td::before {
+        min-width: 76px;
+        font-size: 10px;
+    }
+}
+
+
+/* ════════════════════════════════════════════
+   MOBILE CARD LAYOUTS (Alternative to table transform)
+   ════════════════════════════════════════════ */
+
+/* Product Cards */
+.product-card .card {
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: var(--transition);
+}
+.product-card .card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+.product-card-image {
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--border-light);
+}
+.product-card-image img,
+.product-card-image .no-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.product-card-details .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+.product-card-details .detail-row:last-child {
+    border-bottom: none;
+}
+.product-card-details .detail-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.product-card-details .detail-value {
+    font-size: 14px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Order Cards */
+.order-card .card {
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.order-card-details .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+.order-card-details .detail-row:last-child {
+    border-bottom: none;
+}
+.order-card-details .detail-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.order-card-details .detail-value {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+/* Customer Cards */
+.customer-card .card {
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.customer-avatar {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--green-light-bg);
+}
+.customer-avatar img,
+.customer-avatar .avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.customer-avatar .avatar-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--green-dark);
+    background: linear-gradient(135deg, var(--green-primary), #10b981);
+    color: white;
+}
+.customer-card-details .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+.customer-card-details .detail-row:last-child {
+    border-bottom: none;
+}
+.customer-card-details .detail-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.customer-card-details .detail-value {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+/* Seller Cards */
+.seller-card .card {
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.seller-card-details .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+.seller-card-details .detail-row:last-child {
+    border-bottom: none;
+}
+.seller-card-details .detail-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.seller-card-details .detail-value {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+/* ════════════════════════════════════════════════════════════
+   SELLER REQUESTS TABLE — redesigned cells & action buttons
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Store cell ── */
+.req-store-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.req-store-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--green-primary), #10b981);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(34,197,94,0.25);
+}
+.req-store-name {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+.req-store-city {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+/* ── User/applicant cell ── */
+.req-user-cell {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+.req-user-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.req-user-name {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+.req-user-email {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+}
+.req-user-phone {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+/* ── Category pill ── */
+.req-cat-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--info-light);
+    color: var(--info);
+    border: 1px solid rgba(59,130,246,0.2);
+    white-space: nowrap;
+}
+
+/* ── Payment pill ── */
+.req-payment-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--green-light-bg);
+    color: var(--green-dark);
+    border: 1px solid rgba(34,197,94,0.2);
+    white-space: nowrap;
+}
+
+/* ── Description preview ── */
+.req-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    max-width: 180px;
+    line-height: 1.4;
+    cursor: default;
+}
+
+/* ── Date ── */
+.req-date {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+/* ── Action buttons ── */
+.req-action-group {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+}
+
+.req-btn-approve,
+.req-btn-reject {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    border: 1px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+}
+
+.req-btn-approve {
+    background: var(--green-light-bg);
+    color: var(--green-dark);
+    border-color: rgba(34,197,94,0.3);
+}
+.req-btn-approve:hover {
+    background: var(--green-primary);
+    color: #fff;
+    border-color: var(--green-primary);
+    box-shadow: 0 3px 10px rgba(34,197,94,0.3);
+    transform: translateY(-1px);
+}
+
+.req-btn-reject {
+    background: var(--danger-light);
+    color: var(--danger);
+    border-color: rgba(239,68,68,0.3);
+}
+.req-btn-reject:hover {
+    background: var(--danger);
+    color: #fff;
+    border-color: var(--danger);
+    box-shadow: 0 3px 10px rgba(239,68,68,0.3);
+    transform: translateY(-1px);
+}
+
+/* ── Requests table column widths ── */
+#requestsSection .col-check  { width: 40px; }
+#requestsSection .col-actions { width: 210px; min-width: 200px; }
+
+/* ── Dark mode ── */
+[data-theme="dark"] .req-store-icon { background: linear-gradient(135deg, var(--green-dark), #10b981); }
+[data-theme="dark"] .req-cat-pill   { background: rgba(59,130,246,0.12); color: #60a5fa; border-color: rgba(59,130,246,0.25); }
+[data-theme="dark"] .req-payment-pill { background: rgba(34,197,94,0.1); color: #4ade80; border-color: rgba(34,197,94,0.2); }
+[data-theme="dark"] .req-btn-approve { background: rgba(34,197,94,0.12); color: #4ade80; border-color: rgba(34,197,94,0.3); }
+[data-theme="dark"] .req-btn-reject  { background: rgba(239,68,68,0.12); color: #f87171; border-color: rgba(239,68,68,0.3); }
+[data-theme="dark"] .req-user-avatar { box-shadow: 0 2px 8px rgba(124,58,237,0.3); }

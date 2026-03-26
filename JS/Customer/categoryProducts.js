@@ -4,10 +4,11 @@
  * Adds: view toggle (grid/list), load-more pagination,
  *       toolbar with search chip, skeleton loading.
  */
-
+import { getLS } from '../Core/Storage.js';
+import { KEY_CATEGORIES } from '../Core/Constants.js';
 import { loadProductsFromFolder } from '../Core/FileStorage.js';
-import { getCurrentUser, logoutUser, getCartCount }            from '../Core/Auth.js';
-import { addToCart, getCart }                                  from './Cart.js';
+import { getCurrentUser, logoutUser }            from '../Core/Auth.js';
+import { addToCart, getCart, getCartCount }                                  from './Cart.js';
 import { toggleWishlist, isWishlisted }                        from './Wishlist.js';
 
 /* ── URL param ─────────────────────────────────────── */
@@ -318,8 +319,22 @@ async function init() {
   }
 
   // Filter to category
+  const approvedCategories = new Set(
+      (getLS(KEY_CATEGORIES) || [])
+          .filter(c => c.visibility === 'active')
+          .map(c => c.name.toLowerCase())
+  );
+
+  // Block access if category not approved
+  if (!approvedCategories.has(CATEGORY.toLowerCase())) {
+      if (grid) grid.innerHTML = '';
+      main?.classList.add('d-none');
+      $('catNoResults')?.classList.remove('d-none');
+      return;
+  }
+
   const categoryProducts = allProducts.filter(
-    p => (p.category || p.Category || '').toLowerCase() === CATEGORY.toLowerCase()
+      p => (p.category || p.Category || '').toLowerCase() === CATEGORY.toLowerCase()
   );
 
   if (categoryProducts.length === 0) {

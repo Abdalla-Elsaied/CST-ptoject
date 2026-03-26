@@ -19,7 +19,8 @@ import {
     renderPagination,
     renderTableEmptyState,
     debounce,
-    escapeHTML
+    escapeHTML,
+    getCustomerByEmail
 } from './admin-helpers.js';
 
 import { getLS, setLS } from '../Core/Storage.js';
@@ -119,6 +120,11 @@ export function renderOrdersTable() {
         const shortId = '#' + (fullId.length > 6 ? fullId.slice(-6) : fullId);
         // Support both customerId and userId
         const customerId = o.customerId || o.userId;
+        let customerName = getCustomerName(customerId);
+        if (customerName === '—') {
+            const u = getCustomerByEmail(o.userEmail);
+            customerName = u ? (u.name || u.fullName || '—') : (o.userName || '—');
+        }
 
         const statuses = ['Pending','Processing','Shipped','Delivered','Cancelled','Refunded'];
         // Normalize status to capitalized form for consistent comparison
@@ -133,7 +139,7 @@ export function renderOrdersTable() {
             <tr>
                 <td><span class="text-muted small fw-bold">${startIdx + i + 1}</span></td>
                 <td><span class="order-id-pill" title="${escapeHTML(fullId)}">${escapeHTML(shortId)}</span></td>
-                <td style="font-size:12px;">${getCustomerName(customerId)}</td>
+                <td style="font-size:12px;">${escapeHTML(customerName)}</td>
                 <td style="font-size:12px;">${sellerText}</td>
                 <td class="text-center">
                     <span style="font-weight:700;font-size:13px;color:var(--text-primary);">${itemCount}</span>
@@ -178,7 +184,11 @@ function openOrderDetail(orderId) {
 
     titleEl.textContent = `Order #${order.id}`;
 
-    const customerName = getCustomerName(order.customerId || order.userId);
+    let customerName = getCustomerName(order.customerId || order.userId);
+    if (customerName === '—') {
+        const u = getCustomerByEmail(order.userEmail);
+        customerName = u ? (u.name || u.fullName || '—') : (order.userName || '—');
+    }
 
     // Sellers summary
     let sellerSummary = '—';
