@@ -43,7 +43,7 @@
             <a href="#" class="nav-link" data-section="analytics" data-tooltip="Analytics">
                 <span class="nav-icon"><i class="bi bi-graph-up-arrow"></i></span> Analytics
             </a>
-            <a href="../Customer/CustomerHomePage.html" class="nav-link" target="_blank" rel="noopener"
+            <a href="../Customer/CustomerHomePage.html?role=admin" class="nav-link" target="_blank" rel="noopener"
                 data-tooltip="Live Store">
                 <span class="nav-icon"><i class="bi bi-box-arrow-up-right"></i></span> View Storefront
             </a>
@@ -163,7 +163,7 @@
                 <div class="col-lg-6 col-12">
                     <div class="data-card h-100">
                         <div class="data-card-header">Recent Sellers</div>
-                        <div class="table-responsive">
+                        <div class="table-responsive-wrapper">
                             <table class="table table-sm table-hover mb-0">
                                 <thead>
                                     <tr>
@@ -183,14 +183,14 @@
                 <div class="col-lg-6 col-12">
                     <div class="data-card h-100">
                         <div class="data-card-header">Recent Orders</div>
-                        <div class="table-responsive">
+                        <div class="admin-table">
                             <table class="table table-sm table-hover mb-0">
                                 <thead>
                                     <tr>
                                         <th>Order ID</th>
                                         <th>Customer</th>
-                                        <th>Seller</th>
-                                        <th class="text-end">Total</th>
+                                        <th class="priority-low">Seller</th>
+                                        <th class="text-end priority-low">Total</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
@@ -221,17 +221,17 @@
             </div>
 
             <div class="data-card">
-                <div class="table-responsive">
+                <div class="table-responsive-wrapper">
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
-                                <th>#</th>
-                                <th>Full Name</th>
-                                <th>Email</th>
-                                <th>Phone</th>
+                                <th class="priority-low">#</th>
+                                <th>Seller</th>
+                                <th class="priority-low">Phone</th>
                                 <th>Store Name</th>
-                                <th>City</th>
-                                <th>Payment</th>
+                                <th class="priority-low">City</th>
+                                <th class="priority-low">Payment</th>
+                                <th>Status</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
@@ -249,7 +249,7 @@
                     <h2 class="section-title">Seller Applications</h2>
                     <p class="section-subtitle" id="requestsCount">Loading...</p>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 flex-wrap">
                     <button id="bulkApproveBtn" class="btn-primary-green">
                         <i class="bi bi-check-all"></i> Bulk Approve
                     </button>
@@ -260,20 +260,20 @@
             </div>
 
             <div class="data-card">
-                <div class="table-responsive">
+                <div class="table-responsive-wrapper">
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
-                                <th style="width:40px">
+                                <th class="col-check">
                                     <input type="checkbox" id="selectAllRequests">
                                 </th>
-                                <th>Store Name</th>
-                                <th>User</th>
-                                <th>City</th>
+                                <th>Store</th>
+                                <th>Applicant</th>
                                 <th>Category</th>
-                                <th>Phone</th>
-                                <th>Payment Method</th>
-                                <th class="text-center">Actions</th>
+                                <th>Payment</th>
+                                <th class="priority-low">Description</th>
+                                <th class="priority-low">Date</th>
+                                <th class="text-center col-actions">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="requestsTableBody"></tbody>
@@ -307,12 +307,14 @@
 
             <!-- Suggestions table -->
             <div class="data-card" id="categorySuggestionsCard">
-                <div class="table-responsive">
+                <div class="table-responsive-wrapper">
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
                                 <th>Category Name</th>
                                 <th>Description</th>
+                                <th>Source</th>
+                                <th>Suggested By</th>
                                 <th>Date Suggested</th>
                                 <th class="text-center">Actions</th>
                             </tr>
@@ -324,7 +326,7 @@
 
             <!-- All categories table -->
             <div class="data-card mt-3" id="allCategoriesCard" style="display:none">
-                <div class="table-responsive">
+                <div class="table-responsive-wrapper">
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
@@ -390,7 +392,7 @@
 
                     </div>
                 </div>
-                <div class="table-responsive">
+                <div class="table-responsive-wrapper">
                     <table class="table table-hover align-middle mb-0 users-table">
                         <thead>
                             <tr>
@@ -438,8 +440,8 @@
             </div>
 
             <div class="data-card">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                <div class="table-responsive-wrapper">
+                    <table class="table table-hover align-middle mb-0 products-admin-table" id="productsTable">
                         <thead>
                             <tr>
                                 <th>#</th>
@@ -481,14 +483,19 @@
                     <option>Delivered</option>
                     <option>Cancelled</option>
                 </select>
-                <input type="date" id="orderDateFrom" class="filter-input date-input"
-                    title="From date">
-                <input type="date" id="orderDateTo" class="filter-input date-input"
-                    title="To date">
+                <div class="date-range-group">
+                    <label class="date-range-label" for="orderDateFrom">
+                        <i class="bi bi-calendar3"></i> From
+                    </label>
+                    <input type="date" id="orderDateFrom" class="date-input" title="From date">
+                    <span class="date-range-sep">—</span>
+                    <label class="date-range-label" for="orderDateTo">To</label>
+                    <input type="date" id="orderDateTo" class="date-input" title="To date">
+                </div>
             </div>
 
             <div class="data-card">
-                <div class="table-responsive">
+                <div class="table-responsive-wrapper">
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
@@ -567,13 +574,14 @@
 
             <!-- Testimonials table -->
             <div class="data-card mt-3" id="testimonialsCard">
-                <div class="table-responsive">
+                <div class="table-responsive-wrapper">
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
                                 <th>User</th>
                                 <th>Rating</th>
                                 <th>Comment</th>
+                                <th>Featured</th>
                                 <th>Date</th>
                                 <th class="text-center">Actions</th>
                             </tr>
@@ -585,12 +593,12 @@
 
             <!-- Product reviews table -->
             <div class="data-card mt-3" id="productReviewsCard" style="display:none">
-                <div class="table-responsive">
+                <div class="table-responsive-wrapper">
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
                                 <th>Product</th>
-                                <th>User</th>
+                                <th>Reviewer</th>
                                 <th>Rating</th>
                                 <th>Comment</th>
                                 <th>Date</th>

@@ -327,10 +327,15 @@ body.dark .category-table .badge.active {
   }
 }
 .category-page {
-  display: block;
-  min-height: 100vh;
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .category-page .dashboard-content {
   padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
 }

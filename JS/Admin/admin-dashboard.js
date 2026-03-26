@@ -23,7 +23,9 @@ import {
     formatPrice,
     escapeHTML,
     getCustomerUser,
-    getSellerUser
+    getSellerUser,
+    invalidateCaches,
+    getCustomerUserByEmail 
 } from './admin-helpers.js';
 
 
@@ -300,6 +302,7 @@ window.editSeller = function (sellerId) {
 // ─── RECENT ORDERS ───────────────────────────────────────────
 
 function renderRecentOrders(allOrders) {
+    invalidateCaches(); 
     const orders = (allOrders || getOrders()).slice(-5).reverse();
     const tbody  = document.getElementById('recentOrdersBody');
     if (!tbody) return;
@@ -334,12 +337,13 @@ function renderRecentOrders(allOrders) {
         const shortId = fullId.length > 6 ? '#' + fullId.slice(-6) : '#' + fullId;
 
         // Customer — support both userId (Cart.js) and customerId field names
-        const customerName    = getCustomerName(o.customerId || o.userId);
+        let customerName = getCustomerName(o.customerId || o.userId);
+        if (customerName === '—') customerName = o.userName || o.customerName || '—';
         const customerDisplay = customerName === '—'
             ? `<span class="text-muted">—</span>`
             : `<div class="d-flex align-items-center gap-2">
                    ${(() => {
-                        const cu = getCustomerUser(o.customerId || o.userId);
+                        const cu = getCustomerUser(o.customerId || o.userId) || getCustomerUserByEmail(o.userEmail);
                         return cu?.photoUrl
                             ? `<img src="${cu.photoUrl}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'"/>`
                             : `<span class="table-avatar" style="width:28px;height:28px;font-size:11px;flex-shrink:0;">${customerName.charAt(0).toUpperCase()}</span>`;

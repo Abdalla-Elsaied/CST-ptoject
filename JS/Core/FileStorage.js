@@ -86,7 +86,22 @@ export async function saveProductToDisk(product, imageFiles = []) {
 
     const savedProduct = await response.json();
 
+    // Assign the MockAPI-generated id back to the product object
     product.id = savedProduct.id;
+
+    // ── Sync ls_products so the admin panel sees the change immediately
+    //    without needing a page reload or re-login ──────────────────────
+    try {
+      const KEY = 'ls_products';
+      const existing = JSON.parse(localStorage.getItem(KEY) || '[]');
+      const idx = existing.findIndex(p => String(p.id) === String(savedProduct.id));
+      if (idx !== -1) {
+        existing[idx] = { ...existing[idx], ...savedProduct };
+      } else {
+        existing.push(savedProduct);
+      }
+      localStorage.setItem(KEY, JSON.stringify(existing));
+    } catch (_) {}
 
     console.log("Product saved to MockAPI:", savedProduct);
 
@@ -191,4 +206,3 @@ export function avatarHTML(user, size = 36, extraClass = '') {
   }
   return `<div class="dropdown-user-avatar ${extraClass}">${initials}</div>`;
 }
-

@@ -33,6 +33,9 @@
           Keep your storefront organized with clear visibility and quick actions.
         </p>
       </div>
+      <button class="btn-filter" id="addCategoryBtn" style="align-self:flex-start;">
+        <i class="bi bi-plus-lg me-1"></i> Suggest Category
+      </button>
 
     </div>
 
@@ -97,28 +100,23 @@
 
   <div class="modal" id="categoryModal">
     <div class="modal-card">
-      <h3 id="modalTitle">Add Category</h3>
+      <h3 id="modalTitle">Suggest Category</h3>
+      <p style="font-size:13px;color:#64748b;margin-bottom:16px;">
+        Your suggestion will be reviewed by the admin before going live.
+      </p>
       <div class="form">
         <label>
-          Name
+          Category Name
           <input type="text" id="categoryNameInput" placeholder="e.g. Women Fashion" />
         </label>
         <label>
-          Visibility
-          <select id="categoryVisibilityInput">
-            <option value="active">Active</option>
-            <option value="hidden">Hidden</option>
-            <option value="draft">Draft</option>
-          </select>
-        </label>
-        <label>
-          Description
+          Description <span style="font-size:11px;font-weight:400;color:#94a3b8;">(optional)</span>
           <textarea id="categoryDescInput" rows="3" placeholder="Short description"></textarea>
         </label>
       </div>
       <div class="modal-actions">
         <button class="btn-details" id="cancelModalBtn">Cancel</button>
-        <button class="btn-filter" id="saveCategoryBtn">Save</button>
+        <button class="btn-filter" id="saveCategoryBtn">Submit Suggestion</button>
       </div>
     </div>
   </div>

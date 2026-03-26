@@ -415,5 +415,45 @@ export function rejectCustomerSellerRequest(requestId) {
     return { success: true };
 }
 
+export function showNotif(message, type = 'error', duration = 0) {
+    // duration 0 = stays until closed; >0 = auto-dismiss in ms
+    const icons = {
+        success: 'bi-check-circle-fill',
+        error:   'bi-x-circle-fill',
+        warning: 'bi-exclamation-triangle-fill'
+    };
+    const titles = { success: 'Success', error: 'Error', warning: 'Warning' };
 
-// ─── EXPORTS ─────────────────────────────────────────────────
+    // Remove any existing notif
+    document.querySelector('.dp-notif-overlay')?.remove();
+
+    const autoDismiss = type === 'success' || duration > 0;
+    const ms = duration || (type === 'success' ? 2800 : 0);
+
+    const overlay = document.createElement('div');
+    overlay.className = 'dp-notif-overlay';
+    overlay.innerHTML = `
+        <div class="dp-notif ${type}">
+            <div class="dp-notif-icon"><i class="bi ${icons[type]}"></i></div>
+            <div class="dp-notif-body">
+                <div class="dp-notif-title">${titles[type]}</div>
+                <div class="dp-notif-msg">${message}</div>
+            </div>
+            <button class="dp-notif-close"><i class="bi bi-x"></i></button>
+            ${autoDismiss ? `<div class="dp-notif-progress" style="animation-duration:${ms}ms"></div>` : ''}
+        </div>`;
+
+    document.body.appendChild(overlay);
+
+    // Animate in
+    requestAnimationFrame(() => overlay.querySelector('.dp-notif').classList.add('show'));
+
+    const dismiss = () => {
+        const el = overlay.querySelector('.dp-notif');
+        el.classList.add('hide');
+        setTimeout(() => overlay.remove(), 350);
+    };
+
+    overlay.querySelector('.dp-notif-close').addEventListener('click', dismiss);
+    if (autoDismiss) setTimeout(dismiss, ms);
+}

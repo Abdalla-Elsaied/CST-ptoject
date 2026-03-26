@@ -14,27 +14,48 @@ let _productsCache = null;
  * @param {boolean} forceSync - If true, fetches from MockAPI even if cache exists.
  */
 export async function fetchProducts(forceSync = false) {
-    // If not forcing sync and we have a cache, return it
-    if (!forceSync && _productsCache) {
+    const stored = getLS(KEY_PRODUCTS) || [];
+
+    // If not forcing sync, use localStorage as-is (fast path for filter changes etc.)
+    if (!forceSync) {
+        _productsCache = stored;
         return _productsCache;
     }
 
-    // Try to load from Remote API if forced or if LocalStorage is empty
-    const stored = getLS(KEY_PRODUCTS);
-    if (forceSync || !stored || stored.length === 0) {
-        try {
-            const remoteProducts = await loadProductsForAdmin();
-            if (remoteProducts && remoteProducts.length > 0) {
-                setLS(KEY_PRODUCTS, remoteProducts);
-                _productsCache = remoteProducts;
-                return _productsCache;
-            }
-        } catch (err) {
-            console.error("Remote fetch failed, falling back to local storage", err);
+    // forceSync = true (called on section entry) — always re-fetch from MockAPI
+    // so new products added by sellers appear without reload/re-login
+    try {
+        const remoteProducts = await loadProductsForAdmin();
+        if (remoteProducts && remoteProducts.length > 0) {
+            // Merge: preserve local isActive overrides — admin toggles write
+            // to localStorage immediately and should not be overwritten by MockAPI.
+            // Normalize undefined → false so products default to inactive until admin approves.
+            const localMap = new Map(stored.map(p => [String(p.id), p]));
+            const merged = remoteProducts.map(remote => {
+                const local = localMap.get(String(remote.id));
+                if (local && local.isActive !== undefined) {
+                    return { ...remote, isActive: local.isActive };
+                }
+                // No local record or no local isActive — normalize: treat undefined as false
+                return { ...remote, isActive: remote.isActive === true ? true : false };
+            });
+            setLS(KEY_PRODUCTS, merged);
+            _productsCache = merged;
+            return _productsCache;
         }
+    } catch (err) {
+        console.error("Remote fetch failed, using localStorage", err);
     }
 
-    _productsCache = stored || [];
+    // Normalize isActive for products already in localStorage (undefined → false)
+    const normalized = stored.map(p => ({
+        ...p,
+        isActive: p.isActive === true ? true : false
+    }));
+    if (JSON.stringify(normalized) !== JSON.stringify(stored)) {
+        setLS(KEY_PRODUCTS, normalized);
+    }
+    _productsCache = normalized;
     return _productsCache;
 }
 
@@ -42,9 +63,8 @@ export async function fetchProducts(forceSync = false) {
  * Returns products from memory cache if available, otherwise from LS.
  */
 export function getCachedProducts() {
-    if (!_productsCache) {
-        _productsCache = getLS(KEY_PRODUCTS) || [];
-    }
+    // Always read from localStorage to pick up changes from any tab/module
+    _productsCache = getLS(KEY_PRODUCTS) || [];
     return _productsCache;
 }
 
@@ -62,9 +82,12 @@ export function getFilteredProducts(filters) {
         
         const matchSearch = !search || pName.includes(search.toLowerCase());
         const matchCategory = category === 'All' || pCategory === category;
+        // isActive defaults to true when undefined/null (products from sellers may not set it)
+        // Only treat a product as Inactive when isActive is explicitly === false
+        const activeFlag = p.isActive !== false;
         const matchStatus = status === 'All' ||
-            (status === 'Active' && p.isActive) ||
-            (status === 'Inactive' && !p.isActive);
+            (status === 'Active'   &&  activeFlag) ||
+            (status === 'Inactive' && !activeFlag);
             
         return matchSearch && matchCategory && matchStatus;
     });
@@ -89,21 +112,24 @@ export function getFilteredProducts(filters) {
  * Updates product status and syncs with Remote API.
  */
 export async function updateProductStatus(id, isActive) {
-    const products = getCachedProducts();
+    // Always read fresh from localStorage to avoid stale cache
+    const products = getLS(KEY_PRODUCTS) || [];
     const index = products.findIndex(p => p.id == id);
     if (index === -1) return false;
 
+    // Update locally first so UI reflects change immediately
     const product = { ...products[index], isActive };
-    
+    products[index] = product;
+    setLS(KEY_PRODUCTS, products);
+    _productsCache = products;
+
     try {
-        await saveProductToDisk(product); // Sync with MockAPI
-        products[index] = product;
-        setLS(KEY_PRODUCTS, products);
-        _productsCache = products;
+        await saveProductToDisk(product); // Sync with MockAPI in background
         return true;
     } catch (err) {
-        console.error("Failed to sync product status", err);
-        throw err;
+        console.error("Failed to sync product status with MockAPI", err);
+        // Status already saved locally — don't throw, just warn
+        return true;
     }
 }
 

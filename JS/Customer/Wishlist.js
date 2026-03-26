@@ -1,39 +1,57 @@
 /**
  * Wishlist.js
- * Persists liked products in localStorage under KEY_WISHLIST.
+ * Persists liked products in localStorage under a per-user key.
+ * Key format: ls_wishlist_<userId>  (guests: ls_wishlist_guest)
  */
 import { getLS, setLS } from '../Core/Storage.js';
-import { KEY_WISHLIST } from '../Core/Constants.js';
+import { getCurrentUser } from '../Core/Auth.js';
+
+function getCurrentUserFromSession() {
+  try {
+    // Use getSessionKey() so ?role=admin param is respected (admin storefront preview)
+    const user = getCurrentUser()
+    return user || null;
+  } catch {
+    return null;
+  }
+}
+
+function getWishlistKey() {
+  const user = getCurrentUserFromSession();
+  return user?.id ? `ls_wishlist_${user.id}` : 'ls_wishlist_guest';
+}
 
 export function getWishlist() {
-  return getLS(KEY_WISHLIST) || [];
+  return getLS(getWishlistKey()) || [];
 }
 
 export function addToWishlist(product) {
-  const list = getWishlist();
-  if (!list.find(p => p.id === product.id)) {
-    setLS(KEY_WISHLIST, [...list, product]);
+  const key  = getWishlistKey();
+  const list = getLS(key) || [];
+  if (!list.find(p => String(p.id) === String(product.id))) {
+    setLS(key, [...list, product]);
   }
 }
 
 export function removeFromWishlist(productId) {
-  setLS(KEY_WISHLIST, getWishlist().filter(p => p.id !== productId));
+  const key = getWishlistKey();
+  setLS(key, (getLS(key) || []).filter(p => String(p.id) !== String(productId)));
 }
 
 export function toggleWishlist(product) {
-  const list = getWishlist();
-  const exists = list.find(p => p.id === product.id);
+  const list   = getWishlist();
+  const exists = list.find(p => String(p.id) === String(product.id));
   if (exists) {
     removeFromWishlist(product.id);
     return false; // removed
   } else {
     addToWishlist(product);
-    return true; // added
+    return true;  // added
   }
 }
 
 export function isWishlisted(productId) {
-  return getWishlist().some(p => p.id === productId);
+  return getWishlist().some(p => String(p.id) === String(productId));
 }
 
 export function getWishlistCount() {

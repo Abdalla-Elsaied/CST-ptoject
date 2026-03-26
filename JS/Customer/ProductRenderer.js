@@ -16,6 +16,9 @@
 
 /* ── Field normaliser helpers ─────────────────────────────────── */
 
+import { getLS } from '../Core/Storage.js';
+import { KEY_CATEGORIES } from '../Core/Constants.js';
+
 function resolveImage(p) {
   if (Array.isArray(p.images) && p.images.length > 0) {
     const first = p.images[0];
@@ -115,7 +118,7 @@ function productCardHTML(p) {
                onerror="this.onerror=null;this.src='https://placehold.co/400x300/ecfdf5/16a34a?text=No+Image'"/>
           ${discountBadge}${tagBadge}
           ${outOfStock ? '<span class="badge-out-of-stock">Out of Stock</span>' : ''}
-          <button class="btn-wishlist" title="Add to wishlist">
+          <button class="btn-wishlist" data-id="${p.id}" title="Add to wishlist">
             <i class="bi bi-heart"></i>
           </button>
         </div>
@@ -248,10 +251,15 @@ export function renderProductsByCategory(products, container) {
     groups[cat].push(p);
   }
 
-  // Sort category keys by count desc
-  const sortedCategories = Object.keys(groups).sort(
-    (a, b) => groups[b].length - groups[a].length
+  const approvedCategories = new Set(
+      (getLS(KEY_CATEGORIES) || [])
+          .filter(c => c.visibility === 'active')
+          .map(c => c.name.toLowerCase())
   );
+  // Sort category keys by count desc
+  const sortedCategories = Object.keys(groups)
+    .filter(cat => approvedCategories.has(cat.toLowerCase()))
+    .sort((a, b) => groups[b].length - groups[a].length);
 
     // Only render the top 4 categories on the home page
   const top4 = sortedCategories.slice(0, 4);

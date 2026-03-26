@@ -5,7 +5,14 @@
  */
 
 import { getLS, setLS } from '../Core/Storage.js';
-import { KEY_CART, KEY_ORDERS, KEY_CURRENT_USER } from '../Core/Constants.js';
+import { KEY_ORDERS, KEY_CURRENT_USER } from '../Core/Constants.js';
+import { getCurrentUser } from '../Core/Auth.js';
+
+/** Returns the cart key scoped to the current user (or guest). */
+export function getCartKey() {
+  const user = getCurrentUser();
+  return user ? `ls_cart_${user.id}` : 'ls_cart';  // fallback for guest
+}
 
 /* ──────────────────────────────────────────────────────
    CORE CART OPERATIONS
@@ -16,7 +23,7 @@ import { KEY_CART, KEY_ORDERS, KEY_CURRENT_USER } from '../Core/Constants.js';
  * @returns {Array<{id, name, price, oldPrice, image, category, quantity}>}
  */
 export function getCart() {
-  return getLS(KEY_CART) || [];
+  return getLS(getCartKey()) || [];
 }
 
 /**
@@ -31,7 +38,7 @@ export function addToCart(product, quantity = 1) {
 
   if (idx !== -1) {
     cart[idx].quantity = (cart[idx].quantity || 1) + quantity;
-    setLS(KEY_CART, cart);
+    setLS(getCartKey(), cart);
     return { added: false, newQty: cart[idx].quantity };
   }
 
@@ -46,7 +53,7 @@ export function addToCart(product, quantity = 1) {
     sellerId:      product.sellerId      || null,
     quantity:      quantity,
   };
-  setLS(KEY_CART, [...cart, item]);
+  setLS(getCartKey(), [...cart, item]);
   return { added: true, newQty: quantity };
 }
 
@@ -55,7 +62,7 @@ export function addToCart(product, quantity = 1) {
  * @param {string|number} productId
  */
 export function removeFromCart(productId) {
-  setLS(KEY_CART, getCart().filter(i => String(i.id) !== String(productId)));
+  setLS(getCartKey(), getCart().filter(i => String(i.id) !== String(productId)));
 }
 
 /**
@@ -69,13 +76,13 @@ export function updateCartQty(productId, quantity) {
   const idx  = cart.findIndex(i => String(i.id) === String(productId));
   if (idx !== -1) {
     cart[idx].quantity = quantity;
-    setLS(KEY_CART, cart);
+    setLS(getCartKey(), cart);
   }
 }
 
 /** Empties the entire cart */
 export function clearCart() {
-  setLS(KEY_CART, []);
+  setLS(getCartKey(), []);
 }
 
 /* ──────────────────────────────────────────────────────
@@ -84,7 +91,8 @@ export function clearCart() {
 
 /** Total number of items (sum of quantities) */
 export function getCartCount() {
-  return getCart().reduce((sum, i) => sum + (i.quantity || 1), 0);
+  const cart = getLS(getCartKey()) || [];
+  return cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
 }
 
 /** Subtotal before shipping/tax */
@@ -116,7 +124,9 @@ export function placeOrder(details) {
   const cart = getCart();
   if (cart.length === 0) return { success: false, error: 'Cart is empty' };
 
-  const user = getLS(KEY_CURRENT_USER);
+  // Read user from role-specific session key so the order is assigned to
+  // the correct user — not whatever happens to be in the generic ls_currentUser
+  const user = getCurrentUser();
   if (!user)  return { success: false, error: 'You must be logged in to checkout' };
 
   const order = {
